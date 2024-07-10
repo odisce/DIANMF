@@ -1,0 +1,32 @@
+Type: Package
+Package: DIANMF
+Title: Non-Negative Matrix Factorization To Identify SWATH DIA Metabolomic
+    Data
+Version: 0.1.0
+Maintainer: The package maintainer <yourself@somewhere.net>
+Description: Identify metabolites from SWATH DIA MS2 metabolomic data by
+    extracting their pure DIA MS2 spectra using Non-negative matrix
+    Factorization. It is an end-to-end workflow called DIA-NMF that
+    processes SWATH DIA files and identifies the detected compounds.
+License: What license is it under?
+Imports: 
+    BiocParallel (>= 1.34.2),
+    CAMERA (>= 1.56.0),
+    data.table (>= 1.14.8),
+    DecoMetDIA (>= 1.0.0),
+    dplyr (>= 1.1.2),
+    ggplot2 (>= 3.4.4),
+    ggpp (>= 0.5.5),
+    ggpubr (>= 0.6.0),
+    methods (>= 4.3.0),
+    parallel (>= 4.3.0),
+    remotes (>= 2.4.2.1),
+    reticulate (>= 1.34.0),
+    tools (>= 4.3.0),
+    xcms (>= 3.22.0)
+Author@R: person('Diana', 'Karaki', email = 'zkaraki.diana@gmail.com',
+    role = c('aut', 'cre'), comment = c(ORCID = '0009-0003-5202-3845'))
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
