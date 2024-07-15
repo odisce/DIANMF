@@ -1,4 +1,4 @@
-# this script use decometdia functions the do the general work; i.e. to get the ms1 & ms2 scans information and rt info for every ms1 peak
+# This script extract the ms1 & ms2 scans information and rt info for every ms1  (as DecoMetDia)
 
 #' extract ms1 & ms2 scans information
 #'
@@ -8,7 +8,7 @@
 #' @import xcms
 #'
 #' @return ms1 & ms2 scans information (scans times and spectrum for every scan)
-scan_time.l<- function( fp.smp, dia.feature){
+scan_time_info.f <- function( fp.smp, dia.feature){
 
   idx.smp <- which(dia.feature@filepaths %in% fp.smp) # get index of the sample file for these dia.feautures
   if (length(idx.smp) == 0) {
@@ -36,12 +36,12 @@ scan_time.l<- function( fp.smp, dia.feature){
     "scantime.ms1" = scantime.ms1, # ms1 scans times
     "mz.range" = mz.range, # mz range
     "scan.ms1" = scan.ms1, # ms1 spectra
-    "scantime.ms2" = scantime.ms2, # ms1 scans times
+    "scantime.ms2" = scantime.ms2, # ms2 scans times
     "scan.ms2" = scan.ms2 # ms2 spectra
   ))
 }
 
-
+#-------------------------------------------------------------------------------
 
 #' extract rt information
 #'
@@ -50,7 +50,7 @@ scan_time.l<- function( fp.smp, dia.feature){
 #' @param scanTimes_mzRange  ms1 & ms2 scans information (scans times and spectrum for every scan)
 #'
 #' @return rt information for every ms1 peak
-rt_info <- function(pg.raw, rt.extend, scanTimes_mzRange){
+rt_info.f <- function(pg.raw, rt.extend, scanTimes_mzRange){
 
   seq.pg <- seq_along(pg.raw) # create seq 1:length(ms1 peaks)
 

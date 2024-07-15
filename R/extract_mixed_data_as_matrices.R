@@ -1,8 +1,12 @@
-# this script let us choose a peak that is related to a precursor and extract the mixed matrix of the ms1 and ms2 data that I want
+# This script extract the mixed ms1 and ms2 data matrices for a specific peak
+
+
+#  I want to improve the extracting data functions!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 #--------------------------------------------- Let's choose a peak
 
-#' extract rt, scans, eics of a psecific MS1 peak
+#' extract rt, scans, eics for a specific MS1 peak
 #'
 #' @param pg.raw list raw peaks
 #' @param fp.smp file sample
