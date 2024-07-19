@@ -63,7 +63,7 @@ GetPresenceSimilarity <- function(measuredSpectra, librarySpectra, bin){
 #'
 #' @return numeric dot product
 #'
-GetSimpleDotProductSimilarity <- function(measuredSpectra, librarySpectra,  bin){
+GetSimpleDotProductSimilarity <- function(measuredSpectra, librarySpectra, bin){
   scalarM <- scalarR <- covariance <- sumM <-  sumR <- 0
 
   if(nrow(measuredSpectra) == 0) { return(0) }

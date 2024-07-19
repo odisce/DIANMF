@@ -1,16 +1,33 @@
 # this script is to apply nGMCAs algorithm
 
+# options.l <-  list(
+#   'maximumIteration' = 50,
+#   'maxFBIteration' = 50,
+#   'toleranceFB' = 0.00001,
+#   'useTranspose' = TRUE)
+
+#' calculate the difference between Y an its approximation AS
+#'
+#' @param Y matrix
+#' @param A matrix elution profiles
+#' @param S matrix pure spectra
+#'
+#' @return relative error
+#'
+error_function <- function(Y, A, S){
+  norm(Y - A %*% S, '2') / norm(Y, '2')
+}
+
 #' update the matrix A (it contains elution profiles)
 #'
 #' @param Y matrix
 #' @param A_init matrix
 #' @param S matrix
-#' @param lambda numeric sparsity constraint
 #' @param options list of some parameters
 #'
 #' @return new_A matrix updated elution profiles
 #'
-updateA.f <- function(Y, A_init, S, lambda, options) {
+updateA.f <- function(Y, A_init, S, options) {
 
   L <- svd( t(S) %*% S)$d[1]
   t <- 1
@@ -35,8 +52,6 @@ updateA.f <- function(Y, A_init, S, lambda, options) {
   return(A)
 }
 
-#-------------------------------------------------------------------------------
-
 #' apply soft-thresholding on a matrix
 #'
 #' @param X matrix
@@ -51,8 +66,6 @@ soft_threshold.f <- function(X, threshold){
   mat <- sign(X) * mat
   return(mat)
 }
-
-#-------------------------------------------------------------------------------
 
 #' update the matrix S (it contains pure spectra)
 #'
@@ -73,7 +86,7 @@ updateS.f <- function(Y, A, S_init, lambda, options){
 
   for (i in 1:options$maxFBIteration) {
     # print(i)
-    # lambda <- 0.9*lambda
+    # lambda <- 0.9*lambda to decrease lambda at every iteration
 
     Snext <- pmax( soft_threshold.f( R - (1/L) * t(A) %*% (A %*% R - Y) , lambda/L) , 0)
 
@@ -91,23 +104,6 @@ updateS.f <- function(Y, A, S_init, lambda, options){
   return(S)
 }
 
-#-------------------------------------------------------------------------------
-
-#' calculate the difference between two matrices
-#'
-#' @param Y matrix
-#' @param A matrix elution profiles
-#' @param S matrix pure spectra
-#'
-#' @return numeric the error between Y and its approximation AS
-#'
-error_function <- function(Y, A, S){
-  0.5*norm(Y - A %*% S, '2')^2 + norm(S, '1')
-}
-
-#-------------------------------------------------------------------------------
-
-#'
 #' apply nGMCAs on matrix Y to find A and S
 #'
 #' @param originalMatrix description
@@ -116,9 +112,9 @@ error_function <- function(Y, A, S){
 #'
 #' @return data: list of 2 matrices A and S
 #'
-nGMCAs <- function(originalMatrix = X_final, rank, options = options.l){
+nGMCAs <- function(originalMatrix = X_final, rank, options = options.l, errors_print = FALSE){
 
-  if(options$useTranspose) { originalMatrix <- t(originalMatrix) }
+  if(options$useTranspose) { originalMatrix <- base::t(originalMatrix) }
 
   data <- list()
   res_nndsvd <- nndsvd(originalMatrix, rank)
@@ -127,20 +123,19 @@ nGMCAs <- function(originalMatrix = X_final, rank, options = options.l){
   lambda <- 0.8 * max(originalMatrix)
 
   for (i in 1:options$maximumIteration) {
-    # i <- 1
-    print(i)
+    # print(i)
+    data$S <- t(apply( data$S, 1, function(x) x / max(x)))
     data$S <- updateS.f(originalMatrix, data$A, data$S, lambda = lambda, options)
 
-    data$A <- updateA.f(originalMatrix, data$A, data$S, lambda = lambda, options)
+    data$A <- updateA.f(originalMatrix, data$A, data$S, options)
 
-    print( error_function(originalMatrix, data$A, data$S ) )
+    if(errors_print) {print( error_function(originalMatrix, data$A, data$S )) }
   }
-
+  
   if(options$useTranspose) {
     data$A <- t(data$A)
     data$S <- t(data$S)
   }
+  
   return(data)
 }
-
-#-------------------------------------------------------------------------------

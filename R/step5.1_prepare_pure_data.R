@@ -1,5 +1,7 @@
 # This script contains functions to reshape\plot pure and mixed EICS and spectra.
 
+# I want to add 2 functions here to extract pure elution profiles and pure spectra
+
 #' prepare mixed eics for plotting
 #'
 #' @param eics description
