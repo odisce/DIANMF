@@ -15,7 +15,7 @@ concordance_rank <- function(mat.m){
   res <- perform_rank_determination(data = np_data_matrix, comp_min = as.integer(2), comp_max = my_comp_max,
                                     iter_max = as.integer(20), n_runs = as.integer(10), method = "concordance", save_res = FALSE);
   rank <- res[[4]];
-  if(rank == 999) { rank = 2 };
+  # if(rank == 999) { rank = 2 };
   
   return(rank)
 }

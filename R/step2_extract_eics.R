@@ -69,6 +69,7 @@ extract_eics <- function(spectra_list, ppm = 7, apex_index, rt_index = TRUE, mz_
     target_table,
     full_table
   )
+  output <- merge(output, unique(full_table[, .(spectra_index)]), by = "spectra_index", all = TRUE)
   
   output[, meanmz := mean(mz) %>% sprintf("%.4f", .), by = .(index)]
   output <- output[order(-intensity), lapply(.SD, head, 1), by = .(spectra_index, meanmz)]

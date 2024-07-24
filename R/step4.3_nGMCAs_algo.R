@@ -109,19 +109,33 @@ updateS.f <- function(Y, A, S_init, lambda, options){
 #' @param originalMatrix description
 #' @param rank numeric rank of factorization = number of pure compounds in the mixed data
 #' @param options list of parameters
+#' @param errors_print Boolean 
+#' @param initialization_method random, nndsvd or subSample 
 #'
 #' @return data: list of 2 matrices A and S
-#'
-nGMCAs <- function(originalMatrix = X_final, rank, options = options.l, errors_print = FALSE){
+nGMCAs <- function(originalMatrix = X_final, rank, options = options.l,
+                   errors_print = FALSE, initialization_method = c('nndsvd', 'random', 'subSample'), H_sub = NULL){
 
   if(options$useTranspose) { originalMatrix <- base::t(originalMatrix) }
-
   data <- list()
-  res_nndsvd <- nndsvd(originalMatrix, rank)
+  
+  if( initialization_method == 'nndsvd' ){
+  res_nndsvd <- nndsvd_init(originalMatrix, rank)
   data$A <- res_nndsvd$W
   data$S <- res_nndsvd$H
+  } else if( initialization_method == 'random' ) {  
+    res_random <- random_init(originalMatrix, rank)
+    data$A <- res_random$W
+    data$S <- res_random$H
+  } else if( initialization_method == 'subSample' & !is.null(H_sub) ){
+    res_subSample <- subsample_init(originalMatrix, rank, t(H_sub))
+    data$A <- res_subSample$H
+    data$S <- res_subSample$W
+  } else {
+    print('error! H_sub must be !NULL when using the subSample initialization')
+  }
+  
   lambda <- 0.8 * max(originalMatrix)
-
   for (i in 1:options$maximumIteration) {
     # print(i)
     data$S <- t(apply( data$S, 1, function(x) x / max(x)))

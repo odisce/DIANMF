@@ -10,11 +10,14 @@
 #' @param mzCenterFun string method
 #' @param integrate integer
 #' @param mzdiff integer
+#' @param noise 
+#' @param firstBaselineCheck 
 #'
+#' @import MSnbase
 #' @importFrom xcms findChromPeaks
+#' @importFrom xcms CentWaveParam
 #'
 #' @return rawData.XCMSnExp
-#'
 detect_EICs.f <- function(rawData.onDiskMSnExp, d.out = NULL,
                       ppm = 6, peakwidth = c(6,60), snthresh = 1,
                       prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
@@ -52,30 +55,30 @@ detect_EICs.f <- function(rawData.onDiskMSnExp, d.out = NULL,
 
 # extract_rawData.f <- function(d.in, d.out, nSlaves = 6,
 #                               # peak detection setup
-#                               ppm = 6, snthresh = 1, peakwidth = c(6, 60), mzdiff = -0.001,
+#                               ppm = 6, snthresh = 1, peakwidth = c(6, 60), mzdiff = -0.001, prefilter = c(5,4000),
 #                               rerun = FALSE,
 #                               # to process multiple samples
 #                               correlation = FALSE ){
-#   
-#   wd0 <- getwd(); # the working directory path 
+# 
+#   wd0 <- getwd(); # the working directory path
 #   files <- list.files(d.in, recursive = TRUE, full.names = TRUE, pattern = '(?i)mzML$'); # list of all mzML files in the d.in directory
-#   
+# 
 #   if(correlation == TRUE ){  # to process all files at once
 #     d.out <- paste0(wd0, '/', d.out);  # create the output directory to save results
-#     if (!dir.exists(d.out)) {  
+#     if (!dir.exists(d.out)) {
 #       dir.create(d.out, recursive = TRUE)
 #     };
-#     
-#     rawData.onDiskMSnExp <- readMSData(one_file, mode = "onDisk");  # read mzML as OnDiskMSnExp data from MSnbase package
-#     
+# 
+#     rawData.onDiskMSnExp <- MSnbase::readMSData(one_file, mode = "onDisk");  # read mzML as OnDiskMSnExp data from MSnbase package
+# 
 #     fn.skip <- paste0(d.out ,'/rawData.XCMSnExp'); # check if the raw_MSnbase_data already exist; if not create them
 #     if ((!rerun) & file.exists(fn.skip)) {
 #       cat('using existing results:', fn.skip, '...\n')
 #       load(fn.skip)
 #     } else {
-#       nSlaves <- min(detectCores() - 1, nSlaves, length(file)) 
+#       nSlaves <- min(detectCores() - 1, nSlaves, length(file))
 #       rawData.XCMSnExp <- detect_EICs.f(rawData.onDiskMSnExp, d.out, ppm = ppm, snthresh = snthresh, peakwidth = peakwidth, mzdiff = mzdiff, nSlaves)
-#     }
+#     }             
 #   } else {  # to process every file separately
 #     for(i in 1:length(files)){
 #       one_file <- files[[i]]
@@ -83,9 +86,9 @@ detect_EICs.f <- function(rawData.onDiskMSnExp, d.out = NULL,
 #       if (!dir.exists(d.out)) {
 #         dir.create(d.out, recursive = TRUE)
 #       };
-#       
-#       rawData.onDiskMSnExp <- readMSData(one_file, mode = "onDisk");  # read mzML as OnDiskMSnExp data from MSnbase package
-#       
+# 
+#       rawData.onDiskMSnExp <- MSnbase::readMSData(one_file, mode = "onDisk");  # read mzML as OnDiskMSnExp data from MSnbase package
+# 
 #       fn.skip <- paste0( d.out ,'/rawData.XCMSnExp')  # check if the EIC peaks already detected
 #       if ((!rerun) & file.exists(fn.skip)) {
 #         cat('using existing results:', fn.skip, '...\n')
@@ -96,6 +99,6 @@ detect_EICs.f <- function(rawData.onDiskMSnExp, d.out = NULL,
 #       }
 #     }
 #   }
-#   
+# 
 #   return(raw_MSnbase_data)
 # }

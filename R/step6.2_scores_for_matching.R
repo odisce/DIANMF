@@ -339,17 +339,21 @@ getReverseSearchingSimilarity <- function(measuredSpectra, librarySpectra, bin){
 #' @param mz_precursor numeric peak/MS1 precursor mz value
 #' @param data_base reference/library database
 #' @param measured_spectra list experimental pure spectrum
+#' @param mz_tol numeric
 #'
 #' @importFrom dplyr between
 #'
 #' @return list matching scores with some information of the matched library(reference) spectrum
 #'
-match_pure_scores2 <- function(polarity, mz_precursor, data_base, measured_spectra) {
+match_pure_scores2 <- function(polarity, mz_precursor, data_base, measured_spectra, mz_tol = NULL) {
 
-  mz_tol <- mz_precursor * 5e-6
-  # mz_tol <- 0.01
+  if(is.null(mz_tol)){ # automatic mz_tol depending on the precursor mz
+    mz_tol <- mz_precursor * 5e-6
+  } # else the mz_tol given by the user
+  
   idx_ref_spect <- data_base$index[Polarity == polarity & between(mz, mz_precursor-mz_tol, mz_precursor+mz_tol), id]
-
+  # print(idx_ref_spect)
+  
   if (length(idx_ref_spect) > 0) {
     # # Normalize measured spectra intensities
     # measured_spectra$intensity <- measured_spectra$intensity / max(measured_spectra$intensity)

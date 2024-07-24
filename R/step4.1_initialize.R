@@ -12,14 +12,14 @@
 #' @export
 #' @importFrom stats runif
 #'
-random_init <- function(A, rank){
+random_init <- function(A, k){
   
   max_val <- max(A)
   n_rows <- dim(A)[1]
   n_cols <- dim(A)[2]
   
-  W <- matrix( runif(n_rows * rank, min = 0, max = max_val), nrow = n_rows, ncol = rank) 
-  H <- matrix( runif(rank * n_cols, min = 0, max = max_val), nrow = rank, ncol = n_cols) 
+  W <- matrix( runif(n_rows * k, min = 0, max = max_val), nrow = n_rows, ncol = k) 
+  H <- matrix( runif(k * n_cols, min = 0, max = max_val), nrow = k, ncol = n_cols) 
     
   return(list(
     'W' = W,
@@ -28,8 +28,52 @@ random_init <- function(A, rank){
 }
 #-------------------------------------------------------------------------------
 
-## sub-sampling
-# to come soon
+## initialize the elution profiles matrix by the pure ones I got from NMF MS1 data
+
+#' subSample initialization
+#'
+#' @param A 
+#' @param k 
+#' @param H_sub pure MS1 elution profiles
+#'
+#' @return W and H initializing matrices based on the data
+#' @export
+subsample_init <- function(mat, k, H_sub){  # This method is for NMF of MS2 data.
+  
+  # for W, solve the inverse problem: argmin_{W >=0} 0.5||A - WH||_F^2 (by FBS, specifically gradient projection algorithm).
+  max_val <- max(mat)/20
+  W <- matrix( runif( k * ncol(mat), min = 0, max = max_val), nrow = k, ncol = ncol(mat)) 
+  param <- list(
+    'maxFBIteration' = 10,
+    'toleranceFB' = 1e-5
+  )
+  
+  L <- svd(H_sub %*% t(H_sub))$d[1]
+  t <- 1
+  R <- W
+  S <- W
+  
+  for (i in 1:20) {
+    # print(i)
+    Snext <- pmax( R - (1/L) * t(H_sub) %*% (H_sub %*% R - mat) , 0)
+    
+    tnext <- ( 1+sqrt(1 + 4*(t^2)) ) /2
+    
+    R <- Snext + ((t-1)/tnext) * (Snext - S)
+    
+    if ( norm( Snext - S, 'F') / norm(S, 'F') < 1e-5) {
+      S <- Snext
+      break }
+    
+    S <- Snext
+    # print( error_function(mat, H_sub, Snext) )
+  }
+  
+  return(list(
+    'W' = S,
+    'H' = H_sub
+  ))
+}
 #-------------------------------------------------------------------------------
 
 # nndsvd method non-negative double singular value decomposition
@@ -67,7 +111,7 @@ norm_euc <- function(x){ sqrt(drop(crossprod(x))) }
 #'
 #' @return list of two matrices H and W
 #'
-nndsvd <- function(A, k){
+nndsvd_init <- function(A, k){
   
   if( any(A<0) ){
     print('The input matrix contains negative elements !')

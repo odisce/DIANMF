@@ -6,7 +6,7 @@ test_that("nGMCAs algorithm test", {
     'maxFBIteration' = 5,
     'toleranceFB' = 1e-5,
     'useTranspose' = TRUE)
-  ngmcas_res <- nGMCAs(originalMatrix = m, rank = 2, options = options.l, errors_print = TRUE)
+  ngmcas_res <- nGMCAs(originalMatrix = m, rank = 2, options = options.l, errors_print = TRUE, initialization_method = 'nndsvd')
   
   W <- ngmcas_res$S
   H <- ngmcas_res$A
