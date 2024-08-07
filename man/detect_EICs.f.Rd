@@ -36,6 +36,10 @@ detect_EICs.f(
 \item{integrate}{integer}
 
 \item{mzdiff}{integer}
+
+\item{noise}{}
+
+\item{firstBaselineCheck}{}
 }
 \value{
 rawData.XCMSnExp

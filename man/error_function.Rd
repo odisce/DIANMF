@@ -2,7 +2,7 @@
 % Please edit documentation in R/step4.3_nGMCAs_algo.R
 \name{error_function}
 \alias{error_function}
-\title{calculate the difference between Y an its approximation AS}
+\title{calculate the difference between Y an its approximation A \%*\% S}
 \usage{
 error_function(Y, A, S)
 }
@@ -17,5 +17,5 @@ error_function(Y, A, S)
 relative error
 }
 \description{
-calculate the difference between Y an its approximation AS
+calculate the difference between Y an its approximation A \%*\% S
 }

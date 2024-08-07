@@ -1,12 +1,10 @@
 test_that("nGMCAs algorithm test", {
   
   m <- matrix(c(1,0,0,0,1,1,1,1,1), nrow = 3, ncol = 3)
-  options.l <-  list(
-    'maximumIteration' = 10,
-    'maxFBIteration' = 5,
-    'toleranceFB' = 1e-5,
-    'useTranspose' = TRUE)
-  ngmcas_res <- nGMCAs(originalMatrix = m, rank = 2, options = options.l, errors_print = TRUE, initialization_method = 'nndsvd')
+  ngmcas_res <- nGMCAs(originalMatrix = m, rank = 2,
+                       maximumIteration = 10, maxFBIteration = 5, toleranceFB = 1e-5,
+                       initialization_method = 'nndsvd',
+                       errors_print = TRUE)
   
   W <- ngmcas_res$S
   H <- ngmcas_res$A

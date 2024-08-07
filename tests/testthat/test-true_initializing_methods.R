@@ -4,7 +4,7 @@ test_that("initializing methods test", {
   r <- 2
   
   # test random initialization
-  random_res <- random_init(A = m, k = r)
+  random_res <- random_init(X = m, rank = r)
   W_random <- random_res$W
   H_random <- random_res$H
   
@@ -16,7 +16,7 @@ test_that("initializing methods test", {
   
   
   # test nndsvd initialization
-  nndsvd_res <- nndsvd_init(A = m, k = r)
+  nndsvd_res <- nndsvd_init(X = m, rank = r)
   W_nndsvd <- nndsvd_res$W
   H_nndsvd <- nndsvd_res$H
   
@@ -28,14 +28,14 @@ test_that("initializing methods test", {
   
   
   # test sub-sampling initialization
-  H_sub <- matrix(c(0.2,0,0.8,1,0.06,0.1), nrow = r)         # I want to change the parameters of this function
-  subSample_res <- subsample_init(mat = t(m), k = r, H_sub = t(H_sub))
-  W_subSample <- subSample_res$W
-  H_subSample <- subSample_res$H
+  H_sub <- matrix(c(0.2,0,0.8,1,0.06,0.1), nrow = r)
+  subSample_res <- subsample_init(Y = t(m), rank = r, H_sub = H_sub)
+  A_subSample <- subSample_res$A
+  S_subSample <- subSample_res$S
   
-  expect_equal(dim( H_subSample %*% W_subSample), dim(t(m)))
-  expect_true(all(W_subSample >= 0))
-  expect_true(all(H_subSample >= 0))
-  expect_equal( nrow(W_subSample), r)
-  expect_equal( ncol(H_subSample), r)
+  expect_equal(dim( A_subSample %*% S_subSample), dim(t(m)))
+  expect_true(all(S_subSample >= 0))
+  expect_true(all(A_subSample >= 0))
+  expect_equal( nrow(S_subSample), r)
+  expect_equal( ncol(A_subSample), r)
 })

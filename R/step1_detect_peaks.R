@@ -1,4 +1,3 @@
-
 #' Detect EICs peaks
 #'
 #' @param rawData.onDiskMSnExp 
@@ -18,6 +17,7 @@
 #' @importFrom xcms CentWaveParam
 #'
 #' @return rawData.XCMSnExp
+#' @export
 detect_EICs.f <- function(rawData.onDiskMSnExp, d.out = NULL,
                       ppm = 6, peakwidth = c(6,60), snthresh = 1,
                       prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
@@ -37,7 +37,7 @@ detect_EICs.f <- function(rawData.onDiskMSnExp, d.out = NULL,
                              firstBaselineCheck = firstBaselineCheck,
                              );
   # detect EIC peaks
-  rawData.XCMSnExp <- findChromPeaks(rawData.onDiskMSnExp, param = cwp);
+  rawData.XCMSnExp <- xcms::findChromPeaks(rawData.onDiskMSnExp, param = cwp);
     
   # save the object
   if (!is.null(d.out)) {
@@ -46,8 +46,6 @@ detect_EICs.f <- function(rawData.onDiskMSnExp, d.out = NULL,
     }
     save(rawData.XCMSnExp, file = paste0(d.out, '/rawData.XCMSnExp'))
   }
-  # print the detected peak number
-  # ...............................
   
   return(rawData.XCMSnExp)
 }

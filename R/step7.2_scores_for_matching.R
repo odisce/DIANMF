@@ -7,7 +7,6 @@
 #' @param bin numeric mz tolerance
 #'
 #' @return numeric percentage of library fragments in the experimental spectrum
-#'
 GetPresenceSimilarity <- function(measuredSpectra, librarySpectra, bin){
 
   if(nrow(librarySpectra) == 0) {return(0)}
@@ -62,7 +61,6 @@ GetPresenceSimilarity <- function(measuredSpectra, librarySpectra, bin){
 #' @param bin numeric mz tolerance
 #'
 #' @return numeric dot product
-#'
 GetSimpleDotProductSimilarity <- function(measuredSpectra, librarySpectra, bin){
   scalarM <- scalarR <- covariance <- sumM <-  sumR <- 0
 
@@ -176,7 +174,6 @@ GetSimpleDotProductSimilarity <- function(measuredSpectra, librarySpectra, bin){
 #' @param bin numeric mz tolerance
 #'
 #' @return numeric inverse dot product
-#'
 getReverseSearchingSimilarity <- function(measuredSpectra, librarySpectra, bin){
 
   scalarM <- scalarR <- covariance <- sumM <- sumL <- 0
@@ -344,12 +341,12 @@ getReverseSearchingSimilarity <- function(measuredSpectra, librarySpectra, bin){
 #' @importFrom dplyr between
 #'
 #' @return list matching scores with some information of the matched library(reference) spectrum
-#'
+#' @export
 match_pure_scores2 <- function(polarity, mz_precursor, data_base, measured_spectra, mz_tol = NULL) {
 
-  if(is.null(mz_tol)){ # automatic mz_tol depending on the precursor mz
+  if ( is.null(mz_tol) ){
     mz_tol <- mz_precursor * 5e-6
-  } # else the mz_tol given by the user
+  }
   
   idx_ref_spect <- data_base$index[Polarity == polarity & between(mz, mz_precursor-mz_tol, mz_precursor+mz_tol), id]
   # print(idx_ref_spect)

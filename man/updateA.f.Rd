@@ -4,7 +4,7 @@
 \alias{updateA.f}
 \title{update the matrix A (it contains elution profiles)}
 \usage{
-updateA.f(Y, A_init, S, options)
+updateA.f(Y, A_init, S, maxFBIteration, toleranceFB)
 }
 \arguments{
 \item{Y}{matrix}
@@ -13,7 +13,9 @@ updateA.f(Y, A_init, S, options)
 
 \item{S}{matrix}
 
-\item{options}{list of some parameters}
+\item{maxFBIteration}{}
+
+\item{toleranceFB}{}
 }
 \value{
 new_A matrix updated elution profiles

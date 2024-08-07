@@ -1,13 +1,12 @@
-# extract the isolation windows of SWATH data
-
-#' Title
+#' extract the isolation windows of SWATH data
 #'
 #' @param rawData.onDiskMSnExp 
 #'
 #' @return isolation windows
 #' @export
-#' @import MSnbase
-#' 
+#' @importFrom MSnbase isolationWindowLowerMz
+#' @importFrom MSnbase isolationWindowUpperMz
+#' @importFrom MSnbase filterMsLevel
 isolationWindows.range <- function(rawData.onDiskMSnExp){
   
   ms2_spectra <- MSnbase::filterMsLevel(rawData.onDiskMSnExp, msLevel = 2) # filter MS2 scans
@@ -26,16 +25,14 @@ isolationWindows.range <- function(rawData.onDiskMSnExp){
 #' @param ppm 
 #'
 #' @return mz range of a specific mz value
-#' @export
-#'
 PpmRange <-  function(ref, ppm) {
   dev <- ppm * 1e-6
   ref + (c(-1, 1) * ref * dev)
 }
 
-# to be fixed: I want to filter the ions of the MS1 apex spectra, by deleteing the ions of intensity lower than ms1_int_filter
+# to be fixed: I want to filter the ions of the MS1 apex spectra, by deleting the ions of intensity lower than ms1_int_filter
 
-#' Title
+#' extract the MS1 or MS2 eics from a list of spectra related to a specific peak
 #'
 #' @param spectra_list 
 #' @param ppm 
@@ -47,7 +44,6 @@ PpmRange <-  function(ref, ppm) {
 #' @export
 #' @import data.table
 #' @import magrittr
-#'
 extract_eics <- function(spectra_list, ppm = 7, apex_index, rt_index = TRUE, mz_range = TRUE) {
   
   full_table <- data.table::rbindlist(spectra_list, idcol = "spectra_index")
@@ -89,9 +85,3 @@ extract_eics <- function(spectra_list, ppm = 7, apex_index, rt_index = TRUE, mz_
   mixed_matrix[is.na(mixed_matrix)] <- 0
   return(mixed_matrix)
 }
-# spectra_list <- spec.exp_ms1
-# ppm <- 7
-# apex_index <- idx.apex.ms1
-# mz_range <- isol_window_mz_range
-# mz_range <- NULL
-# rt_index <- spec.exp_rt

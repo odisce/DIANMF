@@ -4,21 +4,23 @@
 \alias{updateS.f}
 \title{update the matrix S (it contains pure spectra)}
 \usage{
-updateS.f(Y, A, S_init, lambda, options)
+updateS.f(Y, A, S_init, lambda, maxFBIteration, toleranceFB)
 }
 \arguments{
-\item{Y}{matrix}
+\item{Y}{}
 
-\item{A}{matrix}
+\item{A}{}
 
-\item{S_init}{matrix}
+\item{S_init}{}
 
-\item{lambda}{numeric sparsity constraint}
+\item{lambda}{}
 
-\item{options}{list of some parameters}
+\item{maxFBIteration}{}
+
+\item{toleranceFB}{}
 }
 \value{
-new_S matrix updated pure spectra
+S
 }
 \description{
 update the matrix S (it contains pure spectra)

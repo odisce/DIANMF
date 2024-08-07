@@ -5,9 +5,13 @@
 \title{apply nGMCAs on matrix Y to find A and S}
 \usage{
 nGMCAs(
-  originalMatrix = X_final,
+  originalMatrix,
   rank,
-  options = options.l,
+  maximumIteration = 10,
+  maxFBIteration = 10,
+  toleranceFB = 1e-05,
+  initialization_method = c("nndsvd", "random", "subSample"),
+  H_sub = NULL,
   errors_print = FALSE
 )
 }
@@ -16,7 +20,17 @@ nGMCAs(
 
 \item{rank}{numeric rank of factorization = number of pure compounds in the mixed data}
 
-\item{options}{list of parameters}
+\item{maximumIteration}{}
+
+\item{maxFBIteration}{}
+
+\item{toleranceFB}{}
+
+\item{initialization_method}{random, nndsvd or subSample}
+
+\item{H_sub}{}
+
+\item{errors_print}{Boolean}
 }
 \value{
 data: list of 2 matrices A and S

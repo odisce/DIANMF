@@ -15,7 +15,6 @@
 #' @import data.table
 #' @import magrittr
 #' @import MSnbase
-#'
 extract_ms_matrix.f <- function(idx.pg, eics_peaks.mat, rawData.onDiskMSnExp, ppm = 7, rt_index = TRUE, mz_range = TRUE, iso_win_index = NULL){
   
   rawData_ms1 <- MSnbase::filterMsLevel(rawData.onDiskMSnExp, 1L) %>%
@@ -96,23 +95,6 @@ extract_ms_matrix.f <- function(idx.pg, eics_peaks.mat, rawData.onDiskMSnExp, pp
   return(ms_mixed_matrix)
 }
 
-#' filter rows with only one non-zero element
-#'
-#' @param mat matrix
-#'
-#' @return filtered matrix
-#' @export
-filter_rows <- function(mat) {
-  rows_to_keep <- apply(mat, 1, function(row) sum(row != 0)) > 1
-  mat[rows_to_keep, , drop = FALSE]  # Use drop = FALSE to maintain matrix structure
-}
-
-# # check if a matrix is empty (zero rows) to be deleted    # it should be the case, since in every isolation window I should have some data
-# is_not_empty <- function(mat) {
-#   nrow(mat) > 0
-# }
-
-
 #-------------------------------------------------------------------------------------------------------------------------------------
 # old functions
 # extract_ms1_matrix.f <- function(idx.pg, eics_peaks.mat, rawData.onDiskMSnExp, ppm = 7, rt_index = TRUE, mz_range = TRUE){
@@ -163,7 +145,6 @@ filter_rows <- function(mat) {
 # mz_range <- isol_window_mz_range
 # mz_range <- NULL
 # rt_index <- spec.exp_rt
-
 
 
 # extract_ms2_matrix.f <- function(idx.pg, eics_peaks.mat, rawData.onDiskMSnExp, ppm = 7, rt_index = TRUE, mz_range = TRUE){

@@ -22,12 +22,10 @@ test_that("scores matching test", {
   expect_true(is.numeric(presence_ratio))
   expect_equal( round(presence_ratio,3), 0.6 )
   
+  
+  # # test the scores in true pure spectrum of Aminophenol
+  # MS2_pure_spectrum <- readRDS("~/DIA_NMF_R_package/dianmf/Data/MS2_pure_spectrum.rds")
+  # DATA_BASE <- 
+  # scores <- match_pure_scores2(polarity = 'POS', mz_precursor = 110.06, DATA_BASE, my_spectrum = MS2_pure_spectrum)
+  
 })
-# spectrum1 <- data.frame(
-#   "mz_value" = seq(1:5),
-#   'intensity' = c(0,1000,0,300,300)
-# )
-# spectrum2 <- data.frame(
-#   "mz_value" = seq(1:5),
-#   'intensity' = c(100,1000,100,400,300)
-# ) # refernce spectra
