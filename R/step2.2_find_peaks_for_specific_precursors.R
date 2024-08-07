@@ -45,8 +45,7 @@ create_list_function.l <- function(compound.df){
 #'
 #' @param compounds.l list empty, every level related to a compounds
 #' @param matrix.n matrix of peaks
-#' @param mz_tol.n numeric mz tolerance
-#' @param  rt_tol.n numeric rt tolerance
+#' @param rt_tol.n numeric rt tolerance
 #' 
 #' @return filled list of peak suggestions for all levels
 #' @export

@@ -14,6 +14,7 @@ filter_rows <- function(mat) {
 #' @param row 
 #'
 #' @return filtered row
+#' @export
 has_four_consecutive_non_zero <- function(row) {
   # Find consecutive non-zero values
   non_zero_streaks <- rle(row != 0)

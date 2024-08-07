@@ -12,8 +12,6 @@ search_for_ROIs_function.l(compounds.l, matrix.n, rt_tol.n)
 \item{matrix.n}{matrix of peaks}
 
 \item{rt_tol.n}{numeric rt tolerance}
-
-\item{mz_tol.n}{numeric mz tolerance}
 }
 \value{
 filled list of peak suggestions for all levels
