@@ -59,7 +59,7 @@ dia.nmf.f <- function(
   while( peak.idx <= peaks_to_be_identified ){
     if( isFALSE(ms1_peaks.df[peak.idx, 'is_ion']) ){
       
-      print(peak.idx)
+      # print(peak.idx)
       
       ms1_mat <- extract_ms_matrix.f(idx.pg = peak.idx, eics_peaks = ms1_peaks.df, rawData.onDiskMSnExp = rawData.onDiskMSnExp,
                                      ppm = ppm, rt_index = TRUE, mz_range = NULL, iso_win_index = NULL)
@@ -188,19 +188,3 @@ dia.nmf.f <- function(
   
   return(features.l)
 }
-
-
-# @param peakwidth numeric(2)
-# @param snthresh numeric(1)
-# @param prefilter numeric
-# @param mzCenterFun 
-# @param integrate 
-# @param mzdiff numeric
-# @param noise numeric
-# @param firstBaselineCheck Boolean 
-# # parameters to detect peaks by xcms, or input the peak matrix or data.frame
-# detect_peaks_by_xcms = TRUE, ms1_peaks = NULL,
-# # xcms parameters to detect peaks
-# ppm = 6, peakwidth = c(6,60), snthresh = 1,
-# prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
-# integrate = 2, mzdiff = -0.001, noise = 0, firstBaselineCheck = FALSE,

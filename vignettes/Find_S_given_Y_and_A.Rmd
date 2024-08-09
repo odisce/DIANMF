@@ -1,0 +1,19 @@
+---
+title: "Find_S_given_Y_and_A"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Find_S_given_Y_and_A}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(DIANMF)
+```

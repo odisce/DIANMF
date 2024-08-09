@@ -1,8 +1,8 @@
 ---
-title: "Extract MS1 Pure Data"
+title: "Extract MS2 Pure Data"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Extract MS1 Pure Data}
+  %\VignetteIndexEntry{Extract MS2 Pure Data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -11,7 +11,7 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  warning = FALSE
+   warning = FALSE
 )
 ```
 
@@ -45,49 +45,20 @@ mz_prec <- ms1_peaks.df[peak.idx, 'mz']
 rt_prec <- ms1_peaks.df[peak.idx, 'rt']
 ```
 
-## Extract the MS1 mixed matrix
-```{r extract the mixed MS1 data as matrix, echo=TRUE }
- ms1_mat <- extract_ms_matrix.f(idx.pg = peak.idx, eics_peaks = ms1_peaks.df, rawData.onDiskMSnExp = rawData.onDiskMSnExp,
-                                     ppm = 7, rt_index = TRUE, mz_range = NULL, iso_win_index = NULL)
-```
-
-## NMF on the MS1 data
-```{r NMF MS1 data, echo=TRUE }
-ms1_rank <- 3
-ngmcas_res <- nGMCAs(originalMatrix = ms1_mat, rank = ms1_rank,
-                     maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
-                     initialization_method = "nndsvd",
-                     errors_print = FALSE)
-W_ms1 <- ngmcas_res$S
-H_ms1 <- ngmcas_res$A
-```
-
-## plot mixed and pure data
-```{r plot data, echo=TRUE, fig.height=10, fig.width=7}
-ms1_pure_data <- choose_ms1_pure_spectrum(W_ms1, mz_prec)
-choosen_comp_ms1 <- ms1_pure_data$choosen_comp_ms1
-
-p_eics <- plot_MS_eics(ms_mixed = ms1_mat, ms_pure_H = H_ms1, ms_level = "MS1", rt_prec = rt_prec, choosen_comp = choosen_comp_ms1)
-p_eics
-
-p_spectra <- plot_MS_spectra(ms_mixed = ms1_mat, ms_pure_W = W_ms1, ms_level = "MS1", mz_prec, choosen_comp = choosen_comp_ms1)
-p_spectra
-```
-
-## Extract the pure MS1 spectrum related to this peak
-```{r extract the good pure MS1 spectrum, echo=TRUE }
-ms1_pure_spectrum <- ms1_pure_data$ms1_pure_spectrum
-```
-
-## Another way to extract all infomation of this peak
+## Extract MS1 and MS2 pure information
 ```{r main fct for MS1 spectrum, echo=TRUE }
 all_info_peak1 <- dia.nmf.f( mzML_path = file,
-                          MS_level = "MS1", ppm = 7,
+                          MS_level = "MS2", ppm = 7,
                           ms1_peaks = eics_peaks.mat,
                           peaks_nb = 1,
                           rt_index = TRUE, 
                           maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
                           MS1_init_method = 'nndsvd', errors_print = FALSE,
                           rt_tol = 2)
-```
 
+ms1_pure_spectrum <- all_info_peak1[[1]]$MS1_pure_spectrum
+print(ms1_pure_spectrum)
+
+ms2_pure_spectrum <- all_info_peak1[[1]]$MS2_pure_spectrum_specific
+print(ms2_pure_spectrum)
+```

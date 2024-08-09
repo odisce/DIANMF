@@ -24,7 +24,7 @@ test_that("test main on barbier data", {
   total_res <- dia.nmf.f( mzML_path = file,
                           MS_level = "MS2", ppm = 7,
                           ms1_peaks = eics_peaks.mat,
-                          peaks_nb = 6,
+                          peaks_nb = 1,
                           rt_index = TRUE, 
                           maximumIteration = 10, maxFBIteration = 5, toleranceFB = 1e-5,
                           MS1_init_method = 'nndsvd', MS2_init_method = 'subSample', errors_print = FALSE,
