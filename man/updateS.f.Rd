@@ -7,17 +7,17 @@
 updateS.f(Y, A, S_init, lambda, maxFBIteration, toleranceFB)
 }
 \arguments{
-\item{Y}{}
+\item{Y}{matrix}
 
-\item{A}{}
+\item{A}{matrix elution profiles}
 
-\item{S_init}{}
+\item{S_init}{matrix pure spectra}
 
-\item{lambda}{}
+\item{lambda}{numeric sparsity parameter of the pure spectra}
 
-\item{maxFBIteration}{}
+\item{maxFBIteration}{numeric FBS max number of iteration}
 
-\item{toleranceFB}{}
+\item{toleranceFB}{numeric stopping value}
 }
 \value{
 S

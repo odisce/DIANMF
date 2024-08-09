@@ -7,7 +7,7 @@
 load_compounds_function.tb(compound.c)
 }
 \arguments{
-\item{compound.c}{character path to load the spiked compounds table}
+\item{compound.c}{file_path to load the spiked compounds table}
 }
 \value{
 data-frame/table spiked compounds table

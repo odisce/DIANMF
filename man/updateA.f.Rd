@@ -13,9 +13,9 @@ updateA.f(Y, A_init, S, maxFBIteration, toleranceFB)
 
 \item{S}{matrix}
 
-\item{maxFBIteration}{}
+\item{maxFBIteration}{numeric max number of iteration}
 
-\item{toleranceFB}{}
+\item{toleranceFB}{numeric stopping value}
 }
 \value{
 new_A matrix updated elution profiles

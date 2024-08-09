@@ -2,8 +2,8 @@
 
 #' Initialize matrices W and H randomly.
 #
-#' @param X 
-#' @param rank 
+#' @param X matrix
+#' @param rank of factorization
 #'
 #' @return W and H random matrices
 #' @export
@@ -26,9 +26,9 @@ random_init <- function(X, rank){
 
 #' subSample initialization
 #'
-#' @param Y 
-#' @param rank 
-#' @param H_sub pure MS1 elution profiles
+#' @param Y matrix
+#' @param rank of factorization
+#' @param H_sub pure MS1 elution profiles matrix
 #'
 #' @return A and S initializing matrices based on the data
 #' @export
@@ -52,7 +52,7 @@ subsample_init <- function(Y, rank, H_sub){  # This method is just for NMF of MS
 
 #' positive projection
 #'
-#' @param x vector of numeric
+#' @param x vector of numerics
 #'
 #' @return vector the projection of x in the positive orthant
 pos <- function(x){ as.numeric(x>=0) * x }
@@ -60,7 +60,7 @@ pos <- function(x){ as.numeric(x>=0) * x }
 
 #' negative projection
 #'
-#' @param x vector of numeric
+#' @param x vector of numerics
 #'
 #' @return vector the projection of x in the negative orthant
 neg <- function(x){ as.numeric(x<=0) * abs(x) }
@@ -74,10 +74,10 @@ neg <- function(x){ as.numeric(x<=0) * abs(x) }
 norm_euc <- function(x){ sqrt(drop(crossprod(x))) }
 
 
-#' apply nndsvd on a matrix
+#' apply nndsvd (non-negative double singular value decomposition) on a matrix
 #'
 #' @param X matrix
-#' @param rank integer: the rank
+#' @param rank of factorization
 #'
 #' @return list of two matrices H and W
 #' @export

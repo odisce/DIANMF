@@ -2,18 +2,18 @@
 % Please edit documentation in R/step2.1_extract_eics.R
 \name{PpmRange}
 \alias{PpmRange}
-\title{create a mz range}
+\title{Create a mz range}
 \usage{
 PpmRange(ref, ppm)
 }
 \arguments{
-\item{ref}{}
+\item{ref}{numeric mz of the peak/precursor}
 
-\item{ppm}{}
+\item{ppm}{numeric}
 }
 \value{
 mz range of a specific mz value
 }
 \description{
-create a mz range
+Create a mz range
 }

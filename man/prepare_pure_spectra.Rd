@@ -7,7 +7,7 @@
 prepare_pure_spectra(W)
 }
 \arguments{
-\item{W}{description}
+\item{W}{matrix contains pure spectra}
 }
 \value{
 data.frame

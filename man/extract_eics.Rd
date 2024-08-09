@@ -2,7 +2,7 @@
 % Please edit documentation in R/step2.1_extract_eics.R
 \name{extract_eics}
 \alias{extract_eics}
-\title{extract the MS1 or MS2 eics from a list of spectra related to a specific peak}
+\title{Extract the MS1 or MS2 eics from a list of spectra related to a specific peak}
 \usage{
 extract_eics(
   spectra_list,
@@ -13,19 +13,19 @@ extract_eics(
 )
 }
 \arguments{
-\item{spectra_list}{}
+\item{spectra_list}{list of spectra related to the fragments exists at the apex spectrum of the peak}
 
-\item{ppm}{}
+\item{ppm}{numeric}
 
-\item{apex_index}{}
+\item{apex_index}{integer index of the spectrum that contains the apex of the peak}
 
-\item{rt_index}{}
+\item{rt_index}{numeric_vector real retention time axis of the peak}
 
-\item{mz_range}{}
+\item{mz_range}{numeric(2) mz range of isolation window where the apex was fragmented}
 }
 \value{
-extracted eics
+extracted eics (mixed matrix)
 }
 \description{
-extract the MS1 or MS2 eics from a list of spectra related to a specific peak
+Extract the MS1 or MS2 eics from a list of spectra related to a specific peak
 }

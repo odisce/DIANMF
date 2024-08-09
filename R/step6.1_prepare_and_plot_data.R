@@ -1,12 +1,12 @@
 #' prepare mixed MS1 and MS2 data
 #'
 #' @param m matrix
-#' @param mz_value 
-#' @param rt 
+#' @param mz_value numeric vector contains the fragments mz values of the eics in m
+#' @param rt numeric vector contains the fragments retention time values of the eics in m
 #'
-#' @return data.frame
-#' @importFrom reshape2 melt
+#' @return data.frame 
 #' @export
+#' @importFrom reshape2 melt
 prepare_mixed_data <- function(m = mat1, mz_value = as.numeric(rownames(ms1_mat)), rt = as.numeric(colnames(ms1_mat)) ){
   
   rownames(m) <- mz_value
@@ -21,11 +21,12 @@ prepare_mixed_data <- function(m = mat1, mz_value = as.numeric(rownames(ms1_mat)
 
 #' prepare pure spectra for plotting
 #'
-#' @param W description
+#' @param W matrix contains pure spectra
 #'
 #' @return data.frame
-#' @importFrom reshape2 melt
 #' @export
+#' @importFrom reshape2 melt
+#' @import magrittr
 prepare_pure_spectra <- function(W){
   nb_components <- ncol(W)
   colnames(W) <- c(paste0("comp",seq(1,nb_components,1)))
@@ -42,12 +43,12 @@ prepare_pure_spectra <- function(W){
 
 #' prepare pure elution profiles for plotting
 #'
-#' @param H 
-#' @param rt 
+#' @param H matrix contains elution profiles
+#' @param rt numeric vector contains the fragments retention time values of the eics in H
 #'
 #' @return data.frame
-#' @importFrom reshape2 melt
 #' @export
+#' @importFrom reshape2 melt
 prepare_pure_eics <- function(H, rt){
  
   rownames(H) <- paste0("comp", seq(1,nrow(H)))
@@ -60,13 +61,63 @@ prepare_pure_eics <- function(H, rt){
 
 #-------------------------------------------------------------------------------
 
+#' Select the good MS1 spectrum related to the MS1 peak
+#'
+#' @param W_ms1 matrix of MS1 pure spectra
+#' @param mz_prec numeric(1) mz value of the precursor
+#'
+#' @return data.frame pure MS1 spectrum
+#' @export
+choose_ms1_pure_spectrum <- function(W_ms1, mz_prec){
+  
+  ms1_pure_spectra <- prepare_pure_spectra(W_ms1);
+  
+  mz_ms1_ions <- round(as.numeric(rownames(W_ms1)), 4);
+  closest_row <- which.min(abs(mz_ms1_ions - mz_prec));
+  choosen_comp_ms1 <- which.max(W_ms1[closest_row, ]);
+  
+  ms1_pure_spectrum <- ms1_pure_spectra[ms1_pure_spectra$comp_nb == paste0('comp',choosen_comp_ms1), ];
+  ms1_pure_spectrum <- ms1_pure_spectrum[, c('mz_value', 'intensity')];
+  ms1_pure_spectrum <- ms1_pure_spectrum[ms1_pure_spectrum['intensity'] != 0, ];
+  
+  return(list(
+    'ms1_pure_spectrum' = ms1_pure_spectrum,
+    'choosen_comp_ms1' = choosen_comp_ms1  ))
+}
+
+#-------------------------------------------------------------------------------
+
+#' Select the good MS2 spectrum related to the MS1 peak
+#'
+#' @param W_ms2 matrix of MS2 pure spectra
+#' @param choosen_comp_ms2 numeric(1) good component
+#'
+#' @return data.frame pure MS2 spectrum
+#' @export
+#' @import magrittr
+choose_ms2_pure_spectrum <- function(W_ms2, choosen_comp_ms2){
+  
+  ms2_pure_spectra <- prepare_pure_spectra(W_ms2);
+  
+  ms2_pure_spectra <-  ms2_pure_spectra %>%
+    group_by(comp_nb) %>%
+    mutate(intensity = intensity / max(intensity));
+  
+  ms2_pure_spectrum <- subset(ms2_pure_spectra, comp_nb == paste0('comp',choosen_comp_ms2));
+  ms2_pure_spectrum <- ms2_pure_spectrum[, c('mz_value','intensity')];
+  
+  return(ms2_pure_spectrum)
+}
+
+#-------------------------------------------------------------------------------
+
 #' plot mixed and pure elution profiles
 #'
-#' @param ms_pure_H 
-#' @param ms_level MS1 or MS2
-#' @param rt_prec 
-#' @param ms_mixed 
-#' @param choosen_comp 
+#' @param ms_pure_H data.frame of pure elution profiles 
+#' @param ms_level character MS1 or MS2
+#' @param rt_prec numeric precursor retention time
+#' @param ms_mixed matrix
+#' @param choosen_comp integer the index of the good component
 #'
 #' @return ggplot2 plot
 #' @export
@@ -103,11 +154,11 @@ plot_MS_eics <- function(ms_mixed, ms_pure_H, ms_level = c("MS1", "MS2"), rt_pre
 
 #' plot mixed and pure spectra
 #'
-#' @param ms_mixed 
-#' @param ms_pure_W 
-#' @param ms_level MS1 or MS2
-#' @param mz_prec 
-#' @param choosen_comp 
+#' @param ms_mixed matrix
+#' @param ms_pure_W data.frame of pure spectra
+#' @param ms_level character MS1 or MS2
+#' @param mz_prec numeric precursor mz
+#' @param choosen_comp integer the index of the good component
 #'
 #' @return ggplot2 plot
 #' @export
@@ -149,7 +200,7 @@ plot_MS_spectra <- function(ms_mixed, ms_pure_W, ms_level = c("MS1", "MS2"), mz_
 #' @param mz_prec prec/peak mz
 #' @param choosen_comp_ms1 the good ms1 comp
 #' @param choosen_comp_ms2 the good ms2 comp
-#' @param peak.idx 
+#' @param peak.idx integer peak index
 #'
 #' @return 4 ggplot2 plots that contains all MS1, MS2 mixed and pure information
 plot_all_info <- function(d.plot,

@@ -7,9 +7,9 @@
 random_init(X, rank)
 }
 \arguments{
-\item{X}{}
+\item{X}{matrix}
 
-\item{rank}{}
+\item{rank}{of factorization}
 }
 \value{
 W and H random matrices

@@ -339,6 +339,7 @@ getReverseSearchingSimilarity <- function(measuredSpectra, librarySpectra, bin){
 #' @param mz_tol numeric
 #'
 #' @importFrom dplyr between
+#' @importFrom parallel mclapply
 #'
 #' @return list matching scores with some information of the matched library(reference) spectrum
 #' @export
@@ -348,14 +349,14 @@ match_pure_scores2 <- function(polarity, mz_precursor, data_base, measured_spect
     mz_tol <- mz_precursor * 5e-6
   }
   
-  idx_ref_spect <- data_base$index[Polarity == polarity & between(mz, mz_precursor-mz_tol, mz_precursor+mz_tol), id]
+  idx_ref_spect <- data_base$index[Polarity == polarity & dplyr::between(mz, mz_precursor-mz_tol, mz_precursor+mz_tol), id]
   # print(idx_ref_spect)
   
   if (length(idx_ref_spect) > 0) {
     # # Normalize measured spectra intensities
     # measured_spectra$intensity <- measured_spectra$intensity / max(measured_spectra$intensity)
 
-    results <- mclapply(idx_ref_spect, function(i) {
+    results <- parallel::mclapply(idx_ref_spect, function(i) {
       cat("Processing ref_spect index:", i, "\n")
 
       ref_spect <- data_base$spectra[[i]]@spectrum
@@ -399,7 +400,7 @@ match_pure_scores2 <- function(polarity, mz_precursor, data_base, measured_spect
 #     # # Normalize measured spectra intensities
 #     # measured_spectra$intensity <- measured_spectra$intensity / max(measured_spectra$intensity)
 #
-#     results <- mclapply(idx_ref_spect, function(i) {
+#     results <- parallel::mclapply(idx_ref_spect, function(i) {
 #       cat("Processing ref_spect index:", i, "\n")
 #
 #       ref_spect <- data_base$spectra[[i]]@spectrum

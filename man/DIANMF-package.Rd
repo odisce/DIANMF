@@ -6,7 +6,7 @@
 \alias{DIANMF-package}
 \title{DIANMF: Non-Negative Matrix Factorization To Identify SWATH DIA Metabolomic Data}
 \description{
-Identify metabolites from SWATH DIA MS2 metabolomic data by extracting their pure DIA MS2 spectra using Non-negative matrix Factorization. It is an end-to-end workflow called DIA-NMF that processes SWATH DIA files and identifies the detected compounds.
+This R package aims to extract pure MS1 and MS2 data raw mzML files.
 }
 \author{
 \strong{Maintainer}: Diana Karaki \email{zkaraki.diana@gmail.com}

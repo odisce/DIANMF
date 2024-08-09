@@ -20,15 +20,15 @@ nGMCAs(
 
 \item{rank}{numeric rank of factorization = number of pure compounds in the mixed data}
 
-\item{maximumIteration}{}
+\item{maximumIteration}{numeric max number of iteration}
 
-\item{maxFBIteration}{}
+\item{maxFBIteration}{numeric FBS max number of iterations}
 
-\item{toleranceFB}{}
+\item{toleranceFB}{numeric stopping value}
 
 \item{initialization_method}{random, nndsvd or subSample}
 
-\item{H_sub}{}
+\item{H_sub}{matrix elution profiles}
 
 \item{errors_print}{Boolean}
 }

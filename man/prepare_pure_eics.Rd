@@ -7,9 +7,9 @@
 prepare_pure_eics(H, rt)
 }
 \arguments{
-\item{H}{}
+\item{H}{matrix contains elution profiles}
 
-\item{rt}{}
+\item{rt}{numeric vector contains the fragments retention time values of the eics in H}
 }
 \value{
 data.frame

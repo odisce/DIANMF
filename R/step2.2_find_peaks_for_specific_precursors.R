@@ -1,12 +1,12 @@
 #' load the compounds file as data-frames/table
 #' 
-#' @param compound.c character path to load the spiked compounds table
+#' @param compound.c file_path to load the spiked compounds table
 #' 
 #' @return data-frame/table spiked compounds table
 #' @export
 #' @importFrom utils read.table
 load_compounds_function.tb <- function(compound.c){
-  m <- read.table(compound.c,
+  m <- utils::read.table(compound.c,
                   sep = "\t",
                   quote = "",
                   header = TRUE,

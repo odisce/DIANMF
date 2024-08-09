@@ -16,8 +16,8 @@ error_function <- function(Y, A, S){
 #' @param Y matrix
 #' @param A_init matrix
 #' @param S matrix
-#' @param maxFBIteration 
-#' @param toleranceFB 
+#' @param maxFBIteration numeric max number of iteration
+#' @param toleranceFB numeric stopping value
 #'
 #' @return new_A matrix updated elution profiles
 #' @export
@@ -64,12 +64,12 @@ soft_threshold.f <- function(X, threshold){
 
 #'  update the matrix S (it contains pure spectra)
 #'
-#' @param Y 
-#' @param A 
-#' @param S_init 
-#' @param lambda 
-#' @param maxFBIteration 
-#' @param toleranceFB 
+#' @param Y matrix
+#' @param A matrix elution profiles
+#' @param S_init matrix pure spectra
+#' @param lambda numeric sparsity parameter of the pure spectra
+#' @param maxFBIteration numeric FBS max number of iteration
+#' @param toleranceFB numeric stopping value
 #'
 #' @return S
 #' @export
@@ -111,10 +111,10 @@ updateS.f <- function(Y, A, S_init, lambda, maxFBIteration, toleranceFB){
 #' @param rank numeric rank of factorization = number of pure compounds in the mixed data
 #' @param errors_print Boolean 
 #' @param initialization_method random, nndsvd or subSample 
-#' @param maximumIteration 
-#' @param maxFBIteration 
-#' @param toleranceFB 
-#' @param H_sub 
+#' @param maximumIteration numeric max number of iteration
+#' @param maxFBIteration numeric FBS max number of iterations
+#' @param toleranceFB numeric stopping value
+#' @param H_sub matrix elution profiles
 #'
 #' @return data: list of 2 matrices A and S
 #' @export

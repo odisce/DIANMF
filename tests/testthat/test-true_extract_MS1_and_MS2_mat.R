@@ -1,3 +1,5 @@
+skip("development script")
+
 test_that("Extract mixed MS1 and MS2 data for a specific peak", {
   
   load("~/DIA_NMF_R_package/dianmf/data/data_example.rda")
@@ -12,7 +14,7 @@ test_that("Extract mixed MS1 and MS2 data for a specific peak", {
   peak.idx <- 2 
   
   # extract the MS1 mixed data--------------------------------------------------
-  ms1_mat <- extract_ms_matrix.f(idx.pg = peak.idx, eics_peaks.mat = ms1_peaks.df,
+  ms1_mat <- extract_ms_matrix.f(idx.pg = peak.idx, eics_peaks = ms1_peaks.df,
                                  rawData.onDiskMSnExp = data_example,
                                  ppm = 7, rt_index = TRUE, mz_range = NULL, iso_win_index = NULL)
   row_filter <- apply(ms1_mat, 1, has_four_consecutive_non_zero)
@@ -24,7 +26,7 @@ test_that("Extract mixed MS1 and MS2 data for a specific peak", {
   # extract the MS2 data--------------------------------------------------------
   idx.swath <- seq(1,3)
   ms2.l <- lapply(idx.swath, function(i){
-    ms2_mat <- extract_ms_matrix.f(idx.pg = peak.idx, eics_peaks.mat = ms1_peaks.df,
+    ms2_mat <- extract_ms_matrix.f(idx.pg = peak.idx, eics_peaks = ms1_peaks.df,
                                    rawData.onDiskMSnExp = data_example,
                                    ppm = 7, rt_index = TRUE, mz_range = NULL, iso_win_index = i)
     return(ms2_mat)

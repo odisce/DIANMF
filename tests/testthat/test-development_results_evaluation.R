@@ -51,7 +51,6 @@ test_that("Evaluate the final results", {
   })
   scores <- do.call(rbind, scores)
   
-  
   # plot them
   for (i in 1:length(l)) {
     lib_idx <- as.numeric(unname(scores[i, 'ref spectrum index']));
@@ -74,6 +73,7 @@ test_that("Evaluate the final results", {
     ggsave(paste0(d.plot, '/', prec_names[[i]], '.png'), p1, w=10, h = 10, dpi = 300)
   }
   
+  saveRDS(scores, '~/DIA_NMF_R_package_plots/pure_spectra/scores.rds')
 })
 
 

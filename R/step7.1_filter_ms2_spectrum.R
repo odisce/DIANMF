@@ -9,8 +9,8 @@
 
 #' get the total number of rows of previous matrices of a specific level in a list
 #'
-#' @param my_list 
-#' @param level_index 
+#' @param my_list list of matrices
+#' @param level_index numeric index of the level
 #'
 #' @return integer
 total_rows_before_level <- function(my_list, level_index) {
@@ -35,10 +35,10 @@ total_rows_before_level <- function(my_list, level_index) {
 
 #' filter the pure MS2 spectrum
 #'
-#' @param ms2_pure_spectrum 
-#' @param ms2_matrices 
-#' @param mz_prec 
-#' @param info.swath 
+#' @param ms2_pure_spectrum data_frame MS2 pure spectrum
+#' @param ms2_matrices list of MS2 matrices
+#' @param mz_prec numeric precursor mz value
+#' @param info.swath isolation windows
 #'
 #' @return filtered MS2 spectrum
 filter_ms2_spectrum <- function(ms2_pure_spectrum, ms2_matrices, mz_prec, info.swath){

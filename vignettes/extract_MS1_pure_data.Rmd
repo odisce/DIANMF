@@ -1,0 +1,87 @@
+---
+title: "Extract MS1 Pure Data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Extract MS1 Pure Data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE
+)
+```
+
+```{r setup}
+library(DIANMF)
+```
+
+## Load raw MSnbase data of a mzML file
+```{r load mzML file and read its MSnbase raw data, echo=TRUE }
+file <- "C:/Users/DK273056/Documents/1workflow/DIA_NMF_workflow/mzML/20170803_FS-DIA-E2-10ng-rep3_pos_51.mzML"
+rawData.onDiskMSnExp <- MSnbase::readMSData(file, mode = "onDisk")
+rawData.onDiskMSnExp
+```
+
+## Detect MS1 peaks using XCMS
+```{r detect MS1 peaks using xcms, echo=TRUE, warning=FALSE, message=FALSE}
+eics_peaks <- detect_peaks_by_xcms(rawData.onDiskMSnExp = rawData.onDiskMSnExp,
+                                     ppm = 7, peakwidth = c(6,60), snthresh = 1,
+                                     prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
+                                     integrate = 2, mzdiff = -0.001, noise = 0,
+                                     firstBaselineCheck = FALSE )
+  
+eics_peaks.mat <- xcms::chromPeaks(eics_peaks)
+ms1_peaks.df <- prepare_ms1_peaks(ms1_peaks = eics_peaks.mat) # prepare the peaks
+```
+
+## Choose a MS1 peak to identify it
+```{r choose MS1 peak, echo=TRUE }
+peak.idx <- 1 
+mz_prec <- ms1_peaks.df[peak.idx, 'mz']
+rt_prec <- ms1_peaks.df[peak.idx, 'rt']
+```
+
+## Extract the MS1 mixed matrix
+```{r extract the mixed MS1 data as matrix, echo=TRUE }
+ ms1_mat <- extract_ms_matrix.f(idx.pg = peak.idx, eics_peaks = ms1_peaks.df, rawData.onDiskMSnExp = rawData.onDiskMSnExp,
+                                     ppm = 7, rt_index = TRUE, mz_range = NULL, iso_win_index = NULL)
+```
+
+## NMF on the MS1 data
+```{r NMF MS1 data, echo=TRUE }
+ms1_rank <- 3
+ngmcas_res <- nGMCAs(originalMatrix = ms1_mat, rank = ms1_rank,
+                     maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
+                     initialization_method = "nndsvd",
+                     errors_print = FALSE)
+W_ms1 <- ngmcas_res$S
+H_ms1 <- ngmcas_res$A
+```
+
+## plot mixed and pure data
+```{r plot data, echo=TRUE, fig.height=10, fig.width=8}
+ms1_pure_data <- choose_ms1_pure_spectrum(W_ms1, mz_prec)
+choosen_comp_ms1 <- ms1_pure_data$choosen_comp_ms1
+
+p_eics <- plot_MS_eics(ms_mixed = ms1_mat, ms_pure_H = H_ms1, ms_level = "MS1", rt_prec = rt_prec, choosen_comp = choosen_comp_ms1)
+p_eics
+
+p_spectra <- plot_MS_spectra(ms_mixed = ms1_mat, ms_pure_W = W_ms1, ms_level = "MS1", mz_prec, choosen_comp = choosen_comp_ms1)
+p_spectra
+```
+
+## Extract the pure MS1 spectrum related to this peak
+```{r extract the good pure MS1 spectrum, echo=TRUE }
+ms1_pure_spectrum <- ms1_pure_data$ms1_pure_spectrum
+```
+
+
+
+
+
+
+

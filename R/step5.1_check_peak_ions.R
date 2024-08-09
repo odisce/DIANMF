@@ -1,9 +1,9 @@
 #' check which MS1 ions are MS1 peaks from the peak list
 #'
-#' @param ions_maybe_peaks.v 
-#' @param peaks.df 
-#' @param rt_prec 
-#' @param rt_tol 
+#' @param ions_maybe_peaks.v numeric_vector fragments mz values
+#' @param peaks.df data_frame of all peaks
+#' @param rt_prec numeric(1) peak/precursor retention time at the apex
+#' @param rt_tol numeric(1) retention time tolerance
 #'
 #' @return vector of peaks which are also ions
 check_ms1_ions <- function(ions_maybe_peaks.v, peaks.df, rt_prec, rt_tol = 2){

@@ -1,12 +1,10 @@
-#' extract the isolation windows of SWATH data
+#' Extract the isolation windows of SWATH data
 #'
-#' @param rawData.onDiskMSnExp 
+#' @param rawData.onDiskMSnExp raw MSnbase data of mzMl file
 #'
 #' @return isolation windows
 #' @export
-#' @importFrom MSnbase isolationWindowLowerMz
-#' @importFrom MSnbase isolationWindowUpperMz
-#' @importFrom MSnbase filterMsLevel
+#' @importFrom MSnbase isolationWindowLowerMz isolationWindowUpperMz filterMsLevel
 isolationWindows.range <- function(rawData.onDiskMSnExp){
   
   ms2_spectra <- MSnbase::filterMsLevel(rawData.onDiskMSnExp, msLevel = 2) # filter MS2 scans
@@ -19,10 +17,10 @@ isolationWindows.range <- function(rawData.onDiskMSnExp){
   return(isolation_windows)
 }
 
-#' create a mz range
+#' Create a mz range
 #'
-#' @param ref 
-#' @param ppm 
+#' @param ref numeric mz of the peak/precursor
+#' @param ppm numeric 
 #'
 #' @return mz range of a specific mz value
 PpmRange <-  function(ref, ppm) {
@@ -32,18 +30,20 @@ PpmRange <-  function(ref, ppm) {
 
 # to be fixed: I want to filter the ions of the MS1 apex spectra, by deleting the ions of intensity lower than ms1_int_filter
 
-#' extract the MS1 or MS2 eics from a list of spectra related to a specific peak
+#' Extract the MS1 or MS2 eics from a list of spectra related to a specific peak
 #'
-#' @param spectra_list 
-#' @param ppm 
-#' @param apex_index 
-#' @param rt_index 
-#' @param mz_range 
+#' @param spectra_list list of spectra related to the fragments exists at the apex spectrum of the peak 
+#' @param ppm numeric
+#' @param apex_index integer index of the spectrum that contains the apex of the peak
+#' @param rt_index numeric_vector real retention time axis of the peak
+#' @param mz_range numeric(2) mz range of isolation window where the apex was fragmented
 #'
-#' @return extracted eics
+#' @return extracted eics (mixed matrix)
 #' @export
-#' @import data.table
+#' @importFrom data.table rbindlist foverlaps setkey merge.data.table dcast %between%
 #' @import magrittr
+#' @importFrom stats end start
+#' @importFrom utils head
 extract_eics <- function(spectra_list, ppm = 7, apex_index, rt_index = TRUE, mz_range = TRUE) {
   
   full_table <- data.table::rbindlist(spectra_list, idcol = "spectra_index")
@@ -58,26 +58,19 @@ extract_eics <- function(spectra_list, ppm = 7, apex_index, rt_index = TRUE, mz_
     .(start = min(out), end = max(out))
   }, by = .(index)]
   full_table[, start := mz][, end := mz]
-  setkey(target_table, start, end)
-  setkey(full_table, start, end)
+  data.table::setkey(target_table, start, end)
+  data.table::setkey(full_table, start, end)
   
   output <- data.table::foverlaps(
     target_table,
     full_table
   )
-  output <- merge(output, unique(full_table[, .(spectra_index)]), by = "spectra_index", all = TRUE)
+  output <- data.table::merge.data.table(output, unique(full_table[, .(spectra_index)]), by = "spectra_index", all = TRUE)
   
   output[, meanmz := mean(mz) %>% sprintf("%.4f", .), by = .(index)]
   output <- output[order(-intensity), lapply(.SD, head, 1), by = .(spectra_index, meanmz)]
   
-  # require(ggplot2)
-  # ggplot(output, aes(spectra_index, intensity, color = index, group = index)) +
-  #   geom_line() +
-  #   theme_bw()
-  mixed_table <- dcast(output, meanmz ~ spectra_index, value.var = "intensity")
-  # max_ind <- apply(mixed_table, 1, max, na.rm = T) %>% which.max()
-  # mixed_table <- dcast(output, meanmz ~ spectra_index, value.var = "mz")
-  # mixed_table[max_ind,]
+  mixed_table <- data.table::dcast(output, meanmz ~ spectra_index, value.var = "intensity")
   mixed_matrix <- as.matrix(mixed_table, rownames = 1)
   if (!is.null(rt_index)) {
     colnames(mixed_matrix) <- rt_index[as.integer(colnames(mixed_matrix))] %>% sprintf("%.3f", .)

@@ -1,3 +1,5 @@
+skip("development script")
+
 test_that("Extract the MS1 peaks", {
   if( !requireNamespace("xcms", quietly = TRUE) ){
     stop(
@@ -7,9 +9,8 @@ test_that("Extract the MS1 peaks", {
   
   load("~/DIA_NMF_R_package/dianmf/data/data_example.rda")
   
-  eics_rawData <- detect_EICs.f(
+  eics_rawData <- detect_peaks_by_xcms(
     rawData.onDiskMSnExp = data_example,
-    d.out = NULL,
     ppm = 6,
     peakwidth = c(3,60), 
     snthresh = 0,

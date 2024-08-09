@@ -7,7 +7,7 @@
 neg(x)
 }
 \arguments{
-\item{x}{vector of numeric}
+\item{x}{vector of numerics}
 }
 \value{
 vector the projection of x in the negative orthant
