@@ -49,7 +49,7 @@ In *DIANMF*, the user has two choices:
 1. Provide the MS1 peaks to be identified.
 1. Detect them using the [xcms](https://bioconductor.org/packages/release/bioc/html/xcms.html) algorithm.
 
-Below we identify the 1st 5 MS1 peaks detected by xcms from the test-data file using the <span style="background-color: rgba(169, 169, 169, 0.4);">dia_nmf.f()</span> function by specifying these parameters: <span style="background-color: rgba(169, 169, 169, 0.4);">ms_level = "MS1"</span>, <span style="background-color: rgba(169, 169, 169, 0.4);">peaks_by_xcms = TRUE</span>, <span style="background-color: rgba(169, 169, 169, 0.4);">ms1_peaks = NULL</span> with some additional specific parameters of <span style="background-color: rgba(169, 169, 169, 0.4);">findChromPeaks()</span> function from [xcms](https://bioconductor.org/packages/release/bioc/html/xcms.html).
+Below we identify detected peaks by xcms from the test-data file using the <span style="background-color: rgba(169, 169, 169, 0.4);">dia_nmf.f()</span> function by specifying these parameters: <span style="background-color: rgba(169, 169, 169, 0.4);">ms_level = "MS1"</span>, <span style="background-color: rgba(169, 169, 169, 0.4);">peaks_by_xcms = TRUE</span>, <span style="background-color: rgba(169, 169, 169, 0.4);">ms1_peaks = NULL</span> with some additional specific parameters of <span style="background-color: rgba(169, 169, 169, 0.4);">findChromPeaks()</span> function from [xcms](https://bioconductor.org/packages/release/bioc/html/xcms.html).
 
 ```{r main function MS1 level, echo=TRUE }
 MS1_features <- dia_nmf.f( mzML_path = file,
@@ -63,7 +63,7 @@ MS1_features <- dia_nmf.f( mzML_path = file,
 
 The user can provide his MS1 peak matrix or data.frame R object in the <span style="background-color: rgba(169, 169, 169, 0.4);">ms1_peaks</span> parameter with <span style="background-color: rgba(169, 169, 169, 0.4);">peaks_by_xcms = FALSE</span>. The **mz**, **mzmin**, **mzmax**, **rt**, **rtmin**, **rtmax**, and **into** are sufficient information for every peak.
 
-The MS1_features object contains information for every identified peak as the peak itself, the pure spectra and elution profiles (or chromatograms) for every pure component in its mixed data (called W_ms1 and H_ms1 respectively), and some other helpful information gained while processing the peak. For example, the pure spectra corresponding to the peaks can be extracted using the following function.
+The MS1_features object contains information for every identified peak as the peak itself, the pure spectrum and elution profile (or chromatograms) for every pure component in the mixed data (called W_ms1 and H_ms1 respectively), and some other helpful information gained while processing the peak. For example, the pure spectra corresponding to the peaks can be extracted using the following function.
 
 ## MS1 pure spectra 
 
@@ -75,11 +75,11 @@ The <span style="background-color: rgba(169, 169, 169, 0.4);">extrcat_pureSpect(
 
 ## Process one specific peak
 
-To familiarize ourselves with the different functions in the *DIANMF* package, we will process one specific peak, the first.
+To familiarize ourselves with the different functions in the *DIANMF* package, we will process one specific peak.
 
 #### Detect and prepare MS1 peaks
 
-The <span style="background-color: rgba(169, 169, 169, 0.4);">detect_peaks_by_xcms()</span> function applies chromatograms peak detection using xcms functions as its name suggests. The user can use any other software to do so or directly <span style="background-color: rgba(169, 169, 169, 0.4);">xcms::findChromPeaks()</span>. This method takes the ` r class(data_example)` as input and does not take the mzML file.
+The <span style="background-color: rgba(169, 169, 169, 0.4);">detect_peaks_by_xcms()</span> function applies chromatograms peak detection using xcms functions as its name suggests. The user can use any other software to do so or directly <span style="background-color: rgba(169, 169, 169, 0.4);">xcms::findChromPeaks()</span>. This method takes the `r class(data_example)` as input and does not take the mzML file.
 
 ```{r detect MS1 peaks using xcms, echo=TRUE, message=FALSE, warning=FALSE}
 ms1_peaks.mat <- detect_peaks_by_xcms( rawData.onDiskMSnExp = data_example,

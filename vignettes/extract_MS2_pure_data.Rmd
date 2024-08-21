@@ -36,7 +36,7 @@ load("~/DIA_NMF_R_package/dianmf/data/data_example.rda")
 ## Extract MS2 features 
 To extract MS2 features from LC-MS/MS data, the MS1 pure spectrum for each identified metabolite in the raw mzML file are obtained first in our approach. The pure MS1 data will be used to extract the pure MS2 data. As before, the user can provide the MS1 peaks or detect them by [xcms](https://bioconductor.org/packages/release/bioc/html/xcms.html) algorithm.
 
-Here, to shorten the vignette running time, we will process the 1st 10 peaks. we use the <span style="background-color: rgba(169, 169, 169, 0.4);">dia_nmf.f()</span> function with <span style="background-color: rgba(169, 169, 169, 0.4);">ms_level = "MS2"</span>.
+We use the <span style="background-color: rgba(169, 169, 169, 0.4);">dia_nmf.f()</span> function with <span style="background-color: rgba(169, 169, 169, 0.4);">ms_level = "MS2"</span>.
 
 ```{r main function MS1 level, echo=TRUE }
 MS2_features <- dia_nmf.f( mzML_path = file,
@@ -49,6 +49,8 @@ MS2_features <- dia_nmf.f( mzML_path = file,
 ```
 
 The MS2_features object contains both the raw and pure MS1 and MS2 information for every identified metabolite.
+
+We are getting this note for some peaks as 1,5,16: No specific MS2 fragments. This means the peak mz is out of the SWATH isolation windows mz ranges, so it was not fragmented in the MS2 level.
 
 ```{r MS1 pure spectra, echo=TRUE }
 MS1_pure_spectra <- extrcat_pureSpect( features = MS2_features, spec_level = 'MS1' )
@@ -101,7 +103,7 @@ peak_ms1_spectrum <- MS1_pure_spectra[[peak.idx]]
 
 ### Extract the MS2 mixed matrix
 
-We are working with SWATH DIA data file. Such data has essential information called the isolation window ranges. This information can be extracted using <span style="background-color: rgba(169, 169, 169, 0.4);">isolationWindows.range()</span> funtion from **DIANMF**. This method needs the `r class(data_example)` raw data from the mzML file.
+We are working with SWATH DIA data file. Such data has essential information called the isolation window ranges. This information can be extracted using <span style="background-color: rgba(169, 169, 169, 0.4);">isolationWindows.range()</span> function from **DIANMF**. This method needs the `r class(data_example)` raw data from the mzML file.
 
 ```{r SWATH isolation windows, echo=TRUE }
 info.swath <- isolationWindows.range(data_example)

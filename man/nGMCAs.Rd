@@ -16,7 +16,7 @@ nGMCAs(
 )
 }
 \arguments{
-\item{X.m}{mixed \code{matrix} add some documentation.}
+\item{X.m}{contains components' sources mixed up in an unknown but linear way. Every row is an elution profile from the candidate precursor and its fragment ions through the rt scans in the columns.}
 
 \item{rank}{\code{numeric(1)} number of pure compounds in the mixed matrix; rank of factorization.}
 

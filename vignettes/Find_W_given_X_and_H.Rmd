@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
  
 This vignette demonstrates how to extract pure spectra $W$ given a matrix of mixed compounds $X$ and their respective pure elution profiles $H$. This method can be applied to both data levels, MS1 and MS2. Here, we will apply it to MS2 data.
 
-First, we attach our packages, load the same test file used in the previous vignettes, and process the first 10 detected MS1 peaks.
+First, we attach our packages, load the same test file used in the previous vignettes, and process the detected MS1 peaks.
 
 ```{r setup}
 library(DIANMF)
@@ -42,7 +42,7 @@ MS2_features <- dia_nmf.f( mzML_path = file,
 
 ## Find W
 
-The first peak does not have specific MS2 fragments because its range is out of the isolation windows ranges, so it was not fragmented in the MS2 level. Due to this, we will work with the second peak and extract its' MS2 raw matrix $X$ and elution profiles matrix $H$ from the MS2_features object.
+The first peak does not have specific MS2 fragments, so we will work with the second peak and extract its' MS2 raw matrix $X$ and elution profiles matrix $H$ from the MS2_features object.
 
 ```{r extract X and H, echo=TRUE }
 peak.idx <- 2

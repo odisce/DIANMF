@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
  
 This vignette demonstrates how to extract pure elution profiles $H$ given a matrix of mixed compounds $X$ and their respective pure spectra $W$. This method can be applied to both data levels, MS1 and MS2. Here, we will apply it to MS1 data.
 
-First, we attach our packages, load the same test file used in the previous vignettes, and process the first 10 detected MS1 peaks.
+First, we attach our packages, load the same test file used in the previous vignettes, and process the detected MS1 peaks.
 
 ```{r setup}
 library(DIANMF)
