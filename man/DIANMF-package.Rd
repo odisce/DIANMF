@@ -6,10 +6,10 @@
 \alias{DIANMF-package}
 \title{DIANMF: Non-Negative Matrix Factorization To Identify SWATH DIA Metabolomic Data}
 \description{
-This R package aims to extract pure MS1 and MS2 data raw mzML files.
+This R package aims to identify metabolomics from raw SWATH DIA mzML files. Identifying a compound from the raw, mixed data means determining its pure MS1 and MS2 spectrum (every compound is characterised by its pure spectrum). Non-negative matrix factorization (NMF) is the key to unmixing (or deconvolution, as it is called, between chemists). NMF is used to factorize the mixed MS1 and MS2 data on every peak detected in the raw, copmlex data. This factorization results in a pure elution profile and spectrum for every compound in the mixed data. One specific compound is related to the peak. The package functionalities are to extract MS1 pure spectra, extract MS2 pure spectra, identify a list of peaks given by the user, find the pure spectra (S) when the mixed data (Y) and the elution profiles (A) are given, or the inverse find the pure elution profiles (A) when the mixed data (Y) and the pure spectra (S) are the inputs.
 }
 \author{
-\strong{Maintainer}: Diana Karaki \email{zkaraki.diana@gmail.com}
+\strong{Maintainer}: Diana Karaki \email{diana.karaki@cea.fr}
 
 Authors:
 \itemize{

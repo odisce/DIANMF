@@ -2,24 +2,24 @@
 % Please edit documentation in R/step4.3_nGMCAs_algo.R
 \name{updateA.f}
 \alias{updateA.f}
-\title{update the matrix A (it contains elution profiles)}
+\title{Update A.}
 \usage{
 updateA.f(Y, A_init, S, maxFBIteration, toleranceFB)
 }
 \arguments{
-\item{Y}{matrix}
+\item{Y}{\code{matrix}}
 
-\item{A_init}{matrix}
+\item{A_init}{\code{matrix} every column is an elution profile.}
 
-\item{S}{matrix}
+\item{S}{\code{matrix} every row is a pure spectrum.}
 
-\item{maxFBIteration}{numeric max number of iteration}
+\item{maxFBIteration}{\code{numeric(1)} maximum number of iterations in the FB algorithm.}
 
-\item{toleranceFB}{numeric stopping value}
+\item{toleranceFB}{\code{numeric(1)} tolerance or stopping value of the FB algorithm.}
 }
 \value{
-new_A matrix updated elution profiles
+\code{matrix} A of updated elution profiles.
 }
 \description{
-update the matrix A (it contains elution profiles)
+Update A.
 }

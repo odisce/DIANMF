@@ -7,12 +7,12 @@
 # i.e., to keep just the ions that exist in the isolation window where the precursor was fragmented
 
 
-#' get the total number of rows of previous matrices of a specific level in a list
+#' Get the total number of rows of previous matrices of a specific level in a list.
 #'
-#' @param my_list list of matrices
-#' @param level_index numeric index of the level
+#' @param my_list `list` of matrices.
+#' @param level_index `numeric` index of the list level.
 #'
-#' @return integer
+#' @return `integer`
 total_rows_before_level <- function(my_list, level_index) {
   if(level_index == 1){
     return(0)
@@ -33,15 +33,17 @@ total_rows_before_level <- function(my_list, level_index) {
   return(total_rows)
 }
 
-#' filter the pure MS2 spectrum
+
+#' Extract the precursor fragments without their adducts and losses fragments.
 #'
-#' @param ms2_pure_spectrum data_frame MS2 pure spectrum
-#' @param ms2_matrices list of MS2 matrices
-#' @param mz_prec numeric precursor mz value
-#' @param info.swath isolation windows
+#' @param ms2_pure_spectrum `data.frame` MS2 pure spectrum related to the precursor.
+#' @param ms2_matrices `list` of MS2 matrices.
+#' @param mz_prec `numeric(1)` precursor mz.
+#' @inheritParams extract_ms2_matrices
 #'
-#' @return filtered MS2 spectrum
-filter_ms2_spectrum <- function(ms2_pure_spectrum, ms2_matrices, mz_prec, info.swath){
+#' @return `data.frame` MS2 spectrum of the precursor.
+#' @export
+filter_ms2_spectrum <- function(ms2_pure_spectrum, ms2_matrices, mz_prec, info.swath, peak.idx = NULL){
 
   idx.swath <- which(info.swath$lowerMz <= mz_prec & info.swath$upperMz >= mz_prec)
   if(length(idx.swath) > 1){
@@ -53,8 +55,15 @@ filter_ms2_spectrum <- function(ms2_pure_spectrum, ms2_matrices, mz_prec, info.s
     start <- total_rows_before_level(my_list = ms2_matrices, level_index = idx.swath)
     end <- start + nrow(ms2_matrices[[idx.swath]])
     ms2_pure_spectrum_new <- ms2_pure_spectrum[ (start+1):end, ];
+    ms2_pure_spectrum_new$intensity <-  ms2_pure_spectrum_new$intensity / max( ms2_pure_spectrum_new$intensity)
+    ms2_pure_spectrum_new <- ms2_pure_spectrum_new[ms2_pure_spectrum_new['intensity'] != 0, ]
+    
   } else{  # if the mz_prec not included in any SWATH window, don't filter (this peaks wasn't fragmented in the MS2 level)
-    print('No specific MS2 fragments.')
+    if( !is.null(peak.idx) ){
+      print(paste(peak.idx, 'No specific MS2 fragments.'))
+    } else {
+      print('No specific MS2 fragments.')
+    }
     return(NULL)
   }
  

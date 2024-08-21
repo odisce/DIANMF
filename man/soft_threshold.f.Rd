@@ -2,18 +2,18 @@
 % Please edit documentation in R/step4.3_nGMCAs_algo.R
 \name{soft_threshold.f}
 \alias{soft_threshold.f}
-\title{apply soft-thresholding on a matrix}
+\title{Apply soft-thresholding on a matrix.}
 \usage{
-soft_threshold.f(X, threshold)
+soft_threshold.f(Y, threshold)
 }
 \arguments{
-\item{X}{matrix}
+\item{Y}{\code{matrix}}
 
-\item{threshold}{numeric thresholding parameter}
+\item{threshold}{\code{numeric(1)} thresholding parameter.}
 }
 \value{
-matrix
+\code{matrix}
 }
 \description{
-apply soft-thresholding on a matrix
+Apply soft-thresholding on a matrix.
 }

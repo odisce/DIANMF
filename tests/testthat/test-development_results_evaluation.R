@@ -6,6 +6,7 @@ test_that("Evaluate the final results", {
   require(parallel)
   NewDB <- readRDS("~/1workflow/DIA_NMF_workflow/Data/NewDB.rds")
   file <- "C:/Users/DK273056/Documents/1workflow/DIA_NMF_workflow/mzML/20170803_FS-DIA-E2-10ng-rep3_pos_51.mzML";
+  
   rawData.onDiskMSnExp <- MSnbase::readMSData(file, mode = "onDisk");
   # load the isolation windows
   iso <- isolationWindows.range(rawData.onDiskMSnExp)
@@ -74,6 +75,5 @@ test_that("Evaluate the final results", {
   }
   
   saveRDS(scores, '~/DIA_NMF_R_package_plots/pure_spectra/scores.rds')
+
 })
-
-

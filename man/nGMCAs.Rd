@@ -2,10 +2,10 @@
 % Please edit documentation in R/step4.3_nGMCAs_algo.R
 \name{nGMCAs}
 \alias{nGMCAs}
-\title{apply nGMCAs on matrix Y to find A and S}
+\title{Approximate Y by A and S.}
 \usage{
 nGMCAs(
-  originalMatrix,
+  X.m,
   rank,
   maximumIteration = 10,
   maxFBIteration = 10,
@@ -16,25 +16,25 @@ nGMCAs(
 )
 }
 \arguments{
-\item{originalMatrix}{description}
+\item{X.m}{mixed \code{matrix} add some documentation.}
 
-\item{rank}{numeric rank of factorization = number of pure compounds in the mixed data}
+\item{rank}{\code{numeric(1)} number of pure compounds in the mixed matrix; rank of factorization.}
 
-\item{maximumIteration}{numeric max number of iteration}
+\item{maximumIteration}{\code{numeric(1)} maximum number of iterations.}
 
-\item{maxFBIteration}{numeric FBS max number of iterations}
+\item{maxFBIteration}{\code{numeric(1)} maximum number of iterations in the FB algorithm.}
 
-\item{toleranceFB}{numeric stopping value}
+\item{toleranceFB}{\code{numeric(1)} tolerance or stopping value of the FB algorithm.}
 
-\item{initialization_method}{random, nndsvd or subSample}
+\item{initialization_method}{\code{character} to specify the initialization method: random, nndsvd or subSample.}
 
-\item{H_sub}{matrix elution profiles}
+\item{H_sub}{\code{matrix} of elution profiles used with subSample initialization method.}
 
-\item{errors_print}{Boolean}
+\item{errors_print}{\code{Logical} \code{TRUE} to print the error difference, \code{FALSE} otherwise.}
 }
 \value{
-data: list of 2 matrices A and S
+\code{list} of 2 matrices A and S.
 }
 \description{
-apply nGMCAs on matrix Y to find A and S
+Approximate Y by A and S.
 }

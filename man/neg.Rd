@@ -2,16 +2,16 @@
 % Please edit documentation in R/step4.1_initialization_methods.R
 \name{neg}
 \alias{neg}
-\title{negative projection}
+\title{Negative projection.}
 \usage{
 neg(x)
 }
 \arguments{
-\item{x}{vector of numerics}
+\item{x}{vector of numeric.}
 }
 \value{
-vector the projection of x in the negative orthant
+Projection of x in the negative orthant.
 }
 \description{
-negative projection
+Negative projection.
 }

@@ -2,30 +2,30 @@
 % Please edit documentation in R/step2.1_extract_eics.R
 \name{extract_eics}
 \alias{extract_eics}
-\title{Extract the MS1 or MS2 eics from a list of spectra related to a specific peak}
+\title{Extract the MS1 or MS2 eics from a list of spectra.}
 \usage{
 extract_eics(
   spectra_list,
-  ppm = 7,
+  ppm.n = 7,
   apex_index,
   rt_index = TRUE,
   mz_range = TRUE
 )
 }
 \arguments{
-\item{spectra_list}{list of spectra related to the fragments exists at the apex spectrum of the peak}
+\item{spectra_list}{\code{list} of spectra.}
 
-\item{ppm}{numeric}
+\item{ppm.n}{\code{numeric(1)} defining the m/z tolerated deviation in parts per million (ppm).}
 
-\item{apex_index}{integer index of the spectrum that contains the apex of the peak}
+\item{apex_index}{\code{integer} spectrum index which contains the peak apex.}
 
-\item{rt_index}{numeric_vector real retention time axis of the peak}
+\item{rt_index}{\code{Logical} if \code{TRUE} use the real retention time axis of the peak, else \code{FALSE}.}
 
-\item{mz_range}{numeric(2) mz range of isolation window where the apex was fragmented}
+\item{mz_range}{\code{Logical} if \code{TRUE} and extracting MS1 data , if \code{TRUE} and extracting MS2 data , else \code{FALSE}.}
 }
 \value{
-extracted eics (mixed matrix)
+\code{matrix} contains extracted eic in every row.
 }
 \description{
-Extract the MS1 or MS2 eics from a list of spectra related to a specific peak
+Extract the MS1 or MS2 eics from a list of spectra.
 }

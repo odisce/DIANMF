@@ -1,12 +1,12 @@
 # this script contains the 3 classical scores: dot product, inverse dot product and the % of fragments (calculated as described in MS-Dial)
 
-#' presence of fragments score: calculate the percentage of library spectrum fragments found in the experimental spectrum
+#' Calculate the percentage of library spectrum fragments found in the experimental spectrum.
 #'
-#' @param measuredSpectra list experimental spectrum
-#' @param librarySpectra  list reference spectrum
-#' @param bin numeric mz tolerance
+#' @param measuredSpectra `list` experimental spectrum.
+#' @param librarySpectra  `list` reference spectrum.
+#' @param bin `numeric(1)` mz tolerance.
 #'
-#' @return numeric percentage of library fragments in the experimental spectrum
+#' @return `numeric(1)` percentage of library fragments in the experimental spectrum.
 GetPresenceSimilarity <- function(measuredSpectra, librarySpectra, bin){
 
   if(nrow(librarySpectra) == 0) {return(0)}
@@ -54,13 +54,11 @@ GetPresenceSimilarity <- function(measuredSpectra, librarySpectra, bin){
 
 #-------------------------------------------------------------------------------
 
-#' dot product score
+#' Dot product score.
 #'
-#' @param measuredSpectra list experimental spectrum
-#' @param librarySpectra  list reference spectrum
-#' @param bin numeric mz tolerance
+#' @inheritParams GetPresenceSimilarity
 #'
-#' @return numeric dot product
+#' @return `numeric(1)` dot product.
 GetSimpleDotProductSimilarity <- function(measuredSpectra, librarySpectra, bin){
   scalarM <- scalarR <- covariance <- sumM <-  sumR <- 0
 
@@ -167,13 +165,11 @@ GetSimpleDotProductSimilarity <- function(measuredSpectra, librarySpectra, bin){
 
 #-------------------------------------------------------------------------------
 
-#' inverse dot product score
+#' Inverse dot product score.
 #'
-#' @param measuredSpectra list experimental spectrum
-#' @param librarySpectra  list reference spectrum
-#' @param bin numeric mz tolerance
+#' @inheritParams GetPresenceSimilarity
 #'
-#' @return numeric inverse dot product
+#' @return `numeric(1)` inverse dot product.
 getReverseSearchingSimilarity <- function(measuredSpectra, librarySpectra, bin){
 
   scalarM <- scalarR <- covariance <- sumM <- sumL <- 0
@@ -330,19 +326,18 @@ getReverseSearchingSimilarity <- function(measuredSpectra, librarySpectra, bin){
 
 # --------------- trying to make the running time faster -----------------------
 
-#' match peaks with some reference spectra from Newdb.rds
+#' Match pure spectrum with some reference spectra to be identify.
 #'
-#' @param polarity string 'POS' or 'NEG'
-#' @param mz_precursor numeric peak/MS1 precursor mz value
-#' @param data_base reference/library database
-#' @param measured_spectra list experimental pure spectrum
-#' @param mz_tol numeric
+#' @param polarity `character` 'POS' or 'NEG'.
+#' @param mz_precursor `numeric` precursor mz value.
+#' @param data_base reference/library database.
+#' @param measured_spectra `data.frame` experimental pure spectrum.
+#' @param mz_tol `numeric(1)` to bin the ions.
 #'
+#' @return `list` matching scores with some information of the matched library(reference) spectrum.
+#' @export
 #' @importFrom dplyr between
 #' @importFrom parallel mclapply
-#'
-#' @return list matching scores with some information of the matched library(reference) spectrum
-#' @export
 match_pure_scores2 <- function(polarity, mz_precursor, data_base, measured_spectra, mz_tol = NULL) {
 
   if ( is.null(mz_tol) ){

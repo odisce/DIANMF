@@ -38,4 +38,5 @@ test_that("initializing methods test", {
   expect_true(all(A_subSample >= 0))
   expect_equal( nrow(S_subSample), r)
   expect_equal( ncol(A_subSample), r)
+  
 })

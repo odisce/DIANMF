@@ -2,16 +2,16 @@
 % Please edit documentation in R/step2.1_extract_eics.R
 \name{isolationWindows.range}
 \alias{isolationWindows.range}
-\title{Extract the isolation windows of SWATH data}
+\title{Extract the isolation windows of SWATH data.}
 \usage{
 isolationWindows.range(rawData.onDiskMSnExp)
 }
 \arguments{
-\item{rawData.onDiskMSnExp}{raw MSnbase data of mzMl file}
+\item{rawData.onDiskMSnExp}{\code{OnDiskMSnExp} object for \code{onDisk} mode.}
 }
 \value{
-isolation windows
+\code{data.frame} SWATH isolation windows.
 }
 \description{
-Extract the isolation windows of SWATH data
+Extract the isolation windows of SWATH data.
 }

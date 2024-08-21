@@ -2,16 +2,16 @@
 % Please edit documentation in R/step4.1_initialization_methods.R
 \name{pos}
 \alias{pos}
-\title{positive projection}
+\title{Positive projection.}
 \usage{
 pos(x)
 }
 \arguments{
-\item{x}{vector of numerics}
+\item{x}{vector of numeric.}
 }
 \value{
-vector the projection of x in the positive orthant
+Projection of x in the positive orthant.
 }
 \description{
-positive projection
+Positive projection.
 }

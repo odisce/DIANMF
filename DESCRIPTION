@@ -4,18 +4,26 @@ Title: Non-Negative Matrix Factorization To Identify SWATH DIA Metabolomic
     Data
 Version: 0.1.0
 Authors@R: c(
-    person(given = "Diana", family = "Karaki", email = "zkaraki.diana@gmail.com", role = c("aut", "cre")),
+    person(given = "Diana", family = "Karaki", email = "diana.karaki@cea.fr", role = c("aut", "cre")),
     person(given = "Sylvain", family = "Dechaumet", email = "sylvain.dechaumet@cea.fr", role = "aut"),
     person(given = "Etienne", family = "Thevenot", email = "etienne.thevenot@cea.fr", role = "ctb")
   )
-Description: This R package aims to extract pure MS1 and MS2 data raw mzML files. 
+Description: This R package aims to identify metabolomics from raw SWATH DIA mzML files.
+    Identifying a compound from the raw, mixed data means determining its pure MS1 and MS2 spectrum (every compound is characterised by its pure spectrum).
+    Non-negative matrix factorization (NMF) is the key to unmixing (or deconvolution, as it is called, between chemists).
+    NMF is used to factorize the mixed MS1 and MS2 data on every peak detected in the raw, copmlex data.
+    This factorization results in a pure elution profile and spectrum for every compound in the mixed data.
+    One specific compound is related to the peak.
+    The package functionalities are to extract MS1 pure spectra, extract MS2 pure spectra, identify a list of peaks given by the user,
+    find the pure spectra (S) when the mixed data (Y) and the elution profiles (A) are given,
+    or the inverse find the pure elution profiles (A) when the mixed data (Y) and the pure spectra (S) are the inputs.
 License: file LICENSE
 biocViews:
 Imports: 
     data.table (>= 1.14.8),
     dplyr (>= 1.1.2),
     ggplot2 (>= 3.4.4),
-    ggpubr (>= 0.6.0),
+    patchwork (>= 1.2.0),
     magrittr (>= 2.0.3),
     MSnbase (>= 2.26.0),
     purrr (>= 1.0.2),

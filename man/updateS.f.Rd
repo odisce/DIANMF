@@ -2,26 +2,26 @@
 % Please edit documentation in R/step4.3_nGMCAs_algo.R
 \name{updateS.f}
 \alias{updateS.f}
-\title{update the matrix S (it contains pure spectra)}
+\title{Update S.}
 \usage{
 updateS.f(Y, A, S_init, lambda, maxFBIteration, toleranceFB)
 }
 \arguments{
-\item{Y}{matrix}
+\item{Y}{\code{matrix}}
 
-\item{A}{matrix elution profiles}
+\item{A}{\code{matrix} every column is an elution profile.}
 
-\item{S_init}{matrix pure spectra}
+\item{S_init}{\code{matrix} every row is a pure spectrum.}
 
-\item{lambda}{numeric sparsity parameter of the pure spectra}
+\item{lambda}{\code{numeric(1)} sparsity parameter of the pure spectra.}
 
-\item{maxFBIteration}{numeric FBS max number of iteration}
+\item{maxFBIteration}{\code{numeric(1)} maximum number of iterations in the FB algorithm.}
 
-\item{toleranceFB}{numeric stopping value}
+\item{toleranceFB}{\code{numeric(1)} tolerance or stopping value of the FB algorithm.}
 }
 \value{
-S
+\code{matrix} S of updated spectra.
 }
 \description{
-update the matrix S (it contains pure spectra)
+Update S.
 }

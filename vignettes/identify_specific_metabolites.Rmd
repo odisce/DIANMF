@@ -1,0 +1,55 @@
+---
+title: "Identify Specific Metabolites"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Identify Specific Metabolites}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+```{r setup}
+library(DIANMF)
+```
+
+## 1
+
+If the user has the peaks he wants to identify, he can provide them for the <span style="background-color: rgba(169, 169, 169, 0.4);">dia_nmf.f()</span> function in the <span style="background-color: rgba(169, 169, 169, 0.4);">ms1_peaks</span> parameter.
+
+This was applied in the "Process MS1 data level" and "Process MS2 data level" vignettes.
+
+
+## 2
+
+Suppose the user has a table of spiked compounds in Excel. *DIANMF* allows searching for every compound's suggested peak among an MS1 peaks matrix or data.frame using mz and rt tolerances. First by loading the .tsv file using <span style="background-color: rgba(169, 169, 169, 0.4);">load_compounds_function.tb()</span>  as a data.frame then searching for the peaks using <span style="background-color: rgba(169, 169, 169, 0.4);">search_for_ROIs_function.l()</span> function.
+
+### Load the compounds table
+
+```{r load spiked compounds table, echo=TRUE, message=FALSE, warning=FALSE}
+compounds_tb <- system.file("extdata", "Barbier_supplementary_tableS1.tsv", package = "DIANMF")
+compounds.df <- load_compounds_function.tb(compounds_tb)
+knitr::kable(head(compounds.df))
+```
+
+
+```{r search for peaks, echo=TRUE, message=FALSE, warning=FALSE}
+load("~/DIA_NMF_R_package/dianmf/data/data_example.rda")
+ms1_peaks.mat <- detect_peaks_by_xcms( rawData.onDiskMSnExp = data_example,
+                                        ppm = 6, peakwidth = c(3,60), snthresh = 0,
+                                        prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
+                                        integrate = 2, mzdiff = -0.001, noise = 0,
+                                        firstBaselineCheck = FALSE )
+  
+ms1_peaks.df <- prepare_ms1_peaks(ms1_peaks = ms1_peaks.mat)
+
+peaks <- search_for_ROIs_function.l(compounds.df, ms1_peaks = ms1_peaks.df, mz_tol.n = 0.05, rt_tol.n = 5)
+knitr::kable(head(peaks))
+```

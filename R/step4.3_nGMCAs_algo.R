@@ -1,25 +1,24 @@
-#' calculate the difference between Y an its approximation A %*% S
+#' Calculate the difference between Y an its approximation A*S.
 #'
-#' @param Y matrix
-#' @param A matrix elution profiles
-#' @param S matrix pure spectra
+#' @param Y `matrix`
+#' @param A `matrix` every column is an elution profile.
+#' @param S `matrix` every row is a pure spectrum.
 #'
-#' @return relative error
+#' @return` numeric(1)` relative error.
 #' @export
 error_function <- function(Y, A, S){
   norm(Y - A %*% S, '2') / norm(Y, '2')
 }
 
 
-#' update the matrix A (it contains elution profiles)
+#' Update A.
 #'
-#' @param Y matrix
-#' @param A_init matrix
-#' @param S matrix
-#' @param maxFBIteration numeric max number of iteration
-#' @param toleranceFB numeric stopping value
+#' @inheritParams error_function
+#' @param A_init `matrix` every column is an elution profile.
+#' @param maxFBIteration `numeric(1)` maximum number of iterations in the FB algorithm.
+#' @param toleranceFB `numeric(1)` tolerance or stopping value of the FB algorithm.
 #'
-#' @return new_A matrix updated elution profiles
+#' @return `matrix` A of updated elution profiles.
 #' @export
 updateA.f <- function(Y, A_init, S, maxFBIteration, toleranceFB) {
 
@@ -45,33 +44,31 @@ updateA.f <- function(Y, A_init, S, maxFBIteration, toleranceFB) {
 }
 
 
-#' apply soft-thresholding on a matrix
+#' Apply soft-thresholding on a matrix.
 #'
-#' @param X matrix
-#' @param threshold numeric thresholding parameter
+#' @inheritParams error_function
+#' @param threshold `numeric(1)` thresholding parameter.
 #'
-#' @return matrix
-soft_threshold.f <- function(X, threshold){
+#' @return `matrix`
+soft_threshold.f <- function(Y, threshold){
   
-  mat <- X
+  mat <- Y
   mat <- abs(mat) - threshold
   mat <- pmax(mat, 0)
-  mat <- sign(X) * mat
+  mat <- sign(Y) * mat
   
   return(mat)
 }
 
 
-#'  update the matrix S (it contains pure spectra)
+#' Update S.
 #'
-#' @param Y matrix
-#' @param A matrix elution profiles
-#' @param S_init matrix pure spectra
-#' @param lambda numeric sparsity parameter of the pure spectra
-#' @param maxFBIteration numeric FBS max number of iteration
-#' @param toleranceFB numeric stopping value
+#' @inheritParams error_function
+#' @param S_init `matrix` every row is a pure spectrum.
+#' @param lambda `numeric(1)` sparsity parameter of the pure spectra.
+#' @inheritParams updateA.f
 #'
-#' @return S
+#' @return `matrix` S of updated spectra.
 #' @export
 updateS.f <- function(Y, A, S_init, lambda, maxFBIteration, toleranceFB){
  
@@ -105,54 +102,53 @@ updateS.f <- function(Y, A, S_init, lambda, maxFBIteration, toleranceFB){
 }
 
 
-#' apply nGMCAs on matrix Y to find A and S
+#' Approximate Y by A and S.
 #'
-#' @param originalMatrix description
-#' @param rank numeric rank of factorization = number of pure compounds in the mixed data
-#' @param errors_print Boolean 
-#' @param initialization_method random, nndsvd or subSample 
-#' @param maximumIteration numeric max number of iteration
-#' @param maxFBIteration numeric FBS max number of iterations
-#' @param toleranceFB numeric stopping value
-#' @param H_sub matrix elution profiles
+#' @param X.m mixed `matrix` add some documentation.
+#' @inheritParams random_init
+#' @param errors_print `Logical` `TRUE` to print the error difference, `FALSE` otherwise. 
+#' @param initialization_method `character` to specify the initialization method: random, nndsvd or subSample. 
+#' @param maximumIteration `numeric(1)` maximum number of iterations.
+#' @inheritParams updateA.f
+#' @param H_sub `matrix` of elution profiles used with subSample initialization method.
 #'
-#' @return data: list of 2 matrices A and S
+#' @return `list` of 2 matrices A and S.
 #' @export
-nGMCAs <- function(originalMatrix, rank,
+nGMCAs <- function(X.m, rank,
                    maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
                   initialization_method = c('nndsvd', 'random', 'subSample'), H_sub = NULL,
                   errors_print = FALSE){
 
-  originalMatrix <- base::t(originalMatrix)
+  X.m <- base::t(X.m)
   data <- list()
   
   if( initialization_method == 'nndsvd' ){
-  res_nndsvd <- nndsvd_init( X = originalMatrix, rank = rank)
+  res_nndsvd <- nndsvd_init( X = X.m, rank = rank)
   data$A <- res_nndsvd$W
   data$S <- res_nndsvd$H
   } else if( initialization_method == 'random' ) {  
-    res_random <- random_init(X = originalMatrix, rank = rank)
+    res_random <- random_init(X = X.m, rank = rank)
     data$A <- res_random$W
     data$S <- res_random$H
   } else if( initialization_method == 'subSample' & !is.null(H_sub) ){
-    res_subSample <- subsample_init(Y = originalMatrix, rank = rank, H_sub)
+    res_subSample <- subsample_init(Y = X.m, rank = rank, H_sub)
     data$A <- res_subSample$A
     data$S <- res_subSample$S
   } else {
     print('error! H_sub must be !NULL when using the subSample initialization')
   }
   
-  lambda <- 0.8 * max(originalMatrix)
+  lambda <- 0.8 * max(X.m)
   for (i in 1:maximumIteration) {
     
     data$S <- t(apply( data$S, 1, function(x) x / max(x)))
-    data$S <- updateS.f( Y = originalMatrix, A = data$A, S_init = data$S, lambda = lambda,
+    data$S <- updateS.f( Y = X.m, A = data$A, S_init = data$S, lambda = lambda,
                          maxFBIteration = maxFBIteration, toleranceFB = toleranceFB ) 
 
-    data$A <- updateA.f(Y = originalMatrix, A_init = data$A, S = data$S,
+    data$A <- updateA.f(Y = X.m, A_init = data$A, S = data$S,
                         maxFBIteration = maxFBIteration, toleranceFB = toleranceFB)
     
-    if(errors_print) {print( error_function(originalMatrix, data$A, data$S )) }
+    if(errors_print) {print( error_function(X.m, data$A, data$S )) }
   }
   
   data$A <- t(data$A)

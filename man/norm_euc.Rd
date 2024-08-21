@@ -2,16 +2,16 @@
 % Please edit documentation in R/step4.1_initialization_methods.R
 \name{norm_euc}
 \alias{norm_euc}
-\title{calculates the square root of the sum of the squared elements in the input matrix "x"}
+\title{Calculates the square root of the sum of the squared elements in the input vector "x".}
 \usage{
 norm_euc(x)
 }
 \arguments{
-\item{x}{matrix}
+\item{x}{vector of numeric.}
 }
 \value{
-numeric
+\code{numeric(1)}
 }
 \description{
-calculates the square root of the sum of the squared elements in the input matrix "x"
+Calculates the square root of the sum of the squared elements in the input vector "x".
 }

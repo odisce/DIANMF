@@ -7,12 +7,12 @@
 random_init(X, rank)
 }
 \arguments{
-\item{X}{matrix}
+\item{X}{\code{matrix}.}
 
-\item{rank}{of factorization}
+\item{rank}{\code{numeric(1)} number of pure compounds in the mixed matrix; rank of factorization.}
 }
 \value{
-W and H random matrices
+W and H random matrices.
 }
 \description{
 Initialize matrices W and H randomly.

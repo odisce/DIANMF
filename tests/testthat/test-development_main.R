@@ -1,8 +1,8 @@
 skip("development script")
 
 test_that("test main on barbier data", {
-  require(xcms)
   require(MSnbase)
+  require(xcms)
 
   file <- "C:/Users/DK273056/Documents/1workflow/DIA_NMF_workflow/mzML/20170803_FS-DIA-E2-10ng-rep3_pos_51.mzML";
   rawData.onDiskMSnExp <- MSnbase::readMSData(file, mode = "onDisk");
@@ -12,37 +12,40 @@ test_that("test main on barbier data", {
   } else {
     sample_file <- rawData.onDiskMSnExp
   }
-  eics_peaks <- detect_peaks_by_xcms(rawData.onDiskMSnExp = sample_file,
+  eics_peaks.mat <- detect_peaks_by_xcms(rawData.onDiskMSnExp = sample_file,
                                      ppm = 7, peakwidth = c(6,60), snthresh = 1,
                                      prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
                                      integrate = 2, mzdiff = -0.001, noise = 0,
                                      firstBaselineCheck = FALSE )
   
-  eics_peaks.mat <- xcms::chromPeaks(eics_peaks)
-  
   # test the main function
-  total_res <- dia.nmf.f( mzML_path = file,
-                          MS_level = "MS2", ppm = 7,
-                          ms1_peaks = eics_peaks.mat,
-                          peaks_nb = 1,
-                          rt_index = TRUE, 
+  total_res <- dia_nmf.f( mzML_path = file,
+                          ms_level = "MS1",
+                          peaks_by_xcms = FALSE, ms1_peaks = eics_peaks.mat,
+                          ppm.n = 7,
                           maximumIteration = 10, maxFBIteration = 5, toleranceFB = 1e-5,
                           MS1_init_method = 'nndsvd', MS2_init_method = 'subSample', errors_print = FALSE,
-                          rt_tol = 2,
-                          plot_key = FALSE, plot_path = NULL )
+                          rt_tol = 2 )
   
+  total_res2 <- dia_nmf.f(mzML_path = file,
+                          ms_level = "MS2",
+                          peaks_by_xcms = FALSE, ms1_peaks = eics_peaks.mat, d.out = NULL,
+                          ppm.n = 7,
+                          maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
+                          MS1_init_method = 'nndsvd', MS2_init_method = 'subSample', errors_print = FALSE,
+                          rt_tol = 2,
+                          ppm = 7, peakwidth = c(6,60), snthresh = 1,
+                          prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
+                          integrate = 2, mzdiff = -0.001, noise = 0,
+                          firstBaselineCheck = FALSE)
+  
+  # eics_peaks.mat[order(-eics_peaks.mat[, "into"]),][1:10, ]
   # plot_path = "C:/Users/DK273056/Documents/DIA_NMF_R_package_plots"
-  # saveRDS(total_res, 'C:/Users/DK273056/Documents/DIA_NMF_R_package_outputs_new/features.rds')
+  # saveRDS(total_res2, 'C:/Users/DK273056/Documents/DIA_NMF_R_package_outputs/features.rds')
   
  # # to analyse the running time
  # running_time <- profvis::profvis({
- #   res_sub <- dia.nmf.f( rawData.onDiskMSnExp = rawData.onDiskMSnExp, ms1_peaks.mat = eics_peaks.mat,
- #                         peaks_nb = 10,
- #                         ppm = 7,
- #                         maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
- #                         MS1_init_method = 'nndsvd', MS2_init_method = 'subSample', errors_print = FALSE,
- #                         rt_tol = 2,
- #                         plot_key = NULL, plot_path = NULL )
+ #   res_sub <- dia.nmf.f(  )
  #   },
  #   interval = 0.1
  #   )
@@ -51,5 +54,5 @@ test_that("test main on barbier data", {
  # htmlwidgets::saveWidget(running_time, "profile.html")
  # # Can open in browser from R
  # browseURL("profile.html")
- 
+ # [order(-eics_peaks.mat[, "into"]),][1:10, ]
 })

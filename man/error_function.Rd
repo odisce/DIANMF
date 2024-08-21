@@ -2,20 +2,20 @@
 % Please edit documentation in R/step4.3_nGMCAs_algo.R
 \name{error_function}
 \alias{error_function}
-\title{calculate the difference between Y an its approximation A \%*\% S}
+\title{Calculate the difference between Y an its approximation A*S.}
 \usage{
 error_function(Y, A, S)
 }
 \arguments{
-\item{Y}{matrix}
+\item{Y}{\code{matrix}}
 
-\item{A}{matrix elution profiles}
+\item{A}{\code{matrix} every column is an elution profile.}
 
-\item{S}{matrix pure spectra}
+\item{S}{\code{matrix} every row is a pure spectrum.}
 }
 \value{
-relative error
+\code{ numeric(1)} relative error.
 }
 \description{
-calculate the difference between Y an its approximation A \%*\% S
+Calculate the difference between Y an its approximation A*S.
 }

@@ -2,10 +2,10 @@
 
 #' Initialize matrices W and H randomly.
 #
-#' @param X matrix
-#' @param rank of factorization
+#' @param X `matrix`.
+#' @param rank `numeric(1)` number of pure compounds in the mixed matrix; rank of factorization.
 #'
-#' @return W and H random matrices
+#' @return W and H random matrices.
 #' @export
 #' @importFrom stats runif
 random_init <- function(X, rank){
@@ -24,11 +24,11 @@ random_init <- function(X, rank){
 
 ##  subSample initialization: given the elution profiles, initialize S
 
-#' subSample initialization
+#' subSample initialization.
 #'
-#' @param Y matrix
-#' @param rank of factorization
-#' @param H_sub pure MS1 elution profiles matrix
+#' @param Y `matrix`.
+#' @inheritParams random_init
+#' @param H_sub pure MS1 elution profiles `matrix`.
 #'
 #' @return A and S initializing matrices based on the data
 #' @export
@@ -50,36 +50,35 @@ subsample_init <- function(Y, rank, H_sub){  # This method is just for NMF of MS
 
 ## nndsvd method non-negative double singular value decomposition
 
-#' positive projection
+#' Positive projection.
 #'
-#' @param x vector of numerics
+#' @param x vector of numeric.
 #'
-#' @return vector the projection of x in the positive orthant
+#' @return Projection of x in the positive orthant.
 pos <- function(x){ as.numeric(x>=0) * x }
 
 
-#' negative projection
+#' Negative projection.
 #'
-#' @param x vector of numerics
+#' @inheritParams pos
 #'
-#' @return vector the projection of x in the negative orthant
+#' @return Projection of x in the negative orthant.
 neg <- function(x){ as.numeric(x<=0) * abs(x) }
 
 
-#' calculates the square root of the sum of the squared elements in the input matrix "x"
+#' Calculates the square root of the sum of the squared elements in the input vector "x".
 #'
-#' @param x matrix
+#' @inheritParams pos
 #'
-#' @return numeric
+#' @return `numeric(1)`
 norm_euc <- function(x){ sqrt(drop(crossprod(x))) }
 
 
-#' apply nndsvd (non-negative double singular value decomposition) on a matrix
+#' nndsvd (non-negative double singular value decomposition).
 #'
-#' @param X matrix
-#' @param rank of factorization
+#' @inheritParams random_init
 #'
-#' @return list of two matrices H and W
+#' @return `list` of two matrices H and W.
 #' @export
 nndsvd_init <- function(X, rank){
   

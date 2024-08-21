@@ -1,8 +1,8 @@
-#' Extract the isolation windows of SWATH data
+#' Extract the isolation windows of SWATH data.
 #'
-#' @param rawData.onDiskMSnExp raw MSnbase data of mzMl file
+#' @inheritParams detect_peaks_by_xcms
 #'
-#' @return isolation windows
+#' @return `data.frame` SWATH isolation windows.
 #' @export
 #' @importFrom MSnbase isolationWindowLowerMz isolationWindowUpperMz filterMsLevel
 isolationWindows.range <- function(rawData.onDiskMSnExp){
@@ -17,34 +17,34 @@ isolationWindows.range <- function(rawData.onDiskMSnExp){
   return(isolation_windows)
 }
 
-#' Create a mz range
+
+#' Create a mz range.
 #'
-#' @param ref numeric mz of the peak/precursor
-#' @param ppm numeric 
+#' @param ref `numeric` mz of the peak.
+#' @inheritParams extract_ms_matrix.f
 #'
-#' @return mz range of a specific mz value
-PpmRange <-  function(ref, ppm) {
-  dev <- ppm * 1e-6
+#' @return `numeric` mz range of a specific mz value.
+PpmRange <-  function(ref, ppm.n) {
+  dev <- ppm.n * 1e-6
   ref + (c(-1, 1) * ref * dev)
 }
 
-# to be fixed: I want to filter the ions of the MS1 apex spectra, by deleting the ions of intensity lower than ms1_int_filter
 
-#' Extract the MS1 or MS2 eics from a list of spectra related to a specific peak
+#' Extract the MS1 or MS2 eics from a list of spectra.
 #'
-#' @param spectra_list list of spectra related to the fragments exists at the apex spectrum of the peak 
-#' @param ppm numeric
-#' @param apex_index integer index of the spectrum that contains the apex of the peak
-#' @param rt_index numeric_vector real retention time axis of the peak
-#' @param mz_range numeric(2) mz range of isolation window where the apex was fragmented
+#' @param spectra_list `list` of spectra.
+#' @inheritParams extract_ms_matrix.f
+#' @param apex_index `integer` spectrum index which contains the peak apex.
+#' @param rt_index `Logical` if `TRUE` use the real retention time axis of the peak, else `FALSE`.
+#' @param mz_range `Logical` if `TRUE` and extracting MS1 data , if `TRUE` and extracting MS2 data , else `FALSE`.
 #'
-#' @return extracted eics (mixed matrix)
+#' @return `matrix` contains extracted eic in every row.
 #' @export
 #' @importFrom data.table rbindlist foverlaps setkey merge.data.table dcast %between%
 #' @import magrittr
 #' @importFrom stats end start
 #' @importFrom utils head
-extract_eics <- function(spectra_list, ppm = 7, apex_index, rt_index = TRUE, mz_range = TRUE) {
+extract_eics <- function(spectra_list, ppm.n = 7, apex_index, rt_index = TRUE, mz_range = TRUE) {
   
   full_table <- data.table::rbindlist(spectra_list, idcol = "spectra_index")
   if (!is.null(mz_range)) {
@@ -54,7 +54,7 @@ extract_eics <- function(spectra_list, ppm = 7, apex_index, rt_index = TRUE, mz_
   target_table <- full_table[spectra_index == apex_index,]
   target_table[, index := seq_len(.N)]
   target_table <- target_table[, {
-    out <- PpmRange(mz, ppm)
+    out <- PpmRange(mz, ppm.n)
     .(start = min(out), end = max(out))
   }, by = .(index)]
   full_table[, start := mz][, end := mz]
