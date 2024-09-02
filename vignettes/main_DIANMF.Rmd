@@ -1,0 +1,409 @@
+---
+title: "*DIANMF*: Deconvolution of SWATH DIA data using non-negative matrix factorization (NMF)"
+author: "Diana Karaki"
+date: "`r Sys.Date()`"
+package: "`r pkg_ver('DIANMF')`"
+
+vignette: >
+  %\VignetteIndexEntry{processing SWATH DIA data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+output: 
+  BiocStyle::html_document
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+# Introduction
+Sequential window acquisition of all theoretical data-independent acquisition mass spectra (SWATH DIA) is essential for information-rich spectral annotations in untargeted metabolomics. However, the acquired MS2 spectra are highly complex, posing significant annotation challenges. We have developed a **DIANMF** package that uses non-negative matrix factorization (NMF) to provide pure MS2 spectra that identify metabolomics in raw samples. **DIANMF** is based on NMF of the MS1 data before processing the MS2 data and on the assumption that for every metabolite, the existing information in the MS1 data correlates in the same sample with its MS2 data. Exploits this quantitative information to deconvolute complex SWATH DIA spectra.
+
+
+# Structure
+The first part of this vignette gives a quick overview of the **DIANMF** main workflow on one specific metabolite, the second part shows how to identify all raw data in an mzML file, and the third part, the appendix section, points to some other valuable vignettes concern some tasks of the package.
+
+
+# Workflow
+soon..
+
+
+# The **DIANMF** data package
+For demonstration purposes and to speed up the processing of this vignette, we will analyze a tiny subset of human plasma samples spiked with a pool of 47 chemical compounds at 7 known concentrations (from 0 to 10 ng/mL for each metabolite). This data was analyzed in triplicate by SWATH DIA, as described in <https://www.mdpi.com/2218-1989/10/4/158>. The data test mzML file is provided in our package. It is a subset from replicate 3 of the 10 ng/mL concentration file from 95-115 m/z, 62-78 seconds, and precursorMZ <= 160 at the MS2 level.
+
+The package accepts the mzML file path and reads its mass-spectrometry data at the first step of the processing. Hence, in the following section, most functions accept metadata rather than mzML files.  
+
+
+# **DIANMF** methods
+## Data import
+We load our package and the dataset, in addition some needed packages:
+
+```{r load mzML file, echo=TRUE }
+# load  the package
+library(DIANMF)
+library(MSnbase)
+packageVersion("DIANMF")
+
+# load the dataset
+file <- system.file("extdata", "test_data.mzml", package = "DIANMF")
+```
+
+## MS1 chromatographic peak detection
+The MS1 peaks are all signals in the sample produced by ions from the same originating component species and retrieved using chromatographic peak detection. In *DIANMF*, the user has two choices:
+
+* Detect them using the [xcms](https://bioconductor.org/packages/release/bioc/html/xcms.html) algorithm.
+* Provide the MS1 peaks.
+
+MS1 peaks can be detected using the <span style="background-color: rgba(169, 169, 169, 0.4);">detect_peaks_by_xcms()</span> *DIANMF* function based on the <span style="background-color: rgba(169, 169, 169, 0.4);">xcms::findChromPeaks()</span> method or by calling the xcms function directly.
+
+<span style="background-color: rgba(169, 169, 169, 0.4);"> detect_peaks_by_xcms()</span> needs:
+
+* <span style="background-color: rgba(169, 169, 169, 0.4);"> rawData.onDiskMSnExp</span>: mzML file mass-spectrometry data , read by <span style="background-color: rgba(169, 169, 169, 0.4);"> MSnbase::readMSData()</span> function. 
+* tuning some <span style="background-color: rgba(169, 169, 169, 0.4);">xcms::findChromPeaks()</span> parameters such as <span style="background-color: rgba(169, 169, 169, 0.4);">ppm</span>, <span style="background-color: rgba(169, 169, 169, 0.4);">peakwidth</span>, <span style="background-color: rgba(169, 169, 169, 0.4);">snthresh</span>, <span style="background-color: rgba(169, 169, 169, 0.4);">prefilter</span>, etc.
+
+Note: if the user provides his MS1 peak matrix or data.frame R object, **mz**, **mzmin**, **mzmax**, **rt**, **rtmin**, **rtmax**, and **into** are sufficient information for every peak.
+
+```{r detect MS1 peaks using xcms, echo=TRUE, message=FALSE, warning=FALSE}
+# load the metadata (mass-spectrometry data)
+data_test <- MSnbase::readMSData(file, mode = "onDisk")
+data_test
+
+# detect MS1 peaks using xcms
+ms1_peaks.mat <- detect_peaks_by_xcms( rawData.onDiskMSnExp = data_test,
+                                        ppm = 6, peakwidth = c(3,60), snthresh = 0,
+                                        prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
+                                        integrate = 2, mzdiff = -0.001, noise = 0,
+                                        firstBaselineCheck = FALSE )
+```
+
+```{r prepare MS1 peak, echo=TRUE, message=FALSE, warning=FALSE}
+# prepare the MS1 peaks
+ms1_peaks.df <- prepare_ms1_peaks(ms1_peaks = ms1_peaks.mat)
+```
+
+*DIANMF* processes MS1 peaks `r class(ms1_peaks.df)` sequentially, starting with the peak of the highest **into**. <span style="background-color: rgba(169, 169, 169, 0.4);">prepare_ms1_peaks()</span> function prepares the peaks in proper form.
+
+Let us proceed with processing a specific MS1 peak. Every peak is related to a specific precursor, identifying a metabolite in the raw data. 
+
+```{r choose MS1 peak, echo=TRUE }
+peak.idx <- 3
+
+# peak mz
+mz_prec <- ms1_peaks.df[peak.idx, 'mz']
+# peak rt
+rt_prec <- ms1_peaks.df[peak.idx, 'rt']
+```
+
+This peak is related to the MS1 precursor of mz `r round(mz_prec,4)` and rt `r round(rt_prec,4)`.
+
+## Extract MS1 mixed matrix
+The original mass-spectrometry data is highly complex, and we want to recover the clean MS1 spectrum associated with this peak. To extract this specific spectrum, we must first shrink the data we want to deconvolute rather than using the raw data directly. Extracting information connected to this peak is crucial. In our approach, we aim to obtain the EICs of all MS1 fragments in the spectrum at the peak apex spot. These EICs will be stacked row-wise in a matrix, with the retention time scans at the columns.
+
+The method <span style="background-color: rgba(169, 169, 169, 0.4);">extract_ms_matrix.f()</span> creates such a matrix. This function has numerous critical arguments to select depending on the data type the user wants to retrieve (MS1 or MS2). The parameters are:
+
+* <span style="background-color: rgba(169, 169, 169, 0.4);">peak.idx</span>: peak index.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">ms1_peaks.df</span>: MS1 peaks `r class(ms1_peaks.df)`.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">rawData.onDiskMSnExp</span>: OnDiskMSnExp object for onDisk mode.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">ppm.n</span>: defining the m/z tolerated deviation in parts per million (ppm).
+* <span style="background-color: rgba(169, 169, 169, 0.4);">rt_index</span>: if *TRUE* use the real retention time axis of the peak, else *FALSE*.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">mz_range</span>: *NULL* if no restriction on the mz ranges, else an mz range. 
+* <span style="background-color: rgba(169, 169, 169, 0.4);">iso_win_index</span>: SWATH isolation window index, just for MS2 level. For MS1 data *iso_win_index = NULL*.
+
+For MS1 level, the <span style="background-color: rgba(169, 169, 169, 0.4);">rt_index = TRUE</span>, <span style="background-color: rgba(169, 169, 169, 0.4);">mz_range = NULL</span> and <span style="background-color: rgba(169, 169, 169, 0.4);">iso_win_index = NULL</span> are fixed.
+
+```{r extract the mixed MS1 matrix, echo=TRUE}
+ms1_mat <- extract_ms_matrix.f(peak.idx = peak.idx, ms1_peaks.df = ms1_peaks.df, rawData.onDiskMSnExp = data_test,
+                                     ppm.n = 7, rt_index = TRUE, mz_range = NULL, iso_win_index = NULL)
+```
+
+*ms1_mat* is a `r class(ms1_mat)`, where every row represents an extracted ion chromatograms among the actual retention time (rt) scans of the peak in the columns. It is possible to plot this mixed MS1 data using <span style="background-color: rgba(169, 169, 169, 0.4);">plot_MS_eics()</span> function. The user should provide the <span style="background-color: rgba(169, 169, 169, 0.4);">ms_mixed</span> and specify the <span style="background-color: rgba(169, 169, 169, 0.4);">ms_level = "MS1"</span>.
+ 
+```{r show the mixed MS1 matrix, echo=TRUE}
+mixed_eics <- plot_MS_eics(ms_mixed = ms1_mat, ms_level = "MS1", rt_prec = rt_prec)
+mixed_eics
+```
+
+All fragments from the same MS1 parent ion have the same elution profile. At this step, we aim to extract the elution profile (or chromatogram) related to the precursor we are identifying without integrating other compounds. In other words, we want to un-mix (factorization as said mathematically) or deconvolution (as known by chemists) this mixed data. 
+
+One of the main strengths of our approach in identifying pure data of metabolites is using non-negative matrix factorization (NMF), which is not the traditional way: model peak selection.
+
+## MS1 data factorization
+*ms1_mat* (or we will call it $X_{m,n}$) contains the components' sources mixed up in an unknown but linear way. NMF aims to approximate $X$ such that: 
+
+\begin{equation}
+\label{eq1}
+X \approx WH,
+\end{equation}
+
+where $W \in \mathbf{R}^{m \times r}$ is the basis matrix and $H \in \mathbf{R}^{r \times n}$ is the coefficients matrix. Each column of $W$ is the unknown spectrum/source that is not negative, whereas each row of $H$ represents an elution profile that determines the contribution of each source, which is also non-negative. Thus, $n$ is the number of measurements, $m$ is the number of source samples, and $r$ is the number of pure sources exist in $X_{m,n}$.
+
+The rank of factorization remains a challenge in NMF problems. However, it is robust in our case, meaning ranking over estimations is worse than assigning a fixed tiny rank. Until now, we have set it to three, so we are confident that one pure component is related to the precursor we are attempting to identify, one to another precursor, and the third may collect all noise in the matrix. 
+
+Solving problem \eqref{eq1} can be written under the constrained form:
+
+\begin{align} \label{eq2} 
+\underset{\substack{W, H \geqslant 0}}{\text{argmin}} \, \mathcal{D}(X \parallel WH) + J(W). 
+\end{align}
+$\mathcal{D}$ is a divergence function, as the Euclidean distance $(l_2)$, it measures the discrepancy between the data $X$ and it's factorization $WH$. $J$ is an optional regularization function providing prior information about the spectra.
+
+Rapin \textit{et al.} introduced the [nGMCAs](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6584797) algorithm, which aims to solve the sparse non-negative blind source separation (BSS). This algorithm minimizes the following optimization problem: 
+\begin{align} \label{sp_W}
+    \underset{\substack{W, H}}{\text{argmin}} \, \frac{1}{2}||X - WH||^2_2 + \lambda ||W||_1 + i^{+}(W) +  i^{+}(H),
+\end{align}
+where $i^{+}$ is the characteristic function of the non-negative orthant that enforces the non-negative constraints; it is applied point-wise on every entry of $W$ and $H$: 
+\vspace{-0.1cm}
+\begin{align}
+i^{+}(w_{i,j}) =
+\begin{cases}
+0 & \text{if} \quad w_{i,j} \geq 0. \\
++ \infty  & \text{otherwise.}
+\end{cases}
+\end{align}
+
+nGMCA$^s$ alternatively minimizes the constrained sub-problems to obtain stable solutions with the sought structure: 
+
+1. Fix H, sub-problem in W is: \begin{align}
+\underset{\substack{W}}{\text{argmin}} \, \frac{1}{2}||X - WH||^2_2 + \lambda ||W||_1 + i^{+}(W).
+\end{align}
+1. Fix W, sub-problem in H is: \begin{align}
+\underset{\substack{H}}{\text{argmin}} \, \frac{1}{2}||X - WH||^2_2 + i^{+}(H).
+\end{align}
+
+The **DIANMF** <span style="background-color: rgba(169, 169, 169, 0.4);">nGMCAs()</span> function code the above NMF algorithm. The user should provide:
+
+* <span style="background-color: rgba(169, 169, 169, 0.4);">X.m</span>: mixed matrix.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">rank</span>: number of pure compounds in the mixed matrix; rank of factorization.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">initialization_method</span>: For MS1 data, it should be "random" ( randomly initialize $W$ and $H$) or "nndsvd" (initialize $W$ and $H$ based on the non-negative double singular value decomposition). 
+
+```{r NMF MS1 data, echo=TRUE }
+ms1_rank <- 3
+ngmcas_res <- nGMCAs(X.m = ms1_mat, rank = ms1_rank,
+                     maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
+                     initialization_method = 'nndsvd')
+
+W_ms1 <- ngmcas_res$S
+H_ms1 <- ngmcas_res$A
+```
+
+MS1 Pure spectra and elution profiles are stored in *W_ms1* and *H_ms1*, respectively. One of the pure sources in *W_ms1* and *H_ms1* is related to the peak we are processing. The spectrum of the maximum intensity at the fragment of mz equal to the peak mz: `r mz_prec` corresponds to this MS1 precursor. And can be retrieved by <span style="background-color: rgba(169, 169, 169, 0.4);">extract_ms1_pure_spectrum()</span> given:
+
+* <span style="background-color: rgba(169, 169, 169, 0.4);">W_ms1</span>
+* <span style="background-color: rgba(169, 169, 169, 0.4);">mz_prec</span>
+
+```{r extract the good pure MS1 spectrum, echo=TRUE }
+ms1_pure_data <- extract_ms1_pure_spectrum(W_ms1 = W_ms1, mz_prec = mz_prec)
+
+# ms1 pure spectrum of the peak
+ms1_pure_spectrum <- ms1_pure_data$ms1_pure_spectrum
+
+# index of the corresponding compound
+comp_ms1 <- ms1_pure_data$comp_ms1
+```
+
+For the users' curiosity, we will plot the pure and mixed data, EICS, and spectra using <span style="background-color: rgba(169, 169, 169, 0.4);">plot_MS_eics()</span> and <span style="background-color: rgba(169, 169, 169, 0.4);">plot_MS_spectra()</span>.
+
+```{r plot data, echo=TRUE, fig.height=6, fig.width=7.2}
+p_eics <- plot_MS_eics(ms_mixed = ms1_mat, ms_pure_H = H_ms1, ms_level = "MS1", rt_prec = rt_prec, choosen_comp = comp_ms1)
+p_eics
+
+p_spectra <- plot_MS_spectra(ms_mixed = ms1_mat, ms_pure_W = W_ms1, ms_level = "MS1", mz_prec, choosen_comp = comp_ms1)
+p_spectra
+```
+
+Let us look closer at the fragments retrieved in the MS1 pure spectra. This spectrum may contain MS1 ions, spotted as peaks in our origin peak matrix. These ions should not be fragmented again if they are strongly related to the processed precursor but not to another. These ions or MS1 peaks should be marked in the peaks `r class(ms1_peaks.df)` to avoid processing the same precursor several times.
+
+## Extract MS2 mixed matrices
+Our *DIANMF* package is designed to process SWATH DIA data. To accomplish this, passing through the MS1 level is necessary. Nonetheless, it is also possible to process only MS1 data, as demonstrated previously.
+
+The isolation window ranges are needed to extract the MS2 data related to this peak. <span style="background-color: rgba(169, 169, 169, 0.4);">isolationWindows.range()</span> method from **DIANMF** given just the `r class(data_example)` raw data from the mzML file extract this information.
+
+```{r SWATH isolation windows, echo=TRUE }
+info.swath <- isolationWindows.range(data_example)
+knitr::kable(info.swath)
+```
+
+The <span style="background-color: rgba(169, 169, 169, 0.4);">extract_ms2_matrices()</span> is a main **DIANMF** feature. This function aims to extract the MS2 extracted ion chromatogram for every ion in the pure MS1 spectrum of the same peak. By doing this, we are sure all information related to this MS1 precursor in this raw file is extracted. Depending on the ions' mz, they were fragmented in a specific isolation window in the MS2 step. Then, we have the MS2 data in a matrix for the related ions for every isolation window.
+
+<span style="background-color: rgba(169, 169, 169, 0.4);">extract_ms2_matrices()</span> inherits the <span style="background-color: rgba(169, 169, 169, 0.4);">extract_ms_matrix.f()</span> function. It determine in which isolation windows the MS1 ions in <span style="background-color: rgba(169, 169, 169, 0.4);">ms1_pure_spectrum</span> and loop over them in <span style="background-color: rgba(169, 169, 169, 0.4);">info.swath</span> parameter.
+
+```{r extract the mixed MS2 data as matrix, echo=TRUE }
+res_ms2 <- extract_ms2_matrices(peak.idx = peak.idx, ms1_peaks.df = ms1_peaks.df,
+                                ppm.n = 7, ms1_pure_spectrum = ms1_pure_spectrum,
+                                rawData.onDiskMSnExp = data_test, info.swath = info.swath )
+ms2_matrix <- do.call(rbind, res_ms2)
+```
+
+*res_ms2* is a `r class(res_ms2)` of matrices extracted from each isolation window containing MS2 data for this peak. This MS2 data will be concatenated into `r class(ms2_matrix)` *ms2_matrix* and factorized together.
+
+
+## MS2 data factorization
+The <span style="background-color: rgba(169, 169, 169, 0.4);">initialization_method</span> here, for MS2 data, can be *random*, *nndsvd* and even *subSample*. *subSample* method initialize $H$ by the MS1 pure elution profiles *H_ms1* and solves the optimization sub-problem \eqref{sp_W} to initialize $W$.
+
+```{r NMF MS2 data, echo=TRUE }
+ms2_rank <- 3
+ngmcas_res <- nGMCAs(X.m = ms2_matrix, rank = ms2_rank,
+                     maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
+                     initialization_method = 'subSample', H_sub = H_ms1)
+
+W_ms2 <- ngmcas_res$S
+H_ms2 <- ngmcas_res$A
+```
+
+MS2 Pure spectra and elution profiles are stored in *W_ms2* and *H_ms2*, respectively. 
+
+We must know which MS2 spectrum from *W_ms2* corresponds to the peak. It is of the same index as the MS1 spectrum. Nevertheless, to be more sure, we will calculate the correlation between:
+
+1. corresponding MS1 elution profile <span style="background-color: rgba(169, 169, 169, 0.4);">chromo_main</span>
+1. MS2 elution profiles <span style="background-color: rgba(169, 169, 169, 0.4);">chromos</span>,
+
+using the function <span style="background-color: rgba(169, 169, 169, 0.4);">elutions_corelation()</span> and choose the best corelation value. In all cases *comp_ms1* and *comp_ms2* are equal.
+
+```{r choose the good MS2 spectrum, echo=TRUE }
+comp_ms1 <- ms1_pure_data$comp_ms1
+comp_ms1
+comp_ms2 <- elutions_corelation(chromo_main = H_ms1[comp_ms1, ], chromos = H_ms2)
+comp_ms2
+```
+
+To plot MS2 data, use the same routines <span style="background-color: rgba(169, 169, 169, 0.4);">plot_MS_eics()</span> and <span style="background-color: rgba(169, 169, 169, 0.4);">plot_MS_spectra()</span> with <span style="background-color: rgba(169, 169, 169, 0.4);">ms_level = MS2</span>.
+
+```{r plot data2, echo=TRUE, fig.height=6, fig.width=7.2}
+p_eics <- plot_MS_eics(ms_mixed = ms2_matrix, ms_pure_H = H_ms2, ms_level = "MS2", rt_prec = rt_prec, choosen_comp = comp_ms1)
+p_eics
+
+p_spectra <- plot_MS_spectra(ms_mixed = ms2_matrix, ms_pure_W = W_ms2, ms_level = "MS2", mz_prec, choosen_comp = comp_ms1)
+p_spectra
+```
+
+
+## MS2 pure spectra
+Finally, we can extract the pure MS2 spectra related to the peak. This spectrum contains MS2 fragments of the precursor, the precursor losses, adducts, and their isotopes. Use <span style="background-color: rgba(169, 169, 169, 0.4);">choose_ms2_pure_spectrum()</span> to extract the choosen MS2 spectrum by providing <span style="background-color: rgba(169, 169, 169, 0.4);">W_ms2</span> and <span style="background-color: rgba(169, 169, 169, 0.4);">choosen_comp = comp_ms1 or comp_ms2</span>.
+
+```{r extract MS2 spectrum, echo=TRUE }
+ms2_pure_spectrum <- choose_ms2_pure_spectrum(W_ms2 = W_ms2, choosen_comp = comp_ms2)
+```
+
+To extract the specific MS2 spectrum of the precursor, which contains just the precursor if it still exists after fragmentation and its fragments, we provided the <span style="background-color: rgba(169, 169, 169, 0.4);">filter_ms2_spectrum()</span> function. It takes:
+
+* <span style="background-color: rgba(169, 169, 169, 0.4);">ms2_pure_spectrum</span>: MS2 pure spectrum extracted from *W_ms2*.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">ms2_matrices</span>: MS2 matrices extracted from every isolation window.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">mz_prec</span>: MS1 peak mz value.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">info.swath</span>: SWATH isolation windows *info.swath*.
+
+```{r choose the specific MS2 spectrum, echo=TRUE }
+ms2_pure_spectrum_specific <- filter_ms2_spectrum(ms2_pure_spectrum = ms2_pure_spectrum, ms2_matrices = res_ms2, mz_prec = mz_prec, info.swath = info.swath)
+# knitr::kable(head(ms2_pure_spectrum_specific))
+```
+
+plot this MS2 spectrum ......
+
+
+## MS2 identification
+This MS2 pure spectrum characterizes the MS1 peak. It is matched against our in-house database of reference spectra using the mean of three classical scores:
+
+* The dot product: $\sum (I_{measured} \times I_{library})^2 / (\sum I^2_{measured} \times \sum I^2_{library})$
+* The inverse dot product: same as the dot product but restricted to the fragments common to the query and reference spectra.
+* The percentage of reference peaks found in the query spectrum: $\textit{matched fragments}~/~\textit{reference fragments}$
+
+These scores can be calculated using these **DIANMF** functions:
+
+* <span style="background-color: rgba(169, 169, 169, 0.4);">GetSimpleDotProductSimilarity()</span>.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">GetPresenceSimilarity()</span>.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">getReverseSearchingSimilarity()</span>. 
+
+or, directly by the main function <span style="background-color: rgba(169, 169, 169, 0.4);">match_pure_scores2()</span>. The function parameters are:
+
+* <span style="background-color: rgba(169, 169, 169, 0.4);">polarity</span> *POS* or *NEG*.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">mz_precursor</span> precursor mz value.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">data_base</span> library database.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">measured_spectra</span> experimental pure spectrum.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">mz_tol</span>: mz tolerance to bin the ions.
+ 
+The compound from the database with the highest matching mean score above 0.3 is assigned to the MS1 precursor.
+
+```{r match the MS2 spectrum, echo=TRUE }
+# scores <- match_pure_scores2(polarity = 'POS', mz_precursor = mz_prec,
+#                              data_base = , measured_spectra = ms2_pure_spectrum_specific,
+#                              mz_tol = 0.05)
+```
+
+
+# *DIANMF* wrapper 
+##  Process all metabolites
+The <span style="background-color: rgba(169, 169, 169, 0.4);">dia_nmf.f()</span> method is a wrapper for the main **DIANMF** functions. The user should provide the mzML file path and the MS level he wants to process *MS1* or *MS2*.
+
+For MS2 level, providing the MS1 peaks:
+```{r main function MS2 level, echo=TRUE }
+MS2_features <- dia_nmf.f( mzML_path = file,
+                       ms_level = "MS2",
+                       peaks_by_xcms = FALSE, ms1_peaks = ms1_peaks.df )
+```
+
+For MS1 level and detecting the peaks by XCMS:
+```{r main function MS1 level, echo=TRUE }
+MS1_features <- dia_nmf.f( mzML_path = file,
+                       ms_level = "MS1",
+                       peaks_by_xcms = TRUE,
+                       ppm = 6, peakwidth = c(3,60), snthresh = 0,
+                       prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
+                       integrate = 2, mzdiff = -0.001, noise = 0,
+                       firstBaselineCheck = FALSE )
+```
+
+
+## Exporting the results
+MS2_features or MS1_features are R objects that consist of all peaks processing information. Such as the MS1 peaks, *W_ms1*, *H_ms1*, *W_ms2*, *H_ms2*, the MS1 pure spectrum, the MS2 pure spectrum and the specific one. In **DIANMF**, we provided some functions to extract the information needed:
+
+1. <span style="background-color: rgba(169, 169, 169, 0.4);">extrcat_pureSpect(features, spec_level)</span>; spec_level can be *MS1*, *MS2* or *MS2_specific*.
+1. <span style="background-color: rgba(169, 169, 169, 0.4);">extract_mixedMat(features, ms_level)</span>; ms_level is *MS1* or *MS2*. 
+1. <span style="background-color: rgba(169, 169, 169, 0.4);">extract_pureMat(features, ms_level, H)</span>; if H == *TRUE* extract H matrices else extract W.
+
+```{r extract pure spectra, echo=TRUE }
+# extract MS1 pure spectra
+ms1_spectra <- extrcat_pureSpect(features = MS2_features, spec_level = "MS1")
+
+# extract MS2 pure spectra
+ms2_spectra <- extrcat_pureSpect(features = MS2_features, spec_level = "MS2")
+
+# extract the precursors specific MS2 pure spectra
+ms2_SpecificSpectra <- extrcat_pureSpect(features = MS2_features, spec_level = "MS2_specific")
+```
+
+```{r extract pure matrices, echo=TRUE }
+# extract W_ms1 matrices
+Ws_ms1 <- extract_pureMat(features = MS2_features, ms_level = "MS1", H = FALSE )
+
+# extract H_ms1 matrices
+Hs_ms1 <- extract_pureMat(features = MS2_features, ms_level = "MS1", H = TRUE)
+
+# extract W_ms2 matrices
+Ws_ms2 <- extract_pureMat(features = MS2_features, ms_level = "MS2", H = TRUE)
+
+# extract H_ms2 matrices
+Hs_ms2 <- extract_pureMat(features = MS2_features, ms_level = "MS2", H = FALSE)
+```
+
+
+# Appendix
+**DIANMF** may perform particular tasks. For every task, there is a small vignette; we will attach its link. Such as:
+
+1. [Process specific peaks or finding and identifying compounds from the raw data.](vignettes/identify_specific_metabolites.Rmd)
+1. [Extracting the pure spectra $W$ given the mixed matrices $X$ and the elution profiles $H$.](vignettes/Find_W_given_X_and_H.Rmd) 
+1. [Or the inverse.](vignettes/Find_H_given_X_and_W.Rmd) 
+
+
+# Cheat Sheet
+soon ...
+
+# Session info
+
+Here is the output of `sessionInfo()` on the system on which this document was compiled:
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```

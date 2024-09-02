@@ -66,9 +66,9 @@ extract_mixedMat <- function(features, ms_level) {
 #' Extract factorization matrices.
 #'
 #' @inheritParams extract_mixedMat
-#' @param H `Logical` if A is TRUE extract A else extract S.  
+#' @param H `Logical` if H is TRUE extract H matrices else extract W.  
 #'
-#' @return `list` of H or S matrices.
+#' @return `list` of H or W matrices.
 #' @export
 extract_pureMat <- function(features, ms_level, H){
   

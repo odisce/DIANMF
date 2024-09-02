@@ -38,7 +38,7 @@ To extract MS2 features from LC-MS/MS data, the MS1 pure spectrum for each ident
 
 We use the <span style="background-color: rgba(169, 169, 169, 0.4);">dia_nmf.f()</span> function with <span style="background-color: rgba(169, 169, 169, 0.4);">ms_level = "MS2"</span>.
 
-```{r main function MS1 level, echo=TRUE }
+```{r main function MS2 level, echo=TRUE }
 MS2_features <- dia_nmf.f( mzML_path = file,
                           ms_level = "MS2",
                           peaks_by_xcms = TRUE, ms1_peaks = NULL, d.out = NULL,
@@ -121,7 +121,7 @@ ms2_matrix <- do.call(rbind, res_ms2)
 
 <span style="background-color: rgba(169, 169, 169, 0.4);">nGMCAs()</span> function is used to factorize the mixed MS2 data.
 
-```{r NMF MS1 data, echo=TRUE }
+```{r NMF MS2 data, echo=TRUE }
 ms2_rank <- 3
 ngmcas_res <- nGMCAs(X.m = ms2_matrix, rank = ms2_rank,
                      maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,

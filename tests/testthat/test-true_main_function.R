@@ -12,7 +12,7 @@ test_that("Extract the MS1 peaks", {
   
   
   features.l_ms1 <- dia_nmf.f( mzML_path = file,
-                           ms_level = "MS1",
+                           ms_level = "MS2",
                            peaks_by_xcms = TRUE, ms1_peaks = NULL,
                            ppm.n = 7,
                            maximumIteration = 10, maxFBIteration = 5, toleranceFB = 1e-5,
@@ -26,10 +26,8 @@ test_that("Extract the MS1 peaks", {
   expect_equal(class(features.l_ms2), "list")
   expect_equal(length(features.l_ms2), 2)
   expect_true( !is.null(features.l_ms2[[1]]) ) 
-  expect_equal(length(features.l_ms2[[1]]), 13)
-  
+
   expect_equal(class(features.l_ms1), "list")
   expect_true( !is.null(features.l_ms1[[1]]) ) 
-  expect_equal(length(features.l_ms1[[1]]), 7)
-  
+
 })

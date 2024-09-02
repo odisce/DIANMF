@@ -104,7 +104,7 @@ updateS.f <- function(Y, A, S_init, lambda, maxFBIteration, toleranceFB){
 
 #' Approximate Y by A and S.
 #'
-#' @param X.m contains components' sources mixed up in an unknown but linear way. Every row is an elution profile from the candidate precursor and its fragment ions through the rt scans in the columns.
+#' @param X.m `matrix` contains components' sources mixed up in an unknown but linear way. Every row is an elution profile from the candidate precursor and its fragment ions through the rt scans in the columns.
 #' @inheritParams random_init
 #' @param errors_print `Logical` `TRUE` to print the error difference, `FALSE` otherwise. 
 #' @param initialization_method `character` to specify the initialization method: random, nndsvd or subSample. 

@@ -67,10 +67,6 @@ dia_nmf.f <- function(
   k <- 1;
   features.l <- list();
   
-  # if( !is.null(peaks.indexes) ){
-  #   ms1_peaks.df <- ms1_peaks.df[c(peaks.indexes), ]
-  # };
-  
   while( peak.idx <= nrow(ms1_peaks.df) ){
     if( isFALSE(ms1_peaks.df[peak.idx, 'is_ion']) ){
       
@@ -105,9 +101,7 @@ dia_nmf.f <- function(
       comp_ms1 <- ms1_pure_data$comp_ms1;
       
       # Test the chosen ms1 pure spectra ions, which will also be considered as peaks or not.
-      ions_maybe_peaks <- which(W_ms1[,comp_ms1] >= 0.8 * rowSums(W_ms1) );
-      ions_maybe_peaks <- as.numeric(names(ions_maybe_peaks));
-      ions_are_peaks <- check_ms1_ions(ions_maybe_peaks.v = ions_maybe_peaks, ms1_peaks.df = ms1_peaks.df, rt_prec = rt_prec, rt_tol = rt_tol);
+      ions_are_peaks <- check_ms1_ions(W_ms1 = W_ms1, comp_ms1 = comp_ms1, ms1_peaks.df = ms1_peaks.df, rt_prec = rt_prec, rt_tol = rt_tol);
       # these ions will not factorized again, but they may be used in different peaks factorization
       ms1_peaks.df[ions_are_peaks, 'is_ion'] <- TRUE;
       # --------------------------------------------------------------------------------------------------------- the peaks data.frame is updated :).

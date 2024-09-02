@@ -73,7 +73,7 @@ prepare_pure_eics <- function(H, rt){
 #' @export
 #' @import ggplot2
 #' @import patchwork
-plot_MS_eics <- function(ms_mixed, ms_pure_H, ms_level = c("MS1", "MS2"), rt_prec, choosen_comp){
+plot_MS_eics <- function(ms_mixed, ms_pure_H = NULL, ms_level = c("MS1", "MS2"), rt_prec, choosen_comp){
   
   # plot the MIXED elution profiles 
   ms1_mixed_eics <- prepare_mixed_data(ms_mixed = ms_mixed, mz_values = as.numeric(rownames(ms_mixed)), rts = as.numeric(colnames(ms_mixed)) )
@@ -85,19 +85,25 @@ plot_MS_eics <- function(ms_mixed, ms_pure_H, ms_level = c("MS1", "MS2"), rt_pre
     xlim( min(ms1_mixed_eics$rt), max(ms1_mixed_eics$rt) ) +
     guides(color = 'none')
   
-  # plot the PURE elution profiles
-  ms_rt <- as.numeric(colnames(ms_mixed))
-  ms1_pure_eics <- prepare_pure_eics(H = ms_pure_H, rt = ms_rt)
-  p2 <- ggplot2::ggplot(data = ms1_pure_eics, aes(rt, intensity , color = comp_nb)) +
-    facet_grid(comp_nb~.) +
-    geom_line() +
-    geom_point() +
-    xlim(min(ms1_pure_eics$rt), max(ms1_pure_eics$rt)) +
-    labs( caption = paste(ms_level, " elution profiles; rt:", round(rt_prec,4), " good comp:", choosen_comp))
   
-  p <- p1 / p2 + plot_layout(ncol = 1, guides = "collect")  # Align plots vertically with shared legend
-  
-  return(p)
+  if( is.null(ms_pure_H) ){
+    return(p1)
+  } else {
+    # plot the PURE elution profiles
+    ms_rt <- as.numeric(colnames(ms_mixed))
+    ms1_pure_eics <- prepare_pure_eics(H = ms_pure_H, rt = ms_rt)
+    p2 <- ggplot2::ggplot(data = ms1_pure_eics, aes(rt, intensity , color = comp_nb)) +
+      facet_grid(comp_nb~.) +
+      geom_line() +
+      geom_point() +
+      xlim(min(ms1_pure_eics$rt), max(ms1_pure_eics$rt)) +
+      labs( caption = paste(ms_level, " elution profiles; rt:", round(rt_prec,4), " good comp:", choosen_comp))
+    
+    p <- p1 / p2 + plot_layout(ncol = 1, guides = "collect")  # Align plots vertically with shared legend
+    
+    return(p)
+  }
+ 
 }
 
 #-------------------------------------------------------------------------------
