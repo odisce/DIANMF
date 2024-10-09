@@ -3,7 +3,9 @@
 #' @param compound.c file path of the spiked compounds table
 #' 
 #' @return data.frame/data.table spiked compounds table.
+#' 
 #' @export
+#' 
 #' @importFrom utils read.table
 load_compounds_function.tb <- function(compound.c){
   m <- utils::read.table(compound.c,
@@ -26,6 +28,7 @@ load_compounds_function.tb <- function(compound.c){
 #' @param rt_tol.n `numeric(1)` retention time tolerance.
 #'
 #' @return MS1 selected peaks `matrix`.
+#' 
 #' @export
 search_for_ROIs_function.l <- function(compounds.df, ms1_peaks, mz_tol.n = 0.05, rt_tol.n = 5) {
   res <- lapply(1:nrow(compounds.df), function(i) {

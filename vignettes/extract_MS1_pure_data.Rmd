@@ -68,10 +68,10 @@ The MS1_features object contains information for every identified peak as the pe
 ## MS1 pure spectra 
 
 ```{r MS1 pure spectra, echo=TRUE }
-MS1_pure_spectra <- extrcat_pureSpect( features = MS1_features, spec_level = 'MS1' )
+MS1_pure_spectra <- extract_pureSpect( features = MS1_features, spec_level = 'MS1' )
 ```
 
-The <span style="background-color: rgba(169, 169, 169, 0.4);">extrcat_pureSpect()</span> method returned list of all extracted MS1 pure spectra. <span style="background-color: rgba(169, 169, 169, 0.4);">extrcat_pureSpect</span> objects are two-dimensional `r class(MS1_pure_spectra[[1]])` of two columns `r colnames(MS1_pure_spectra[[1]])`.
+The <span style="background-color: rgba(169, 169, 169, 0.4);">extract_pureSpect()</span> method returned list of all extracted MS1 pure spectra. <span style="background-color: rgba(169, 169, 169, 0.4);">extract_pureSpect</span> objects are two-dimensional `r class(MS1_pure_spectra[[1]])` of two columns `r colnames(MS1_pure_spectra[[1]])`.
 
 ## Process one specific peak
 

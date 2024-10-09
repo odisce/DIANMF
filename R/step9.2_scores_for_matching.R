@@ -7,6 +7,13 @@
 #' @param bin `numeric(1)` mz tolerance.
 #'
 #' @return `numeric(1)` percentage of library fragments in the experimental spectrum.
+#' 
+#' @export
+#' 
+#' @examples
+#' a <- data.frame( "mz_value" = seq(1:8), 'intensity' = c(0,400,1000,200,0,700,300,300) )
+#' b <- data.frame( "mz_value" = seq(1:8), 'intensity' = c(100,0,1000,0,100,0,400,300)) 
+#' GetPresenceSimilarity(measuredSpectra = a, librarySpectra = b, bin = 0.05)
 GetPresenceSimilarity <- function(measuredSpectra, librarySpectra, bin){
 
   if(nrow(librarySpectra) == 0) {return(0)}
@@ -59,6 +66,13 @@ GetPresenceSimilarity <- function(measuredSpectra, librarySpectra, bin){
 #' @inheritParams GetPresenceSimilarity
 #'
 #' @return `numeric(1)` dot product.
+#' 
+#' @export
+#' 
+#' @examples
+#' a <- data.frame( "mz_value" = seq(1:8), 'intensity' = c(0,400,1000,200,0,700,300,300) ) 
+#' b <- data.frame( "mz_value" = seq(1:8), 'intensity' = c(100,0,1000,0,100,0,400,300)) 
+#' GetSimpleDotProductSimilarity(measuredSpectra = a, librarySpectra = b, bin = 0.05)
 GetSimpleDotProductSimilarity <- function(measuredSpectra, librarySpectra, bin){
   scalarM <- scalarR <- covariance <- sumM <-  sumR <- 0
 
@@ -170,6 +184,13 @@ GetSimpleDotProductSimilarity <- function(measuredSpectra, librarySpectra, bin){
 #' @inheritParams GetPresenceSimilarity
 #'
 #' @return `numeric(1)` inverse dot product.
+#' 
+#' @export
+#' 
+#' @examples
+#' a <- data.frame( "mz_value" = seq(1:8), 'intensity' = c(0,400,1000,200,0,700,300,300) ) 
+#' b <- data.frame( "mz_value" = seq(1:8), 'intensity' = c(100,0,1000,0,100,0,400,300))
+#' getReverseSearchingSimilarity(measuredSpectra = a, librarySpectra = b, bin = 0.05)
 getReverseSearchingSimilarity <- function(measuredSpectra, librarySpectra, bin){
 
   scalarM <- scalarR <- covariance <- sumM <- sumL <- 0
@@ -284,10 +305,10 @@ getReverseSearchingSimilarity <- function(measuredSpectra, librarySpectra, bin){
 
 #-------------------------------------------------------------------------------
 
-# match_pure_scores2 <- function(polarity, mz_precursor, data_base, measured_spectra){
+# match_pure_scores2 <- function(polarity, mz_prec, data_base, measured_spectra){
 #
-#   mz_tol <- mz_precursor * 5e-6
-#   idx_ref_spect <- data_base$index[Polarity == polarity & dplyr::between(mz, mz_precursor-mz_tol, mz_precursor+mz_tol), id]
+#   mz_tol <- mz_prec * 5e-6
+#   idx_ref_spect <- data_base$index[Polarity == polarity & dplyr::between(mz, mz_prec-mz_tol, mz_prec+mz_tol), id]
 #
 #   if( length(idx_ref_spect) > 0 ){
 #     res <- lapply(seq_along(idx_ref_spect), function(i){
@@ -329,22 +350,24 @@ getReverseSearchingSimilarity <- function(measuredSpectra, librarySpectra, bin){
 #' Match pure spectrum with some reference spectra to be identify.
 #'
 #' @param polarity `character` 'POS' or 'NEG'.
-#' @param mz_precursor `numeric` precursor mz value.
+#' @inheritParams filter_ms2_spectrum
 #' @param data_base reference/library database.
 #' @param measured_spectra `data.frame` experimental pure spectrum.
 #' @param mz_tol `numeric(1)` to bin the ions.
 #'
 #' @return `list` matching scores with some information of the matched library(reference) spectrum.
+#' 
 #' @export
+#' 
 #' @importFrom dplyr between
 #' @importFrom parallel mclapply
-match_pure_scores2 <- function(polarity, mz_precursor, data_base, measured_spectra, mz_tol = NULL) {
+match_pure_scores2 <- function(polarity, mz_prec, data_base, measured_spectra, mz_tol = NULL) {
 
   if ( is.null(mz_tol) ){
-    mz_tol <- mz_precursor * 5e-6
+    mz_tol <- mz_prec * 5e-6
   }
   
-  idx_ref_spect <- data_base$index[Polarity == polarity & dplyr::between(mz, mz_precursor-mz_tol, mz_precursor+mz_tol), id]
+  idx_ref_spect <- data_base$index[Polarity == polarity & dplyr::between(mz, mz_prec-mz_tol, mz_prec+mz_tol), id]
   # print(idx_ref_spect)
   
   if (length(idx_ref_spect) > 0) {
@@ -367,15 +390,15 @@ match_pure_scores2 <- function(polarity, mz_precursor, data_base, measured_spect
       score <- ( score2 + score3 ) /2
 
       data.table(
-        "ref spectrum index" = i,
+        "ref_spectrum_index" = i,
         "mz" = data_base$index[i, 'mz'],
-        "NCE" = data_base$index[i, 'NCE'],
-        "Composition" = data_base$index[i, 'composition'],
-        "name" = data_base$index[i, 'name'],
-        "Dot prod" = round(score1,2),
-        "Rev prod" = round(score3,2),
-        "Presence" = round(score2,2),
-        "total score" = round(score,2) )
+        "NCE" = unname(data_base$index[i, 'NCE']),
+        "Composition" = unname(data_base$index[i, 'composition']),
+        "name" = unname(data_base$index[i, 'name']),
+        "dot_prod" = round(score1,2),
+        "rev_prod" = round(score3,2),
+        "presence" = round(score2,2),
+        "total_score" = round(score,2) )
     })
     res1 <- rbindlist(results)
   } else {
@@ -385,9 +408,9 @@ match_pure_scores2 <- function(polarity, mz_precursor, data_base, measured_spect
 }
 
 # match with the whole data base
-# match_with_whole_data_base <- function(polarity, mz_precursor, data_base, measured_spectra) {
+# match_with_whole_data_base <- function(polarity, mz_prec, data_base, measured_spectra) {
 #
-#   mz_tol <- mz_precursor * 5e-6
+#   mz_tol <- mz_prec * 5e-6
 #   # mz_tol <- 0.01
 #   idx_ref_spect <- data_base$index[Polarity == polarity, id]
 #

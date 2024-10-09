@@ -19,3 +19,8 @@ getReverseSearchingSimilarity(measuredSpectra, librarySpectra, bin)
 \description{
 Inverse dot product score.
 }
+\examples{
+a <- data.frame( "mz_value" = seq(1:8), 'intensity' = c(0,400,1000,200,0,700,300,300) ) 
+b <- data.frame( "mz_value" = seq(1:8), 'intensity' = c(100,0,1000,0,100,0,400,300))
+getReverseSearchingSimilarity(measuredSpectra = a, librarySpectra = b, bin = 0.05)
+}

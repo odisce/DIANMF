@@ -4,8 +4,10 @@
 #' @param mz_values Fragments mz values of the eics in ms_mixed. The row TRUE names.
 #' @param rts EICs retention time values in ms_mixed. The columns TRUE names.
 #'
-#' @return data.frame for every EIC with the mz and rt information.
+#' @return `data.frame` for every EIC with the mz and rt information.
+#' 
 #' @export
+#' 
 #' @importFrom reshape2 melt
 prepare_mixed_data <- function(ms_mixed = mat1, mz_values = as.numeric(rownames(ms1_mat)), rts = as.numeric(colnames(ms1_mat)) ){
   
@@ -24,7 +26,9 @@ prepare_mixed_data <- function(ms_mixed = mat1, mz_values = as.numeric(rownames(
 #' @param W Pure spectra `matrix`.
 #'
 #' @return Pure components spectra information `data.frame`.
+#' 
 #' @export
+#' 
 #' @importFrom reshape2 melt
 #' @import magrittr
 prepare_pure_spectra <- function(W){
@@ -47,7 +51,9 @@ prepare_pure_spectra <- function(W){
 #' @param rt `numeric` vector chromatograms retention time values in H.
 #'
 #' @return Pure components chromatograms information `data.frame`.
+#' 
 #' @export
+#' 
 #' @importFrom reshape2 melt
 prepare_pure_eics <- function(H, rt){
  
@@ -70,7 +76,9 @@ prepare_pure_eics <- function(H, rt){
 #' @inheritParams choose_ms2_pure_spectrum
 #'
 #' @return ggplot2 plot
+#' 
 #' @export
+#' 
 #' @import ggplot2
 #' @import patchwork
 plot_MS_eics <- function(ms_mixed, ms_pure_H = NULL, ms_level = c("MS1", "MS2"), rt_prec, choosen_comp){
@@ -111,12 +119,14 @@ plot_MS_eics <- function(ms_mixed, ms_pure_H = NULL, ms_level = c("MS1", "MS2"),
 #' plot mixed and pure spectra
 #'
 #' @inheritParams prepare_mixed_data
-#' @param ms_pure_W data.frame of pure spectra
+#' @param ms_pure_W `data.frame` of pure spectra
 #' @inheritParams plot_MS_eics
 #' @inheritParams filter_ms2_spectrum
 #'
 #' @return ggplot2 plot
+#' 
 #' @export
+#' 
 #' @import ggplot2
 plot_MS_spectra <- function(ms_mixed, ms_pure_W, ms_level = c("MS1", "MS2"), mz_prec, choosen_comp){
   
@@ -135,6 +145,36 @@ plot_MS_spectra <- function(ms_mixed, ms_pure_W, ms_level = c("MS1", "MS2"), mz_
     geom_linerange(data = spectra, stat = "identity", aes( x = mz_value, y = intensity, ymin = 0, ymax = intensity, color = comp_nb)) +
     facet_grid(comp_nb~.) +
     labs( caption = paste(ms_level, " spectra; mz:", round(mz_prec,4), " good_comp:", choosen_comp)) +
+    theme_bw();
+  
+  return(p)
+}
+
+#-------------------------------------------------------------------------------
+
+#' Plot measured vs library spectra.
+#'
+#' @param measured_spectrum `data.frame` measured spectrum.
+#' @param library_spectrum `data.frame` library/reference spectrum.
+#'
+#' @return ggplot2 plot
+#' 
+#' @export
+#' 
+#' @import ggplot2
+plot_spectra_vs <- function(measured_spectrum, library_spectrum){
+  measured_spectrum <- as.data.frame(measured_spectrum)
+  measured_spectrum$intensity <- measured_spectrum$intensity / max(measured_spectrum$intensity)
+  
+  library_spectrum <- as.data.frame(library_spectrum)
+  colnames(library_spectrum) <- c('mz_value', 'intensity')
+  library_spectrum$intensity <- library_spectrum$intensity / max(library_spectrum$intensity)
+  
+  p <- ggplot2::ggplot( ) +
+    geom_linerange(data = measured_spectrum, stat = "identity", aes( x = mz_value, y = intensity, ymin = 0, ymax = intensity)) +
+    geom_linerange(data = library_spectrum, stat = "identity", aes( x = mz_value, y = -intensity, ymin = -intensity, ymax = 0, color = 'red')) +
+    guides(color = FALSE) +
+    labs( caption = "measured VS library spectra.") +
     theme_bw();
   
   return(p)

@@ -4,7 +4,9 @@
 #' @param chromos `numeric` MS2 chromatograms.
 #'
 #' @return `numeric(1)` index of the MS2 chromatogram best correlates with the MS1 chromatogram.
+#' 
 #' @export
+#' 
 #' @importFrom stats cor
 elutions_corelation <- function(chromo_main, chromos){
   correlations <- c()
@@ -21,6 +23,7 @@ elutions_corelation <- function(chromo_main, chromos){
 #' @inheritParams filter_ms2_spectrum
 #'
 #' @return Precursor MS1 pure spectrum `data.frame`.
+#' 
 #' @export
 extract_ms1_pure_spectrum <- function(W_ms1, mz_prec){
   
@@ -46,7 +49,9 @@ extract_ms1_pure_spectrum <- function(W_ms1, mz_prec){
 #' @param choosen_comp `numeric(1)` good component index.
 #'
 #' @return Pure MS2 spectrum `data.frame`.
+#' 
 #' @export
+#' 
 #' @import magrittr
 choose_ms2_pure_spectrum <- function(W_ms2, choosen_comp){
   

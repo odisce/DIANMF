@@ -6,7 +6,7 @@
 \usage{
 match_pure_scores2(
   polarity,
-  mz_precursor,
+  mz_prec,
   data_base,
   measured_spectra,
   mz_tol = NULL
@@ -15,7 +15,7 @@ match_pure_scores2(
 \arguments{
 \item{polarity}{\code{character} 'POS' or 'NEG'.}
 
-\item{mz_precursor}{\code{numeric} precursor mz value.}
+\item{mz_prec}{\code{numeric(1)} precursor mz.}
 
 \item{data_base}{reference/library database.}
 

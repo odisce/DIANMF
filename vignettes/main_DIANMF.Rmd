@@ -128,7 +128,7 @@ mixed_eics <- plot_MS_eics(ms_mixed = ms1_mat, ms_level = "MS1", rt_prec = rt_pr
 mixed_eics
 ```
 
-All fragments from the same MS1 parent ion have the same elution profile. At this step, we aim to extract the elution profile (or chromatogram) related to the precursor we are identifying without integrating other compounds. In other words, we want to un-mix (factorization as said mathematically) or deconvolution (as known by chemists) this mixed data. 
+All fragments from the same MS1 parent ion have the same elution profile. At this step, we aim to extract the elution profiles (or chromatograms) related to the precursor we identify (at rt `r round(rt_prec,4)`) without integrating other compounds. In other words, we want to un-mix (factorization as said mathematically) or deconvolution (as known by chemists) this mixed data.
 
 One of the main strengths of our approach in identifying pure data of metabolites is using non-negative matrix factorization (NMF), which is not the traditional way: model peak selection.
 
@@ -190,7 +190,7 @@ W_ms1 <- ngmcas_res$S
 H_ms1 <- ngmcas_res$A
 ```
 
-MS1 Pure spectra and elution profiles are stored in *W_ms1* and *H_ms1*, respectively. One of the pure sources in *W_ms1* and *H_ms1* is related to the peak we are processing. The spectrum of the maximum intensity at the fragment of mz equal to the peak mz: `r mz_prec` corresponds to this MS1 precursor. And can be retrieved by <span style="background-color: rgba(169, 169, 169, 0.4);">extract_ms1_pure_spectrum()</span> given:
+MS1 Pure spectra and elution profiles are stored in *W_ms1* and *H_ms1*, respectively. One of the pure sources in *W_ms1* and *H_ms1* is related to the peak we are processing. The spectrum of the maximum intensity at the fragment of mz equal to the peak mz: `r round(mz_prec,4)` corresponds to this MS1 precursor. And can be retrieved by <span style="background-color: rgba(169, 169, 169, 0.4);">extract_ms1_pure_spectrum()</span> given:
 
 * <span style="background-color: rgba(169, 169, 169, 0.4);">W_ms1</span>
 * <span style="background-color: rgba(169, 169, 169, 0.4);">mz_prec</span>
@@ -205,7 +205,7 @@ ms1_pure_spectrum <- ms1_pure_data$ms1_pure_spectrum
 comp_ms1 <- ms1_pure_data$comp_ms1
 ```
 
-For the users' curiosity, we will plot the pure and mixed data, EICS, and spectra using <span style="background-color: rgba(169, 169, 169, 0.4);">plot_MS_eics()</span> and <span style="background-color: rgba(169, 169, 169, 0.4);">plot_MS_spectra()</span>.
+For the users' curiosity, we will plot the pure and mixed data: EICS and spectra using <span style="background-color: rgba(169, 169, 169, 0.4);">plot_MS_eics()</span> and <span style="background-color: rgba(169, 169, 169, 0.4);">plot_MS_spectra()</span>.
 
 ```{r plot data, echo=TRUE, fig.height=6, fig.width=7.2}
 p_eics <- plot_MS_eics(ms_mixed = ms1_mat, ms_pure_H = H_ms1, ms_level = "MS1", rt_prec = rt_prec, choosen_comp = comp_ms1)
@@ -215,7 +215,7 @@ p_spectra <- plot_MS_spectra(ms_mixed = ms1_mat, ms_pure_W = W_ms1, ms_level = "
 p_spectra
 ```
 
-Let us look closer at the fragments retrieved in the MS1 pure spectra. This spectrum may contain MS1 ions, spotted as peaks in our origin peak matrix. These ions should not be fragmented again if they are strongly related to the processed precursor but not to another. These ions or MS1 peaks should be marked in the peaks `r class(ms1_peaks.df)` to avoid processing the same precursor several times.
+Let us look closer at the fragments retrieved in the MS1 pure spectra. These spectra may contain MS1 ions, spotted as peaks in our origin peak matrix. These ions should not be fragmented again if they are strongly related to the processed precursor but not to another. These ions or MS1 peaks should be marked in the peaks `r class(ms1_peaks.df)` to avoid processing the same precursor several times.
 
 ## Extract MS2 mixed matrices
 Our *DIANMF* package is designed to process SWATH DIA data. To accomplish this, passing through the MS1 level is necessary. Nonetheless, it is also possible to process only MS1 data, as demonstrated previously.
@@ -227,7 +227,7 @@ info.swath <- isolationWindows.range(data_example)
 knitr::kable(info.swath)
 ```
 
-The <span style="background-color: rgba(169, 169, 169, 0.4);">extract_ms2_matrices()</span> is a main **DIANMF** feature. This function aims to extract the MS2 extracted ion chromatogram for every ion in the pure MS1 spectrum of the same peak. By doing this, we are sure all information related to this MS1 precursor in this raw file is extracted. Depending on the ions' mz, they were fragmented in a specific isolation window in the MS2 step. Then, we have the MS2 data in a matrix for the related ions for every isolation window.
+The <span style="background-color: rgba(169, 169, 169, 0.4);">extract_ms2_matrices()</span> is a main **DIANMF** feature. This function aims to extract the MS2 extracted ion chromatograms for every ion in the pure MS1 spectrum. By doing this, we are sure all information related to this MS1 precursor in this raw file is extracted. Depending on the ions' mz, they were fragmented in a specific isolation window in the MS2 step. Then, we have the MS2 data in a matrix for the related ions for every isolation window.
 
 <span style="background-color: rgba(169, 169, 169, 0.4);">extract_ms2_matrices()</span> inherits the <span style="background-color: rgba(169, 169, 169, 0.4);">extract_ms_matrix.f()</span> function. It determine in which isolation windows the MS1 ions in <span style="background-color: rgba(169, 169, 169, 0.4);">ms1_pure_spectrum</span> and loop over them in <span style="background-color: rgba(169, 169, 169, 0.4);">info.swath</span> parameter.
 
@@ -261,22 +261,22 @@ We must know which MS2 spectrum from *W_ms2* corresponds to the peak. It is of t
 1. corresponding MS1 elution profile <span style="background-color: rgba(169, 169, 169, 0.4);">chromo_main</span>
 1. MS2 elution profiles <span style="background-color: rgba(169, 169, 169, 0.4);">chromos</span>,
 
-using the function <span style="background-color: rgba(169, 169, 169, 0.4);">elutions_corelation()</span> and choose the best corelation value. In all cases *comp_ms1* and *comp_ms2* are equal.
+using the function <span style="background-color: rgba(169, 169, 169, 0.4);">elutions_corelation()</span> it choose the best corelation value. In all cases *comp_ms1* and *comp_ms2* are equal.
 
 ```{r choose the good MS2 spectrum, echo=TRUE }
-comp_ms1 <- ms1_pure_data$comp_ms1
 comp_ms1
+
 comp_ms2 <- elutions_corelation(chromo_main = H_ms1[comp_ms1, ], chromos = H_ms2)
 comp_ms2
 ```
 
-To plot MS2 data, use the same routines <span style="background-color: rgba(169, 169, 169, 0.4);">plot_MS_eics()</span> and <span style="background-color: rgba(169, 169, 169, 0.4);">plot_MS_spectra()</span> with <span style="background-color: rgba(169, 169, 169, 0.4);">ms_level = MS2</span>.
+To plot MS2 data, use the same functions <span style="background-color: rgba(169, 169, 169, 0.4);">plot_MS_eics()</span> and <span style="background-color: rgba(169, 169, 169, 0.4);">plot_MS_spectra()</span> with <span style="background-color: rgba(169, 169, 169, 0.4);">ms_level = MS2</span>.
 
 ```{r plot data2, echo=TRUE, fig.height=6, fig.width=7.2}
-p_eics <- plot_MS_eics(ms_mixed = ms2_matrix, ms_pure_H = H_ms2, ms_level = "MS2", rt_prec = rt_prec, choosen_comp = comp_ms1)
+p_eics <- plot_MS_eics(ms_mixed = ms2_matrix, ms_pure_H = H_ms2, ms_level = "MS2", rt_prec = rt_prec, choosen_comp = comp_ms2)
 p_eics
 
-p_spectra <- plot_MS_spectra(ms_mixed = ms2_matrix, ms_pure_W = W_ms2, ms_level = "MS2", mz_prec, choosen_comp = comp_ms1)
+p_spectra <- plot_MS_spectra(ms_mixed = ms2_matrix, ms_pure_W = W_ms2, ms_level = "MS2", mz_prec, choosen_comp = comp_ms2)
 p_spectra
 ```
 
@@ -319,7 +319,7 @@ These scores can be calculated using these **DIANMF** functions:
 or, directly by the main function <span style="background-color: rgba(169, 169, 169, 0.4);">match_pure_scores2()</span>. The function parameters are:
 
 * <span style="background-color: rgba(169, 169, 169, 0.4);">polarity</span> *POS* or *NEG*.
-* <span style="background-color: rgba(169, 169, 169, 0.4);">mz_precursor</span> precursor mz value.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">mz_prec</span> precursor mz value.
 * <span style="background-color: rgba(169, 169, 169, 0.4);">data_base</span> library database.
 * <span style="background-color: rgba(169, 169, 169, 0.4);">measured_spectra</span> experimental pure spectrum.
 * <span style="background-color: rgba(169, 169, 169, 0.4);">mz_tol</span>: mz tolerance to bin the ions.
@@ -327,11 +327,12 @@ or, directly by the main function <span style="background-color: rgba(169, 169, 
 The compound from the database with the highest matching mean score above 0.3 is assigned to the MS1 precursor.
 
 ```{r match the MS2 spectrum, echo=TRUE }
-# scores <- match_pure_scores2(polarity = 'POS', mz_precursor = mz_prec,
+# scores <- match_pure_scores2(polarity = 'POS', mz_prec = mz_prec,
 #                              data_base = , measured_spectra = ms2_pure_spectrum_specific,
 #                              mz_tol = 0.05)
 ```
 
+soon to be continued .... 
 
 # *DIANMF* wrapper 
 ##  Process all metabolites
@@ -359,19 +360,19 @@ MS1_features <- dia_nmf.f( mzML_path = file,
 ## Exporting the results
 MS2_features or MS1_features are R objects that consist of all peaks processing information. Such as the MS1 peaks, *W_ms1*, *H_ms1*, *W_ms2*, *H_ms2*, the MS1 pure spectrum, the MS2 pure spectrum and the specific one. In **DIANMF**, we provided some functions to extract the information needed:
 
-1. <span style="background-color: rgba(169, 169, 169, 0.4);">extrcat_pureSpect(features, spec_level)</span>; spec_level can be *MS1*, *MS2* or *MS2_specific*.
+1. <span style="background-color: rgba(169, 169, 169, 0.4);">extract_pureSpect(features, spec_level)</span>; spec_level can be *MS1*, *MS2* or *MS2_specific*.
 1. <span style="background-color: rgba(169, 169, 169, 0.4);">extract_mixedMat(features, ms_level)</span>; ms_level is *MS1* or *MS2*. 
 1. <span style="background-color: rgba(169, 169, 169, 0.4);">extract_pureMat(features, ms_level, H)</span>; if H == *TRUE* extract H matrices else extract W.
 
 ```{r extract pure spectra, echo=TRUE }
 # extract MS1 pure spectra
-ms1_spectra <- extrcat_pureSpect(features = MS2_features, spec_level = "MS1")
+ms1_spectra <- extract_pureSpect(features = MS2_features, spec_level = "MS1")
 
 # extract MS2 pure spectra
-ms2_spectra <- extrcat_pureSpect(features = MS2_features, spec_level = "MS2")
+ms2_spectra <- extract_pureSpect(features = MS2_features, spec_level = "MS2")
 
 # extract the precursors specific MS2 pure spectra
-ms2_SpecificSpectra <- extrcat_pureSpect(features = MS2_features, spec_level = "MS2_specific")
+ms2_SpecificSpectra <- extract_pureSpect(features = MS2_features, spec_level = "MS2_specific")
 ```
 
 ```{r extract pure matrices, echo=TRUE }

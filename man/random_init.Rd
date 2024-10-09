@@ -17,3 +17,9 @@ W and H random matrices.
 \description{
 Initialize matrices W and H randomly.
 }
+\examples{
+ m <- matrix(c(1,0,0,0,1,1,1,1,1), nrow = 3, ncol = 3)
+ r <- 2
+ 
+random_init(X = m, rank = r)
+}

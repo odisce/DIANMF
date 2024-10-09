@@ -7,7 +7,7 @@ test_that("scores matching test", {
   spectrum2 <- data.frame(
     "mz_value" = seq(1:8),
     'intensity' = c(100,0,1000,0,100,0,400,300)
-  ) # reference spectra
+  ) # reference spectrum
  
   dot_product <- GetSimpleDotProductSimilarity(measuredSpectra = spectrum1, librarySpectra = spectrum2, bin = 0.001)
   reverse_dot_product <- getReverseSearchingSimilarity(measuredSpectra = spectrum1, librarySpectra = spectrum2, bin = 0.001)
@@ -26,6 +26,6 @@ test_that("scores matching test", {
   # # test the scores in true pure spectrum of Aminophenol
   # MS2_pure_spectrum <- readRDS("~/DIA_NMF_R_package/dianmf/Data/MS2_pure_spectrum.rds")
   # DATA_BASE <- 
-  # scores <- match_pure_scores2(polarity = 'POS', mz_precursor = 110.06, DATA_BASE, my_spectrum = MS2_pure_spectrum)
+  # scores <- 
   
 })

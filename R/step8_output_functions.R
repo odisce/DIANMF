@@ -4,8 +4,9 @@
 #' @param spec_level `character` determine the pure spectrum spec_level 'MS1', 'MS2' or 'MS2_specific'. 'MS2_specific' is the spectrum related to the precursor and its fragments without its adducts and loss fragments.
 #'
 #' @return `list` of pure spectra.
+#' 
 #' @export
-extrcat_pureSpect <- function(features, spec_level){
+extract_pureSpect <- function(features, spec_level){
   
   if( spec_level == "MS1" ){
     spect <- lapply(features, function(x) x$MS1_pure_spectrum)
@@ -42,10 +43,11 @@ extrcat_pureSpect <- function(features, spec_level){
 
 #' Extract raw (mixed) matrices.
 #'
-#' @inheritParams extrcat_pureSpect 
+#' @inheritParams extract_pureSpect 
 #' @param ms_level `character` 'MS1' or 'MS2' level.
 #'
 #' @return `list` of raw matrices before factorization.
+#' 
 #' @export
 extract_mixedMat <- function(features, ms_level) {
   
@@ -69,6 +71,7 @@ extract_mixedMat <- function(features, ms_level) {
 #' @param H `Logical` if H is TRUE extract H matrices else extract W.  
 #'
 #' @return `list` of H or W matrices.
+#' 
 #' @export
 extract_pureMat <- function(features, ms_level, H){
   

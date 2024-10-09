@@ -13,7 +13,9 @@
 #' @param ... Additional parameters passed to \code{\link[xcms]{CentWaveParam}}.
 #'
 #' @return `list` of identified features.
+#' 
 #' @export
+#' 
 #' @importFrom purrr map
 #' @import magrittr
 #' @import dplyr 
@@ -174,9 +176,9 @@ dia_nmf.f <- function(
         
       }
       
-      # # the following line will be deleted at the end !!!!!!!!!!!!!!!!!!!!!!!!!!
-      # saveRDS(feature_sub.l, paste0('C:/Users/DK273056/Documents/DIA_NMF_R_package_outputs/peak_', peak.idx, '.rds') );
-      
+      # the following line will be deleted at the end !!!!!!!!!!!!!!!!!!!!!!!!!!
+      saveRDS(feature_sub.l, paste0('C:/Users/DK273056/Documents/DIA_NMF_R_package_outputs2/peak_', ms1_peaks.df[peak.idx, 'rt'], '.rds') );
+
       features.l[[k]] <- feature_sub.l;
       k <- k + 1
       } else {   # peaks which are ions will not be factorized alone

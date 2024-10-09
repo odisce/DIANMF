@@ -55,7 +55,6 @@ test_that("Factorize mixed MS1 and MS2 data for a specific peak to get the pure 
   p_eics <- plot_MS_eics(ms_mixed = ms2_mat, ms_pure_H = H_ms2, ms_level = "MS2", rt_prec = rt_prec, choosen_comp = comp_ms2)
   p_spectra <- plot_MS_spectra(ms_mixed = ms2_mat, ms_pure_W = W_ms2, ms_level = "MS2", mz_prec, choosen_comp = comp_ms2)
   
-  
   # tests
   expect_true( !is.null(ms1_pure_spectrum) )
   expect_true( !is.null(ms2_pure_spectrum) )

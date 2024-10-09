@@ -28,7 +28,9 @@ has_four_consecutive_non_zero <- function(row) {
 #' @param iso_win_index `numeric(1)` SWATH isolation window index; just for MS2 level.
 #'
 #' @return Mixed `matrix` related peak.idx.
+#' 
 #' @export
+#' 
 #' @importFrom data.table as.data.table 
 #' @importFrom MSnbase filterMsLevel filterRt fData filterIsolationWindow spectra rtime
 #' @import magrittr
@@ -115,13 +117,15 @@ extract_ms_matrix.f <- function(peak.idx, ms1_peaks.df, rawData.onDiskMSnExp, pp
 #' @param info.swath `data.frame` SWATH isolation windows.
 #'
 #' @return `list` of ms2 matrices, every matrix is from one isolation window.
+#' 
 #' @export
+#' 
 #' @importFrom data.table %between%
 extract_ms2_matrices <- function(peak.idx, ms1_peaks.df, ppm.n, ms1_pure_spectrum, rawData.onDiskMSnExp, info.swath){
   
   min_mz <- min(ms1_pure_spectrum$mz_value);
   max_mz <- max(ms1_pure_spectrum$mz_value);
-  idx.swath <- which(info.swath$lowerMz %between% c(min_mz, max_mz) | info.swath$upperMz %between% c(min_mz, max_mz)); # check this for other values
+  idx.swath <- which(info.swath$lowerMz < max_mz | info.swath$upperMz > min_mz); 
   
   # so from every isolation window in idx.swath we will extract the ms2 data
   res_ms2 <- lapply(idx.swath, function(i){

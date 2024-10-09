@@ -3,7 +3,9 @@
 #' @inheritParams detect_peaks_by_xcms
 #'
 #' @return `data.frame` SWATH isolation windows.
+#' 
 #' @export
+#' 
 #' @importFrom MSnbase isolationWindowLowerMz isolationWindowUpperMz filterMsLevel
 isolationWindows.range <- function(rawData.onDiskMSnExp){
   
@@ -39,7 +41,9 @@ PpmRange <-  function(ref, ppm.n) {
 #' @param mz_range `Logical` if `TRUE` and extracting MS1 data , if `TRUE` and extracting MS2 data , else `FALSE`.
 #'
 #' @return `matrix` contains extracted eic in every row.
+#' 
 #' @export
+#' 
 #' @importFrom data.table rbindlist foverlaps setkey merge.data.table dcast %between%
 #' @import magrittr
 #' @importFrom stats end start

@@ -5,6 +5,7 @@
 #' @param S `matrix` every row is a pure spectrum.
 #'
 #' @return` numeric(1)` relative error.
+#' 
 #' @export
 error_function <- function(Y, A, S){
   norm(Y - A %*% S, '2') / norm(Y, '2')
@@ -19,6 +20,7 @@ error_function <- function(Y, A, S){
 #' @param toleranceFB `numeric(1)` tolerance or stopping value of the FB algorithm.
 #'
 #' @return `matrix` A of updated elution profiles.
+#' 
 #' @export
 updateA.f <- function(Y, A_init, S, maxFBIteration, toleranceFB) {
 
@@ -69,6 +71,7 @@ soft_threshold.f <- function(Y, threshold){
 #' @inheritParams updateA.f
 #'
 #' @return `matrix` S of updated spectra.
+#' 
 #' @export
 updateS.f <- function(Y, A, S_init, lambda, maxFBIteration, toleranceFB){
  
@@ -113,7 +116,14 @@ updateS.f <- function(Y, A, S_init, lambda, maxFBIteration, toleranceFB){
 #' @param H_sub `matrix` of elution profiles used with subSample initialization method.
 #'
 #' @return `list` of 2 matrices A and S.
+#' 
 #' @export
+#' 
+#' @examples
+#'  m <- matrix(c(1,0,0,0,1,1,1,1,1), nrow = 3, ncol = 3)
+#'  
+#' nGMCAs(X.m = m, rank = 2, maximumIteration = 10, maxFBIteration = 5, toleranceFB = 1e-5,
+#'  initialization_method = 'nndsvd')
 nGMCAs <- function(X.m, rank,
                    maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
                   initialization_method = c('nndsvd', 'random', 'subSample'), H_sub = NULL,

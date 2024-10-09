@@ -4,6 +4,7 @@
 #' @param W pure spectra `matrix`.
 #'
 #' @return H: elution profiles (chromatograms) `matrix`.
+#' 
 #' @export
 find_H <- function(X.m, W, maxFBIteration = 20, toleranceFB = 1e-5){
   
@@ -20,6 +21,7 @@ find_H <- function(X.m, W, maxFBIteration = 20, toleranceFB = 1e-5){
 #' @param H elution profiles `matrix`.
 #'
 #' @return W: pure spectra `matrix`.
+#' 
 #' @export
 find_W <- function(X.m, H, maxFBIteration = 20, toleranceFB = 1e-5){
   

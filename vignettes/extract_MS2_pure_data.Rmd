@@ -53,8 +53,8 @@ The MS2_features object contains both the raw and pure MS1 and MS2 information f
 We are getting this note for some peaks as 1,5,16: No specific MS2 fragments. This means the peak mz is out of the SWATH isolation windows mz ranges, so it was not fragmented in the MS2 level.
 
 ```{r MS1 pure spectra, echo=TRUE }
-MS1_pure_spectra <- extrcat_pureSpect( features = MS2_features, spec_level = 'MS1' )
-MS2_pure_spectra <- extrcat_pureSpect( features = MS2_features, spec_level = 'MS2' )
+MS1_pure_spectra <- extract_pureSpect( features = MS2_features, spec_level = 'MS1' )
+MS2_pure_spectra <- extract_pureSpect( features = MS2_features, spec_level = 'MS2' )
 ```
 
 ## Process one specific peak

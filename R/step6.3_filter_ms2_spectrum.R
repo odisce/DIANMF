@@ -42,6 +42,7 @@ total_rows_before_level <- function(my_list, level_index) {
 #' @inheritParams extract_ms2_matrices
 #'
 #' @return `data.frame` MS2 spectrum of the precursor.
+#' 
 #' @export
 filter_ms2_spectrum <- function(ms2_pure_spectrum, ms2_matrices, mz_prec, info.swath, peak.idx = NULL){
 
@@ -57,6 +58,8 @@ filter_ms2_spectrum <- function(ms2_pure_spectrum, ms2_matrices, mz_prec, info.s
     ms2_pure_spectrum_new <- ms2_pure_spectrum[ (start+1):end, ];
     ms2_pure_spectrum_new$intensity <-  ms2_pure_spectrum_new$intensity / max( ms2_pure_spectrum_new$intensity)
     ms2_pure_spectrum_new <- ms2_pure_spectrum_new[ms2_pure_spectrum_new['intensity'] != 0, ]
+    
+    ms2_pure_spectrum_new <- as.data.frame(ms2_pure_spectrum_new)
     
   } else{  # if the mz_prec not included in any SWATH window, don't filter (this peaks wasn't fragmented in the MS2 level)
     if( !is.null(peak.idx) ){

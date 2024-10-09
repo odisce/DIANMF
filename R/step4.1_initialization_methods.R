@@ -6,8 +6,16 @@
 #' @param rank `numeric(1)` number of pure compounds in the mixed matrix; rank of factorization.
 #'
 #' @return W and H random matrices.
-#' @export
+#' 
 #' @importFrom stats runif
+#' 
+#' @export
+#' 
+#' @examples
+#'  m <- matrix(c(1,0,0,0,1,1,1,1,1), nrow = 3, ncol = 3)
+#'  r <- 2
+#'  
+#' random_init(X = m, rank = r)
 random_init <- function(X, rank){
   
   max_val <- max(X)
@@ -31,7 +39,15 @@ random_init <- function(X, rank){
 #' @param H_sub pure MS1 elution profiles `matrix`.
 #'
 #' @return A and S initializing matrices based on the data
+#' 
 #' @export
+#' 
+#' @examples
+#'  m <- matrix(c(1,0,0,0,1,1,1,1,1), nrow = 3, ncol = 3)
+#'  r <- 2
+#' 
+#'  H_sub <- matrix(c(0.2,0,0.8,1,0.06,0.1), nrow = r) 
+#'  subsample_init(Y = t(m), rank = r, H_sub = H_sub) 
 subsample_init <- function(Y, rank, H_sub){  # This method is just for NMF of MS2 data. (and can't be applied for MS1 data)
   
   # for S, solve the inverse problem: argmin_{S >=0} 0.5||Y - AS||_F^2 + lambda*||S||_1 (by FBS).
@@ -79,7 +95,14 @@ norm_euc <- function(x){ sqrt(drop(crossprod(x))) }
 #' @inheritParams random_init
 #'
 #' @return `list` of two matrices H and W.
+#' 
 #' @export
+#' 
+#' @examples
+#' m <- matrix(c(1,0,0,0,1,1,1,1,1), nrow = 3, ncol = 3)
+#'  r <- 2
+#'  
+#' nndsvd_init(X = m, rank = r)
 nndsvd_init <- function(X, rank){
   
   if( any(X<0) ){

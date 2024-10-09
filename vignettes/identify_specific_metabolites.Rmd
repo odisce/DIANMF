@@ -29,7 +29,7 @@ This was applied in the "Process MS1 data level" and "Process MS2 data level" vi
 
 ## 2
 
-Suppose the user has a table of spiked compounds in Excel. *DIANMF* allows searching for every compound a suggested peak among an MS1 peaks matrix or data.frame using mz <span style="background-color: rgba(169, 169, 169, 0.4);">(mz_tol.n)</span> and rt <span style="background-color: rgba(169, 169, 169, 0.4);">(rt_tol.n)</span> tolerances. First by loading the .tsv file using <span style="background-color: rgba(169, 169, 169, 0.4);">load_compounds_function.tb()</span>  as a data.frame then searching for the peaks using <span style="background-color: rgba(169, 169, 169, 0.4);">search_for_ROIs_function.l()</span> function.
+Suppose the user has a table of spiked compounds in Excel. **DIANMF** allows searching for every compound a suggested peak among an MS1 peaks matrix or data.frame using mz <span style="background-color: rgba(169, 169, 169, 0.4);">(mz_tol.n)</span> and rt <span style="background-color: rgba(169, 169, 169, 0.4);">(rt_tol.n)</span> tolerances. First by loading the .tsv file using <span style="background-color: rgba(169, 169, 169, 0.4);">load_compounds_function.tb()</span>  as a data.frame then searching for the peaks using <span style="background-color: rgba(169, 169, 169, 0.4);">search_for_ROIs_function.l()</span> function.
 
 ### Load the compounds table
 

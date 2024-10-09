@@ -5,11 +5,11 @@ test_that("Given X and W, find H or the inverse", {
   
   # test functions that extract information from the output object
   # extract pure MS1 spectra
-  MS1_spect <- extrcat_pureSpect(features = features.l, spec_level = 'MS1')
+  MS1_spect <- extract_pureSpect(features = features.l, spec_level = 'MS1')
   # extract pure MS2 spectra
-  MS2_spect <- extrcat_pureSpect(features = features.l, spec_level = 'MS2')
+  MS2_spect <- extract_pureSpect(features = features.l, spec_level = 'MS2')
   # extract pure MS1 spectra
-  MS2_spectPrec2 <- extrcat_pureSpect(features = features.l, spec_level = 'MS2_specific')
+  MS2_spectPrec2 <- extract_pureSpect(features = features.l, spec_level = 'MS2_specific')
   
   # ms1 raw matrix
   ms1_mat <- extract_mixedMat(features = features.l, ms_level = 'MS1')
