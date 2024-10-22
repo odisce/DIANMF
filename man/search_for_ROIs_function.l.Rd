@@ -2,14 +2,9 @@
 % Please edit documentation in R/step3.2_find_peaks_for_specific_precursors.R
 \name{search_for_ROIs_function.l}
 \alias{search_for_ROIs_function.l}
-\title{Search for the peaks suggestions for compound using the mz and retention time info.}
+\title{Search for the peaks suggestions for compounds using the mz and retention time info.}
 \usage{
-search_for_ROIs_function.l(
-  compounds.df,
-  ms1_peaks,
-  mz_tol.n = 0.05,
-  rt_tol.n = 5
-)
+search_for_ROIs_function.l(compounds.df, ms1_peaks, mz_tol.n = 5, rt_tol.n = 5)
 }
 \arguments{
 \item{compounds.df}{\code{data.frame}}
@@ -24,5 +19,5 @@ search_for_ROIs_function.l(
 MS1 selected peaks \code{matrix}.
 }
 \description{
-Search for the peaks suggestions for compound using the mz and retention time info.
+Search for the peaks suggestions for compounds using the mz and retention time info.
 }

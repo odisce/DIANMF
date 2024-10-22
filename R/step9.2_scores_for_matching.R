@@ -13,6 +13,7 @@
 #' @examples
 #' a <- data.frame( "mz_value" = seq(1:8), 'intensity' = c(0,400,1000,200,0,700,300,300) )
 #' b <- data.frame( "mz_value" = seq(1:8), 'intensity' = c(100,0,1000,0,100,0,400,300)) 
+#' 
 #' GetPresenceSimilarity(measuredSpectra = a, librarySpectra = b, bin = 0.05)
 GetPresenceSimilarity <- function(measuredSpectra, librarySpectra, bin){
 
@@ -72,6 +73,7 @@ GetPresenceSimilarity <- function(measuredSpectra, librarySpectra, bin){
 #' @examples
 #' a <- data.frame( "mz_value" = seq(1:8), 'intensity' = c(0,400,1000,200,0,700,300,300) ) 
 #' b <- data.frame( "mz_value" = seq(1:8), 'intensity' = c(100,0,1000,0,100,0,400,300)) 
+#' 
 #' GetSimpleDotProductSimilarity(measuredSpectra = a, librarySpectra = b, bin = 0.05)
 GetSimpleDotProductSimilarity <- function(measuredSpectra, librarySpectra, bin){
   scalarM <- scalarR <- covariance <- sumM <-  sumR <- 0
@@ -190,6 +192,7 @@ GetSimpleDotProductSimilarity <- function(measuredSpectra, librarySpectra, bin){
 #' @examples
 #' a <- data.frame( "mz_value" = seq(1:8), 'intensity' = c(0,400,1000,200,0,700,300,300) ) 
 #' b <- data.frame( "mz_value" = seq(1:8), 'intensity' = c(100,0,1000,0,100,0,400,300))
+#' 
 #' getReverseSearchingSimilarity(measuredSpectra = a, librarySpectra = b, bin = 0.05)
 getReverseSearchingSimilarity <- function(measuredSpectra, librarySpectra, bin){
 
@@ -377,7 +380,7 @@ match_pure_scores2 <- function(polarity, mz_prec, data_base, measured_spectra, m
     results <- parallel::mclapply(idx_ref_spect, function(i) {
       cat("Processing ref_spect index:", i, "\n")
 
-      ref_spect <- data_base$spectra[[i]]@spectrum
+      ref_spect <- data_base$spectra[[i]]
       ref_spect <- as.data.frame(ref_spect)
       colnames(ref_spect) <- c('mz_value', 'intensity')
       # Normalize reference spectra intensities

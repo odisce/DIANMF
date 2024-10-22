@@ -30,4 +30,21 @@ test_that("Extract the MS1 peaks", {
   expect_equal(class(features.l_ms1), "list")
   expect_true( !is.null(features.l_ms1[[1]]) ) 
 
+  
+  # # I need to plot 3 spectra of Dextromorphan: NMF MS2 pure spectrum, dia spectrum and dda spectrum
+  # 
+  # nmf_spectrum_specific <- features.l_ms2[[1]]$MS2_pure_spectrum_specific
+  # nmf_spectrum <- features.l_ms2[[1]]$MS2_pure_spectrum
+  # clean_dia_database_5ppm <- readRDS("~/1workflow/DIA_NMF_workflow/Results/original_vs_clean_dia_databse/ppm_5/clean_dia_database_5ppm.rds")
+  # dia_spectrum <- clean_dia_database_5ppm[[18]]
+  # dda_spectrum <- sub_database$spectra[[1]]@spectrum
+  # 
+  # plot_spectra_vs(measured_spectrum = nmf_spectrum_specific, library_spectrum = dia_spectrum)
+  # plot_spectra_vs(measured_spectrum = nmf_spectrum, library_spectrum = dia_spectrum)
+  # plot_spectra_vs(measured_spectrum = nmf_spectrum, library_spectrum = dda_spectrum)
+  
+  
+  
+  
+  
 })

@@ -7,9 +7,9 @@
 #'
 #' @return W and H random matrices.
 #' 
-#' @importFrom stats runif
-#' 
 #' @export
+#' 
+#' @importFrom stats runif
 #' 
 #' @examples
 #'  m <- matrix(c(1,0,0,0,1,1,1,1,1), nrow = 3, ncol = 3)
@@ -46,7 +46,7 @@ random_init <- function(X, rank){
 #'  m <- matrix(c(1,0,0,0,1,1,1,1,1), nrow = 3, ncol = 3)
 #'  r <- 2
 #' 
-#'  H_sub <- matrix(c(0.2,0,0.8,1,0.06,0.1), nrow = r) 
+#'  H_sub <- matrix(c(0.9,0,0.8,1,0.06,0.1), nrow = r) 
 #'  subsample_init(Y = t(m), rank = r, H_sub = H_sub) 
 subsample_init <- function(Y, rank, H_sub){  # This method is just for NMF of MS2 data. (and can't be applied for MS1 data)
   
@@ -99,7 +99,7 @@ norm_euc <- function(x){ sqrt(drop(crossprod(x))) }
 #' @export
 #' 
 #' @examples
-#' m <- matrix(c(1,0,0,0,1,1,1,1,1), nrow = 3, ncol = 3)
+#'  m <- matrix(c(1,0,0,0,1,1,1,1,1), nrow = 3, ncol = 3)
 #'  r <- 2
 #'  
 #' nndsvd_init(X = m, rank = r)

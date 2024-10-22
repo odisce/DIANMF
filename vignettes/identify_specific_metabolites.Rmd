@@ -1,10 +1,26 @@
 ---
 title: "Identify Specific Metabolites"
-output: rmarkdown::html_vignette
+author: "Diana Karaki"
+date: "`r Sys.Date()`"
+package: "`r pkg_ver('DIANMF')`"
+
 vignette: >
   %\VignetteIndexEntry{Identify Specific Metabolites}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+bibliography: '`r system.file("bib", "references-vignette.bib", package = "DIANMF")`'
+output: 
+  BiocStyle::html_document:
+    citation_package: natbib
+    csl: nature.csl
+    fig_caption: yes
+    toc: yes
+    toc_depth: 4
+    toc_float:
+      collapsed: false
+    editor_options: 
+      markdown: 
+       wrap: 72
 ---
 
 ```{r, include = FALSE}
@@ -16,43 +32,91 @@ knitr::opts_chunk$set(
 )
 ```
 
+# Introduction
+This vignette concerns users who want to process or search for specific metabolites in SWATH DIA LC-MS/MS biological data.
+
+Let us first load our package and dataset.
+
 ```{r setup}
+# load  the package
 library(DIANMF)
+
+# load the data-set
+file <- system.file("extdata", "test_data.mzml", package = "DIANMF")
 ```
 
-## 1
+# Automated Processing of Spiked Compounds
+Assume the user has a table of spiking compounds that he wants to search for and identify. **DIANMF** provides functions for such tasks. 
 
-If the user has the peaks he wants to identify, he can provide them for the <span style="background-color: rgba(169, 169, 169, 0.4);">dia_nmf.f()</span> function in the <span style="background-color: rgba(169, 169, 169, 0.4);">ms1_peaks</span> parameter.
+The pipeline:
 
-This was applied in the "Process MS1 data level" and "Process MS2 data level" vignettes.
+1. Load the compounds table.
+1. Detect MS1 peaks.
+1. Search and identify for the related peaks.
 
 
-## 2
-
-Suppose the user has a table of spiked compounds in Excel. **DIANMF** allows searching for every compound a suggested peak among an MS1 peaks matrix or data.frame using mz <span style="background-color: rgba(169, 169, 169, 0.4);">(mz_tol.n)</span> and rt <span style="background-color: rgba(169, 169, 169, 0.4);">(rt_tol.n)</span> tolerances. First by loading the .tsv file using <span style="background-color: rgba(169, 169, 169, 0.4);">load_compounds_function.tb()</span>  as a data.frame then searching for the peaks using <span style="background-color: rgba(169, 169, 169, 0.4);">search_for_ROIs_function.l()</span> function.
-
-### Load the compounds table
+## Load the compounds table
+In **DIANMF**, we provided the table of the spiked precursors of the real spiked data from [@BarbierSaintHilaire_ComparativeEvaluationData_2020].
 
 ```{r load spiked compounds table, echo=TRUE, message=FALSE, warning=FALSE}
+# the file path
 compounds_tb <- system.file("extdata", "Barbier_supplementary_tableS1.tsv", package = "DIANMF")
+
+# load the spiked precursors 
 compounds.df <- load_compounds_function.tb(compounds_tb)
-knitr::kable(head(compounds.df[, c(1,2,3,8)]))
+knitr::kable(head(compounds.df[ ,c(1,2,3,8)]))
 ```
 
-### Detect MS1 peaks
+<span style="background-color: rgba(169, 169, 169, 0.4);">load_compounds_function.tb()</span> load the .tsv file as `r class(compounds.df)`. This table should contains for every compounds its mass-to-mass ratio (m/z) and retention time (rt) in seconds.
+
+As the *process_swath_dia_data* vignette mentions, our dataset is a small part of the complete mzML file (to keep the package size in the accepted range). Thus, we expect to find just some of the spiked precursors when searching for a suggested peak for every compound.  
+
+
+## Detect MS1 peaks
+
+Let us detect the MS1 peaks in this mzML file using <span style="background-color: rgba(169, 169, 169, 0.4);">detect_peaks_by_xcms()</span> function from **DIANMF** package.
+
 ```{r MS1 peaks, echo=TRUE, message=FALSE, warning=FALSE}
-load("~/DIA_NMF_R_package/dianmf/data/data_example.rda")
-ms1_peaks.mat <- detect_peaks_by_xcms( rawData.onDiskMSnExp = data_example,
-                                        ppm = 6, peakwidth = c(3,60), snthresh = 0,
-                                        prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
-                                        integrate = 2, mzdiff = -0.001, noise = 0,
-                                        firstBaselineCheck = FALSE )
-  
+# load the meta-data
+data_test <- MSnbase::readMSData(files = file, mode = "onDisk")
+
+# detect MS1 peaks
+ms1_peaks.mat <- detect_peaks_by_xcms( rawData.onDiskMSnExp = data_test,
+                                       ppm = 6, peakwidth = c(3,60), snthresh = 0,
+                                       prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
+                                       integrate = 2, mzdiff = -0.001, noise = 0,
+                                       firstBaselineCheck = FALSE )
+
+# prepare the MS1 peaks
 ms1_peaks.df <- prepare_ms1_peaks(ms1_peaks = ms1_peaks.mat)
 ```
 
-### Search for peaks
+
+## Search for peaks
+Now, we will search for a suggested peak for the spiked compounds among the detected ones. 
+
 ```{r search for peaks, echo=TRUE, message=FALSE, warning=FALSE}
-peaks <- search_for_ROIs_function.l(compounds.df, ms1_peaks = ms1_peaks.df, mz_tol.n = 0.05, rt_tol.n = 5)
-knitr::kable(head(peaks))
+peaks <- search_for_ROIs_function.l(compounds.df, ms1_peaks = ms1_peaks.df, mz_tol.n = 3, rt_tol.n = 5)
+peaks
 ```
+
+The final step is identifying these peaks. It is straight forward using the <span style="background-color: rgba(169, 169, 169, 0.4);">dia_nmf.f()</span>, by providing *peaks* in <span style="background-color: rgba(169, 169, 169, 0.4);">ms1_peaks</span> with <span style="background-color: rgba(169, 169, 169, 0.4);">peaks_by_xcms = FALSE</span>.
+
+```{r main function MS2 level, echo=TRUE }
+MS2_features <- dia_nmf.f( mzML_path = file,
+                       ms_level = "MS2",
+                       peaks_by_xcms = FALSE, ms1_peaks = peaks)
+```
+
+
+... spectral matching , to show that these peaks relatde to one of the spiked compounds ...
+
+# Session info
+Here is the output of `sessionInfo()` on the system on which this document was compiled:
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```
+
+# References
+

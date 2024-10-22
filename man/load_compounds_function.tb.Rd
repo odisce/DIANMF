@@ -15,3 +15,9 @@ data.frame/data.table spiked compounds table.
 \description{
 Load the compounds table.
 }
+\examples{
+compounds_tb <- system.file("extdata", "Barbier_supplementary_tableS1.tsv", package = "DIANMF")
+
+load_compounds_function.tb(compounds_tb)
+
+}

@@ -1,10 +1,26 @@
 ---
 title: "Find H, given X and W"
-output: rmarkdown::html_vignette
+author: "Diana Karaki"
+date: "`r Sys.Date()`"
+package: "`r pkg_ver('DIANMF')`"
+
 vignette: >
   %\VignetteIndexEntry{Find H, given X and W}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+bibliography: '`r system.file("bib", "references-vignette.bib", package = "DIANMF")`'
+output: 
+  BiocStyle::html_document:
+    citation_package: natbib
+    csl: nature.csl
+    fig_caption: yes
+    toc: yes
+    toc_depth: 4
+    toc_float:
+      collapsed: false
+    editor_options: 
+      markdown: 
+       wrap: 72
 ---
 
 ```{r, include = FALSE}
@@ -16,60 +32,73 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Introduction
- 
+
+# Introduction
 This vignette demonstrates how to extract pure elution profiles $H$ given a matrix of mixed compounds $X$ and their respective pure spectra $W$. This method can be applied to both data levels, MS1 and MS2. Here, we will apply it to MS1 data.
 
 First, we attach our packages, load the same test file used in the previous vignettes, and process the detected MS1 peaks.
 
 ```{r setup}
+# load package
 library(DIANMF)
-```
 
-```{r load mzML file, echo=TRUE }
+# load the data-set
 file <- system.file("extdata", "test_data.mzml", package = "DIANMF")
 ```
 
 ```{r main function MS1 level, echo=TRUE }
+# process metabolites at MS1 level
 MS1_features <- dia_nmf.f( mzML_path = file,
-                          ms_level = "MS1",
-                          peaks_by_xcms = TRUE, ms1_peaks = NULL,
-                          ppm = 6, peakwidth = c(3,60), snthresh = 0,
-                          prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
-                          integrate = 2, mzdiff = -0.001, noise = 0,
-                          firstBaselineCheck = FALSE)
+                           ms_level = "MS1",
+                           peaks_by_xcms = TRUE, ms1_peaks = NULL,
+                           ppm = 6, peakwidth = c(3,60), snthresh = 0,
+                           prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
+                           integrate = 2, mzdiff = -0.001, noise = 0,
+                           firstBaselineCheck = FALSE)
 ```
 
-## Find H
-
-We will extract the MS1 raw matrix related to the first peak $X$ and its' pure MS1 spectra matrix $W$ from the MS1_features object.
+# Find H
+We will extract the MS1 raw matrix $X$ related to the first peak and its' pure MS1 spectra matrix $W$ from the MS1_features object.
 
 ```{r extract X and W, echo=TRUE }
 peak.idx <- 1
 
+# extract X
 ms1_raw_matrices <- extract_mixedMat(features = MS1_features, ms_level = 'MS1')
 X <- ms1_raw_matrices[[peak.idx]]
 
+# extract W
 ms1_pureSpect_mat <- extract_pureMat(features = MS1_features, ms_level = 'MS1', H = FALSE)
 W <- ms1_pureSpect_mat[[1]]
 # knitr::kable(head(W), row.names = FALSE)
 ```
 
-In *DIANMF*, we have provided the <span style="background-color: rgba(169, 169, 169, 0.4);">find_H()</span> function, which is based on the forward-backward algorithms (FBS). This function takes as inputs <span style="background-color: rgba(169, 169, 169, 0.4);">X</span>, <span style="background-color: rgba(169, 169, 169, 0.4);">W</span>, and FBS parameters as <span style="background-color: rgba(169, 169, 169, 0.4);">maxFBIteration</span> and <span style="background-color: rgba(169, 169, 169, 0.4);">toleranceFB</span> to iterate and find the best $H$. Every row of $H$ is an elution profile.
+In **DIANMF**, we have provided the <span style="background-color: rgba(169, 169, 169, 0.4);">find_H()</span> function, which is based on the forward-backward algorithms (FBS) [@Combettes_2005_SignalRecoveryProximal]. It iterates to find the best $H$, where every row of $H$ is an elution profile.
+
+This function takes as inputs:
+
+* <span style="background-color: rgba(169, 169, 169, 0.4);">X</span> matrix contains components' sources mixed up in an unknown but linear way. Every row is an elution profile from the candidate precursor and its fragment ions through the rt scans in the columns.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">W</span> pure spectra matrix.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">maxFBIteration</span> max number of iterations.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">toleranceFB</span> tolerance or stopping value of the FB algorithm.
 
 ```{r find H, echo=TRUE, fig.height=4, fig.width=7.2}
 H <- find_H( X = X, W = W, maxFBIteration = 20, toleranceFB = 1e-5 )
-knitr::kable(H[, c(1:9)], row.names = FALSE)
+# knitr::kable(H[, c(1:9)], row.names = FALSE)
 
-# library(ggplot2)
-# ms_rt <- as.numeric(colnames(X))
-# eics <- prepare_pure_eics(H = H, rt = ms_rt)
-# ggplot2::ggplot(data = eics, aes(rt, intensity , color = comp_nb)) +
-#   facet_grid(comp_nb~.) +
-#   geom_line() +
-#   geom_point() +
-#   xlim(min(eics$rt), max(eics$rt))
+# plot mixed chromatograms (from X) vs H
+rt_peak <- MS1_features[[1]]$peak$rt
 
-# p_eics <- plot_MS_eics(ms_mixed = X, ms_pure_H = H, ms_level = "MS1", rt_prec = rt_prec, choosen_comp = 0)
-# p_eics
+p <- plot_MS_eics(ms_mixed = X, ms_pure_H = H, ms_level = "MS1", rt_prec = rt_peak, choosen_comp = "")
+p
 ```
+
+# Session info
+Here is the output of `sessionInfo()` on the system on which this document was compiled:
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```
+
+# References
+

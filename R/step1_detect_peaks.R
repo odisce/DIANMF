@@ -8,15 +8,6 @@
 #' @export
 #' 
 #' @importFrom xcms findChromPeaks CentWaveParam chromPeaks
-#' 
-#' @examples
-#' load("~/DIA_NMF_R_package/dianmf/data/data_example.rda")
-#' ms1_peaks.mat <- detect_peaks_by_xcms( data_example, ppm = 6, peakwidth = c(3,60),
-#'  snthresh = 0, prefilter = c(5,4000), mzCenterFun = "wMeanApex3", integrate = 2,
-#'   firstBaselineCheck = FALSE )
-#' ms1_peaks.mat
-#' 
-#' # running this example takes time, and warnings are printed
 detect_peaks_by_xcms <- function(rawData.onDiskMSnExp, ...){
   
   # create centwave parameter object
@@ -38,7 +29,20 @@ detect_peaks_by_xcms <- function(rawData.onDiskMSnExp, ...){
 #' 
 #' @export
 #' 
+#' @examples
+#' peaks_matrix <- matrix(c(150.5, 148.8, 155.2, 4.5, 4.9, 4.2, 3000,
+#'                          200.3, 198.1, 205.7, 5.1, 5.5, 4.8, 4500,
+#'                          180.7, 177.6, 185.0, 6.0, 6.4, 5.7, 5000,
+#'                          210.9, 208.3, 215.5, 7.2, 7.6, 6.8, 3200),
+#'                          nrow = 4, ncol = 7,
+#'                          byrow = TRUE, dimnames = list(NULL, 
+#'                          c("mz", "mzmin", "mzmax", "rt", "rtmax", "rtmin",
+#'                           "into")))
+#' 
+#' prepare_ms1_peaks(ms1_peaks = peaks_matrix)
+#' 
 #' @importFrom dplyr arrange desc
+#' 
 #' @import magrittr
 prepare_ms1_peaks <- function(ms1_peaks){
   

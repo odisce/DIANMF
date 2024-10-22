@@ -42,8 +42,6 @@ PpmRange <-  function(ref, ppm.n) {
 #'
 #' @return `matrix` contains extracted eic in every row.
 #' 
-#' @export
-#' 
 #' @importFrom data.table rbindlist foverlaps setkey merge.data.table dcast %between%
 #' @import magrittr
 #' @importFrom stats end start

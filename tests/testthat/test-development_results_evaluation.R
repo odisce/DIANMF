@@ -45,7 +45,10 @@ test_that("Evaluate the final results", {
     info_prec <- strsplit(prec_names[[i]], split = "_")
     mz_prec <- as.numeric(info_prec[[1]][[3]])
     x <- pure_spectra[[i]]
-    sub_score <- match_pure_scores2(polarity = 'POS', mz_precursor = mz_prec, data_base = NewDB, measured_spectra = as.data.frame(x), mz_tol = 0.05)
+    
+    # it will not work any more !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # I changed the function because of the database format
+    sub_score <- match_pure_scores2(polarity = 'POS', mz_prec = mz_prec, data_base = NewDB, measured_spectra = as.data.frame(x), mz_tol = 0.05)
     sub_score$true_name <- info_prec[[1]][[1]]
     row_idx <- which.max(sub_score$"total score");
     sub_score <-  sub_score[ row_idx, ]

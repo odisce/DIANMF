@@ -1,10 +1,26 @@
 ---
 title: "Find W, given X and H"
-output: rmarkdown::html_vignette
+author: "Diana Karaki"
+date: "`r Sys.Date()`"
+package: "`r pkg_ver('DIANMF')`"
+
 vignette: >
   %\VignetteIndexEntry{Find W, given X and H}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+bibliography: '`r system.file("bib", "references-vignette.bib", package = "DIANMF")`'
+output: 
+  BiocStyle::html_document:
+    citation_package: natbib
+    csl: nature.csl
+    fig_caption: yes
+    toc: yes
+    toc_depth: 4
+    toc_float:
+      collapsed: false
+    editor_options: 
+      markdown: 
+       wrap: 72
 ---
 
 ```{r, include = FALSE}
@@ -16,48 +32,72 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Introduction
- 
+
+# Introduction
 This vignette demonstrates how to extract pure spectra $W$ given a matrix of mixed compounds $X$ and their respective pure elution profiles $H$. This method can be applied to both data levels, MS1 and MS2. Here, we will apply it to MS2 data.
 
-First, we attach our packages, load the same test file used in the previous vignettes, and process the detected MS1 peaks.
+First, we load our package and the test file used in the previous vignettes and process all detected MS1 peaks.
 
 ```{r setup}
+# load package
 library(DIANMF)
-```
 
-```{r load mzML file, echo=TRUE }
+# load the data-set
 file <- system.file("extdata", "test_data.mzml", package = "DIANMF")
 ```
 
 ```{r main function MS2 level, echo=TRUE }
 MS2_features <- dia_nmf.f( mzML_path = file,
-                          ms_level = "MS2",
-                          peaks_by_xcms = TRUE, ms1_peaks = NULL, d.out = NULL,
-                          ppm = 6, peakwidth = c(3,60), snthresh = 0,
-                          prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
-                          integrate = 2, mzdiff = -0.001, noise = 0,
-                          firstBaselineCheck = FALSE)
+                           ms_level = "MS2",
+                           peaks_by_xcms = TRUE, ms1_peaks = NULL, d.out = NULL,
+                           ppm = 6, peakwidth = c(3,60), snthresh = 0,
+                           prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
+                           integrate = 2, mzdiff = -0.001, noise = 0,
+                           firstBaselineCheck = FALSE)
 ```
 
-## Find W
-
-The first peak does not have specific MS2 fragments, so we will work with the second peak and extract its' MS2 raw matrix $X$ and elution profiles matrix $H$ from the MS2_features object.
+# Find W
+For the first peak, let us extract its raw matrix $X$ and elution profiles matrix $H$ from the MS2_features object.
 
 ```{r extract X and H, echo=TRUE }
-peak.idx <- 2
+peak.idx <- 1
 
+# extract X
 MS2_raw_matrices <- extract_mixedMat(features = MS2_features, ms_level = 'MS2')
 X <- MS2_raw_matrices[[peak.idx]]
 
+# extract H
 H_ms2.l <- extract_pureMat(features = MS2_features, ms_level = 'MS2', H = TRUE)
 H <- H_ms2.l[[peak.idx]]
 # knitr::kable(head(H_ms2))
 ```
 
-<span style="background-color: rgba(169, 169, 169, 0.4);">find_W()</span> is a function from *DIANMF*, that aims to find $W$ from $X$ and $H$. This function is based on the forward-backward algorithm and more specifically on the positive-projection algorithm. It takes inputs <span style="background-color: rgba(169, 169, 169, 0.4);">X</span>, <span style="background-color: rgba(169, 169, 169, 0.4);">H</span>, <span style="background-color: rgba(169, 169, 169, 0.4);">maxFBIteration</span>, and <span style="background-color: rgba(169, 169, 169, 0.4);">toleranceFB</span> parameters to iterate and find the best $W$. Every column of $W$ is a pure spectrum related to a compound in $X$.
+<span style="background-color: rgba(169, 169, 169, 0.4);">find_W()</span> is a function from **DIANMF**, that aims to find $W$ from $X$ and $H$. This function is based on the forward-backward algorithm (FBS) and more specifically on the positive-projection algorithm [@Combettes_2005_SignalRecoveryProximal]. It iterates to find the best $W$, where every column of $W$ is a pure spectrum related to a compound in $X$. 
+
+The function parameters:
+
+* <span style="background-color: rgba(169, 169, 169, 0.4);">X</span> matrix contains components' sources mixed up in an unknown but linear way. Every row is an elution profile from the candidate precursor and its fragment ions through the rt scans in the columns.
+* <span style="background-color: rgba(169, 169, 169, 0.4);">H</span>
+* <span style="background-color: rgba(169, 169, 169, 0.4);">maxFBIteration</span> max number of iterations
+* <span style="background-color: rgba(169, 169, 169, 0.4);">toleranceFB</span> tolerance or stopping value of the FB algorithm.
 
 ```{r find A, echo=TRUE}
 W <- find_W(X = X, H = H, maxFBIteration = 20, toleranceFB = 1e-5)
-knitr::kable(W, row.names = FALSE)
+# knitr::kable(W, row.names = FALSE)
+
+# plot the mixed spectrum (from X) vs W
+mz_peak <- MS2_features[[1]]$peak$mz
+  
+p <- plot_MS_spectra(ms_mixed = X, ms_pure_W = W, ms_level = "MS2", mz_prec = mz_peak, choosen_comp = "")
+p
 ```
+
+# Session info
+Here is the output of `sessionInfo()` on the system on which this document was compiled:
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```
+
+# References
+

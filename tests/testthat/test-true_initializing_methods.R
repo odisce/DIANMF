@@ -1,3 +1,5 @@
+skip("development script")
+
 test_that("initializing methods test", {
   
   m <- matrix(c(1,0,0,0,1,1,1,1,1), nrow = 3, ncol = 3)

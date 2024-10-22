@@ -6,6 +6,11 @@
 #' 
 #' @export
 #' 
+#' @examples
+#' compounds_tb <- system.file("extdata", "Barbier_supplementary_tableS1.tsv", package = "DIANMF")
+#' 
+#' load_compounds_function.tb(compounds_tb)
+#' 
 #' @importFrom utils read.table
 load_compounds_function.tb <- function(compound.c){
   m <- utils::read.table(compound.c,
@@ -14,13 +19,15 @@ load_compounds_function.tb <- function(compound.c){
                   header = TRUE,
                   row.names = 1)
   m[, "Retention.time.s."] <- m[, "Retention.time..min."] * 60
+ 
   rownames(m) <- make.names(rownames(m), unique = TRUE)
+  colnames(m) <- c("composition", "mz", "rt.min", "NCE", "fragment1.mz", "fragment2.mz", "fragment3.mz", "rt.sec")
   
   return(m)
 }
 
 
-#' Search for the peaks suggestions for compound using the mz and retention time info.
+#' Search for the peaks suggestions for compounds using the mz and retention time info.
 #'
 #' @param compounds.df `data.frame` 
 #' @inheritParams prepare_ms1_peaks
@@ -30,11 +37,11 @@ load_compounds_function.tb <- function(compound.c){
 #' @return MS1 selected peaks `matrix`.
 #' 
 #' @export
-search_for_ROIs_function.l <- function(compounds.df, ms1_peaks, mz_tol.n = 0.05, rt_tol.n = 5) {
+search_for_ROIs_function.l <- function(compounds.df, ms1_peaks, mz_tol.n = 5, rt_tol.n = 5) {
   res <- lapply(1:nrow(compounds.df), function(i) {
     
-    mz.n <- as.numeric(compounds.df[i, "Precursor.mz"])
-    rt.n <- as.numeric(compounds.df[i, "Retention.time.s."])
+    mz.n <- as.numeric(compounds.df[i, "mz"])
+    rt.n <- as.numeric(compounds.df[i, "rt.sec"])
     
     matches <- ms1_peaks[
       (ms1_peaks[, "mzmin"] - mz_tol.n <= mz.n & ms1_peaks[, "mzmax"] + mz_tol.n >= mz.n) &
@@ -45,7 +52,7 @@ search_for_ROIs_function.l <- function(compounds.df, ms1_peaks, mz_tol.n = 0.05,
       return(NULL)  # No matches found
     } else if (nrow(matches) == 1) {
       rownames(matches) <- NULL
-      return(matches)  # Only one match, return as-is
+      return(matches)  # Only one match, return it
     } else {
       mz_centers <- rowMeans(matches[, c("mzmin", "mzmax")])
       closest_index <- which.min(abs(mz_centers - mz.n))

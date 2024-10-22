@@ -7,8 +7,8 @@
 nGMCAs(
   X.m,
   rank,
-  maximumIteration = 10,
-  maxFBIteration = 10,
+  maximumIteration = 50,
+  maxFBIteration = 100,
   toleranceFB = 1e-05,
   initialization_method = c("nndsvd", "random", "subSample"),
   H_sub = NULL,

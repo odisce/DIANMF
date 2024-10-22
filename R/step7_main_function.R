@@ -6,8 +6,8 @@
 #' @inheritParams prepare_ms1_peaks
 #' @param d.out `character` file path to save the MS1 peaks matrix if detected by XCMS.
 #' @inheritParams nGMCAs
-#' @param MS1_init_method 'character' MS1 initialization method.
-#' @param MS2_init_method 'character' MS2 initialization method.
+#' @param MS1_init_method `character` MS1 initialization method.
+#' @param MS2_init_method `character` MS2 initialization method.
 #' @inheritParams check_ms1_ions
 #' @inheritParams extract_ms_matrix.f
 #' @param ... Additional parameters passed to \code{\link[xcms]{CentWaveParam}}.
@@ -175,9 +175,6 @@ dia_nmf.f <- function(
           'ions_are_peaks' = ions_are_peaks  );
         
       }
-      
-      # the following line will be deleted at the end !!!!!!!!!!!!!!!!!!!!!!!!!!
-      saveRDS(feature_sub.l, paste0('C:/Users/DK273056/Documents/DIA_NMF_R_package_outputs2/peak_', ms1_peaks.df[peak.idx, 'rt'], '.rds') );
 
       features.l[[k]] <- feature_sub.l;
       k <- k + 1

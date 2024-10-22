@@ -23,8 +23,8 @@ sIndex <- data.table(
   'composition' = sIndex.composition,
   'name' = sIndex.name)
 
-sSpectra <- list(NewDB$spectra[7975]$EXTRACT_MSMS1_d0ca6f846, NewDB$spectra[3924]$EXTRACT_MSMS1_9814bf7a1,
-                 NewDB$spectra[7678]$EXTRACT_MSMS1_498f208d1, NewDB$spectra[7963]$EXTRACT_MSMS1_7017005c6)
+sSpectra <- list(NewDB$spectra[7975]$EXTRACT_MSMS1_d0ca6f846@spectrum, NewDB$spectra[3924]$EXTRACT_MSMS1_9814bf7a1@spectrum,
+                 NewDB$spectra[7678]$EXTRACT_MSMS1_498f208d1@spectrum, NewDB$spectra[7963]$EXTRACT_MSMS1_7017005c6@spectrum)
 
 sub_database <- list(
   'index' = sIndex,
