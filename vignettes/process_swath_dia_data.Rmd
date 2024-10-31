@@ -50,6 +50,7 @@ This vignette showcases the processing of metabolites in a small SWATH DIA LC-MS
 
 
 # Workflow
+![DIA-NMF workflow](figures/workflow.png)
 
 
 # Data import
@@ -284,8 +285,8 @@ p_spectra
 
 In the xcms framework, the MS2 spectrum of each fragment ion must be reconstructed using the available MS2 data (i.e., the chromatographic peaks detected at the MS2 level). Specifically, for SWATH data, the fragment ion signals should be found within the **same isolation window** containing the precursor ion's $m/z$, and the chromatographic peak profile of the MS2 peaks should exhibit similar retention times and shapes to the MS1 peak of the precursor. However, we disagree with the first assumption. Depending on this fact, the pure MS2 data for each peak aligns with the MS1 data is more reasonable. Additionally, the MS1 pure spectrum ions often have significantly different $m/z$ values from the precursor's $m/z$, indicating that these ions were fragmented in **distinct isolation windows** at the MS2 level.
 
-... add an image here, how ions are fragmented ....
 
+Improve the plot .....
 
 The definition of these isolation windows (SWATH pockets) is imported from the metadata of the mzML file. Below we inspect the respective information using <span style="background-color: rgba(169, 169, 169, 0.4);">isolationWindows.range()</span> function given the `r class(data_test)` raw data. The upper and lower isolation window $m/z$ bounds are available within "LowerMz" and "UpperMz" respectively.
 
@@ -486,6 +487,8 @@ MS1_features is an R object that contains all MS1 features of the peaks: MS1 pea
 
 
 # Cheat Sheet
+
+![DIA-NMF cheat sheet](figures/cheat_sheet.png)
 
 
 # Session info

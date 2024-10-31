@@ -2,5 +2,4 @@
 ^\.Rproj\.user$
 images/*
 ^data-raw$
-^doc$
 ^Meta$
