@@ -33,8 +33,28 @@ knitr::opts_chunk$set(
 ```
 
 
-# Introduction
-Sequential window acquisition of all theoretical data-independent acquisition mass spectra (SWATH DIA) is essential for information-rich spectral annotations. However, the acquired MS2 spectra are hybrid mixtures, posing significant annotation challenges. We have developed the **DIANMF** R package for untargeted metabolomics processing. 
+
+**DIANMF** provides a comprehensive pipeline to extract pure MS1 and MS2 spectra from LC-MS using **N**on-Negative **M**atrix **F**actorization (NMF). It supports LC-MS and LC-MS/MS acquisitions in `.mzML` format and outputs a list of unique pure spectra for each file. The procedure includes the following steps:  
+
+1. Chromatographic peak detection at the MS1 level.  
+2. For every MS1 peak $p$, construct the related MS1 matrix $X^1$ (every row of this matrix is an extracted ion chromatogram (EIC) of MS1 fragment/ion that may relate to the precursor $p$).  
+3. Factorize $X^1$ to extract the pure MS1 information related to $p$: pure MS1 spectrum $s1_p$ and its elution profile.  
+4. Extract the MS2 matrices from every isolation window $X^2_i$, using the information in $s1_p$.  
+5. Factorize the concatenation of these MS2 matrices $X^2$ using NMF to get the MS2 pure spectra $s2_p$.  
+6. Finally, match $s2_p$ to a library database to identify the precursor (metabolite).
+
+This vignette showcases the processing steps to extract pure spectra from a small SWATH DIA LC-MS/MS dataset with **DIANMF** and can be used in 2 different ways:  
+
+1. by using a wrapper function to run the full workflow from `.mzML` files [see Use-Case 1](#caseA)
+2. by using separate functions to run individual steps [see Use-Case 2](#caseB)
+
+A more detailed description of the implemented methods can be found in the [Introduction](#intro)
+
+<span style='color: red;'>Add a synthetic schema of the main inputs, steps and outputs</span>
+
+# Introduction {#intro}
+
+One of the main challeng in untargeted metabolomics is molecule identification and annotation. Fragmentation methods are widely used in **M**ass **S**pectrometry (MS) based approches to gather specific information on unknown molecules. Different fragmentation methods exists, each one having a trade-off between specificity and coverage. A promising with wide coverage is the **S**equential **W**indow **A**cquisition of all **T**heoretical **D**ata-**I**ndependent **A**cquisition (SWATH-DIA) methods. However, the acquired MS2 spectra are hybrid mixtures, posing significant annotation challenges. We developed the **DIANMF** R package to adress to overcome this challenges and propose a robust and efficient way to unmix the spectra for untargeted metabolomics applications.
 
 Non-negative matrix factorization is widely used for analyzing high-dimensional data and feature extraction  [@Fu_2019_NonnegativeMatrixFactorization]. It automatically extracts meaningful features from a set of non-negative linear mixtures. This non-negativity arises naturally in many real problems such as hyperspectral sensors  [@Brezini_2020_NMFBasedMethodHyperspectral], audio processing [@Fevotte_2009_NonnegativeMatrixFactorization], clustering [@Kim_2008_SparseNonnegativeMatrix], and spectrometry [@Dubroca_2012_WeightedNMFHighresolution]. It has been recently applied to LC-MS [@Rapin_2016_ApplicationNonnegativeMatrix]and has been shown superior to model peak algorithms for gas chromatography (GC)-MS data [@Smirnov_2019_ADAPGCApplicationClusteringAssisted]. Furthermore, on the assumption that for every metabolite, the existing information in the MS1 data correlates in the same sample with its MS2 data. Exploits this quantitative information to deconvolute complex SWATH DIA spectra.
 
@@ -42,34 +62,23 @@ The two existing approaches that address the issue of DIA data without relying o
 
 NMF is not the only advantage of **DIANMF**. However, the methodology used to extract the mixed data and use the pure MS1 information for every peak to collect its MS2 data are essential aspects of our workflow. Every ion in the pure MS1 spectrum, depending on its $m/z$ value, was fragmented in a specific isolation window. This fact leads us to: from every window, we extract all MS2 fragments generated from the fragmented MS1 ions.
 
-**DIANMF** provides a complete pipeline for the identification of untargeted metabolomics. It supports LC-MS and LC-MS/MS files as mzML files and ends with a list of features characterizing every metabolite in the raw biological sample—the procedure: (1) Chromatographic peak detection at the MS1 level. (2) For every MS1 peak $p$, construct the related MS1 matrix $X^1$ (every row of this matrix is an extracted ion chromatogram (EIC) of MS1 fragment/ion that may relate to the precursor $p$). (3) Factorize $X^1$ to extract the pure MS1 information related to $p$: pure MS1 spectrum $s1_p$ and its elution profile. (4) Extract the MS2 matrices from every isolation window $X^2_i$, using the information in $s1_p$. (5) Factorize the concatenation of these MS2 matrices $X^2$ using NMF to get the MS2 pure spectra $s2_p$. (6) Finally, match $s2_p$ to a library database to identify the precursor (metabolite).
 
-advantages, or some results + convince people by my pure ms2 spectra ...
+# Dataset description and loading
 
-This vignette showcases the processing of metabolites in a small SWATH DIA LC-MS/MS data set using **DIANMF**. It consists of two main parts. The first part introduces different **DIANMF** functions and their parameters while identifying specific metabolites. The second part identifies all metabolites in the raw data using one primary **DIANMF** function (a wrapper function) and extracts the outputs from the features object.
+For demonstration purposes and to speed up the processing of this document, we will analyze a tiny subset of real spiked data from [@BarbierSaintHilaire_ComparativeEvaluationData_2020]. This dataset correspond to Human plasma samples with a pool of 47 chemical compounds added at 7 known concentrations (from 0 to 10 ng/ml). Each sample was acquired in triplicate by LC-(ESI+)MS/MS using a SWATH-DIA method on an Orbitrap Fusion instrument. Each full scan MS event was followed by ten MS2 spectra collected from consecutive isolation windows (20 to 50 Da each). A stepped fragmentation method was used at 30 $\pm$ 20 Normalized Collision Energy (NCE). MS1 and MS2 spectra were recorded at a resolution of 120,000 and 15,000 (at $m/Z$ 200), respectively.
 
+The data test mzML file is provided in our package. It is a subset from replicate 3 of the 10 ng/ml concentration file from 100-290 $m/Z$, 425-440 seconds, and precursorMZ $<=$ 280 at the MS2 level. The data set consists of the "Dextromethorphan" spiked compound of $m/Z$ 272.2009 and $rt$ 432 seconds.
 
-# Workflow
-![DIA-NMF workflow](figures/workflow.png)
-
-
-# Data import
-For demonstration purposes and to speed up the processing of this document, we will analyze a tiny subset of real spiked data from [@BarbierSaintHilaire_ComparativeEvaluationData_2020]. In which human plasma samples spiked with a pool of 47 chemical compounds at 7 known concentrations (from 0 to 10~ng/mL for each metabolite) were analyzed in triplicate by SWATH DIA. A full scan MS event was followed by ten MS2 spectra collected from consecutive precursor ion isolation windows (20 to 50~Da each) on an Orbitrap Fusion instrument operated in the positive ionization mode. A stepped Normalized Collision Energy (NCE) was used to optimize the fragmentation: each MS2 spectrum is the mean of spectra acquired at 30\% $\pm$ 20\% NCE. MS1 and MS2 spectra were recorded at a resolution of 120,000 and 15,000 (at $m/z$ 200), respectively.
-
-
-The data test mzML file is provided in our package. It is a subset from replicate 3 of the 10 ng/mL concentration file from 100-290 $m/z$, 425-440 seconds, and precursorMZ $<=$ 280 at the MS2 level. The data set consists of the "Dextromethorphan" spiked compound of $m/z$ 272.2009 and $rt$ 432 seconds.
+<span style='color: red;'>Add a table with the isolation window informations</span>
 
 Let us load our package and the dataset mzML file.
 
 ```{r load mzML file, echo=TRUE }
 # load  the package
 library(DIANMF)
-packageVersion("DIANMF")
-
 # load the dataset
 file <- system.file("extdata", "test_data.mzml", package = "DIANMF")
 ```
-
 
 # Comprehensive workflow
 
