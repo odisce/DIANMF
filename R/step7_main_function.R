@@ -91,7 +91,7 @@ dia_nmf.f <- function(
       
       W_ms1 <- ngmcas_res$S
       H_ms1 <- ngmcas_res$A
-      W_ms1 <- apply(W_ms1, 2, function(x) x / max(x));  # normalize every column (comp spectrum) by the max value
+      # W_ms1 <- apply(W_ms1, 2, function(x) x / max(x));  # normalize every column (comp spectrum) by the max value
       
       # prepare pure MS1 spectra and choose the peak corresponding spectrum (the good spectrum)
       mz_prec <- as.numeric(ms1_peaks.df[peak.idx, 'mz']);
@@ -147,7 +147,7 @@ dia_nmf.f <- function(
                                  errors_print = errors_print);
         W_ms2 <- ngmcas_res_all$S;
         H_ms2 <- ngmcas_res_all$A;
-        W_ms2 <- apply(W_ms2, 2, function(x) x / max(x));  # normalize every column (comp spectrum) by the max value
+        # W_ms2 <- apply(W_ms2, 2, function(x) x / max(x));  # normalize every column (comp spectrum) by the max value
         
         # choose the good MS2 spectrum
         comp_ms2 <- elutions_corelation(chromo_main = H_ms1[comp_ms1, ], chromos = H_ms2);

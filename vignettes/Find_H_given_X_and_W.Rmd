@@ -73,7 +73,7 @@ W <- ms1_pureSpect_mat[[1]]
 # knitr::kable(head(W), row.names = FALSE)
 ```
 
-In **DIANMF**, we have provided the <span style="background-color: rgba(169, 169, 169, 0.4);">find_H()</span> function, which is based on the forward-backward algorithms (FBS) [@Combettes_2005_SignalRecoveryProximal]. It iterates to find the best $H$, where every row of $H$ is an elution profile.
+In **DIANMF**, we have provided the <span style="background-color: rgba(169, 169, 169, 0.4);">find_H()</span> function, which is based on the forward-backward algorithms (FBS) [@Combettes_2005_SignalRecoveryProximal]. It iterates to find the best $H$, where every row of $H$ is an elution profile, [see find H](#caseH).
 
 This function takes as inputs:
 
@@ -92,6 +92,26 @@ rt_peak <- MS1_features[[1]]$peak$rt
 p <- plot_MS_eics(ms_mixed = X, ms_pure_H = H, ms_level = "MS1", rt_prec = rt_peak, choosen_comp = "")
 p
 ```
+
+# Appendix 
+
+## Algorithm FISTA for the sub-problem in H {#caseH}
+<hr style="border: 1px solid black;">
+
+1.  **Start:** Updates$(X, W, \lambda, H_{0})$
+1.  **initialize** $R_{0}=H_{0},  L=||W^{T}W||_{s},  t_1=1,  k=1$
+1.  **while** not convergence **do**
+1.  $H_k = [R_{k-1} - \frac{1}{L} W^T ( W R_{k-1} - X)]_+$
+1.  $t_{k+1} = \frac{1 + \sqrt{1+4t^2_k}}{2}$
+1.  $R_k = H_k + \frac{t_k - 1 }{t_{k+1}} (H_k - H_{k-1})$
+1.  $k = k + 1$
+1.  **end while**
+1.  **return** $H_k$
+
+<hr style="border: 1px solid black;">
+
+
+
 
 # Session info
 Here is the output of `sessionInfo()` on the system on which this document was compiled:

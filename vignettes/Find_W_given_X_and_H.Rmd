@@ -72,7 +72,7 @@ H <- H_ms2.l[[peak.idx]]
 # knitr::kable(head(H_ms2))
 ```
 
-<span style="background-color: rgba(169, 169, 169, 0.4);">find_W()</span> is a function from **DIANMF**, that aims to find $W$ from $X$ and $H$. This function is based on the forward-backward algorithm (FBS) and more specifically on the positive-projection algorithm [@Combettes_2005_SignalRecoveryProximal]. It iterates to find the best $W$, where every column of $W$ is a pure spectrum related to a compound in $X$. 
+<span style="background-color: rgba(169, 169, 169, 0.4);">find_W()</span> is a function from **DIANMF**, that aims to find $W$ from $X$ and $H$. This function is based on the forward-backward algorithm (FBS) and more specifically on the positive-projection algorithm [@Combettes_2005_SignalRecoveryProximal]. It iterates to find the best $W$, where every column of $W$ is a pure spectrum related to a compound in $X$, [see find W](#caseW). 
 
 The function parameters:
 
@@ -91,6 +91,25 @@ mz_peak <- MS2_features[[1]]$peak$mz
 p <- plot_MS_spectra(ms_mixed = X, ms_pure_W = W, ms_level = "MS2", mz_prec = mz_peak, choosen_comp = "")
 p
 ```
+
+# Appendix 
+
+## Algorithm FISTA for the sub-problem in W {#caseW}
+<hr style="border: 1px solid black;">
+
+1.  **Start:** Updates$(X, H, \lambda, W_{0})$
+1.  **initialize** $R_{0}=W_{0},  L=||HH^{T}||_{s},  t_1=1,  k=1$
+1.  **while** not convergence **do**
+1.  $W_{k+1} = [Soft_{\frac{\lambda}{L}}(R_{k} - \frac{1}{L} (R_{k}H - X) H^T )]_+$
+1.  $t_{k+1} = \frac{1 + \sqrt{1+4t^2_k}}{2}$
+1.  $R_{k+1} = W_{k+1} + \frac{t_k - 1 }{t_{k+1}} (W_{k+1} - W_k)$
+1.  $k = k + 1$
+1.  **end while**
+1.  **return** $W_{k+1}$
+
+<hr style="border: 1px solid black;">
+
+
 
 # Session info
 Here is the output of `sessionInfo()` on the system on which this document was compiled:
