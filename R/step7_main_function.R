@@ -32,7 +32,7 @@ dia_nmf.f <- function(
     maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
     MS1_init_method = 'nndsvd', MS2_init_method = 'subSample', errors_print = FALSE,
     # rt tolerance is used to find MS1 ions that also detect as MS1 peaks
-    rt_tol = 2,
+    rt_tol = 3,
     # additional parameters from xcms::CentWaveParam to detect peaks
     ... ){
   
@@ -81,10 +81,17 @@ dia_nmf.f <- function(
         peak.idx <- peak.idx + 1
         next 
       };
+
+      # determine the rank of factorization
+      rank <- find_rank(ms1_peaks.df, peak.idx, rt_tol = rt_tol, max_r = ncol(ms1_mat));
+      if(rank == 0 ){
+        print("No factorization")
+        peak.idx <- peak.idx + 1
+        next
+      };
       
       # NMF on MS1 data
-      ms1_rank <- 3 # to be modified later on, it should be detected automatically
-      ngmcas_res <- nGMCAs(X.m = ms1_mat, rank = ms1_rank,
+      ngmcas_res <- nGMCAs(X.m = ms1_mat, rank = rank,
                            maximumIteration = maximumIteration, maxFBIteration = maxFBIteration, toleranceFB = toleranceFB,
                            initialization_method = MS1_init_method,
                            errors_print = errors_print);
@@ -139,9 +146,8 @@ dia_nmf.f <- function(
         };
   
         # NMF on MS2 data
-        ms2_rank <- 3  # change this !!!!!!!!!
         rownames(H_ms1) <- NULL; 
-        ngmcas_res_all <- nGMCAs(X.m = ms2_matrices, rank = ms2_rank,
+        ngmcas_res_all <- nGMCAs(X.m = ms2_matrices, rank = rank,
                                  maximumIteration = maximumIteration, maxFBIteration = maxFBIteration, toleranceFB = toleranceFB,
                                  initialization_method = MS2_init_method, H_sub = H_ms1,
                                  errors_print = errors_print);
@@ -172,7 +178,8 @@ dia_nmf.f <- function(
           'H_ms2' = H_ms2,
           'comp_ms1' = comp_ms1,
           'comp_ms2' = comp_ms2,
-          'ions_are_peaks' = ions_are_peaks  );
+          'ions_are_peaks' = ions_are_peaks,
+          'rank' = rank );
         
       }
 

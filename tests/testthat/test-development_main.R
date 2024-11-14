@@ -29,9 +29,9 @@ test_that("test main on barbier data", {
   
   total_res2 <- dia_nmf.f(mzML_path = file,
                           ms_level = "MS2",
-                          peaks_by_xcms = FALSE, ms1_peaks = eics_peaks.mat[1:20, ], d.out = NULL,
+                          peaks_by_xcms = FALSE, ms1_peaks = eics_peaks.mat[1:35, ], d.out = NULL,
                           ppm.n = 7,
-                          maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
+                          maximumIteration = 5, maxFBIteration = 10, toleranceFB = 1e-5,
                           MS1_init_method = 'nndsvd', MS2_init_method = 'subSample', errors_print = FALSE,
                           rt_tol = 2,
                           ppm = 7, peakwidth = c(6,60), snthresh = 1,

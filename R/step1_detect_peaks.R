@@ -58,7 +58,7 @@ prepare_ms1_peaks <- function(ms1_peaks){
     ms1_peaks.df <- ms1_peaks %>%
       arrange(desc(into))  }
   
-  ms1_peaks.df$is_ion <- FALSE
+  ms1_peaks.df$is_ion <- 0
   
   return(ms1_peaks.df)
 }

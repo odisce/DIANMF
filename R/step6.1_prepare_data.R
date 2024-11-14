@@ -83,6 +83,7 @@ prepare_pure_eics <- function(H, rt){
 #' @import patchwork
 plot_MS_eics <- function(ms_mixed, ms_pure_H = NULL, ms_level = c("MS1", "MS2"), rt_prec, choosen_comp){
   
+  ms_mixed <- ms_mixed / max(ms_mixed)
   # plot the MIXED elution profiles 
   ms1_mixed_eics <- prepare_mixed_data(ms_mixed = ms_mixed, mz_values = as.numeric(rownames(ms_mixed)), rts = as.numeric(colnames(ms_mixed)) )
   ms1_mixed_eics$mz_value <- paste0(ms_level, ms1_mixed_eics$mz_value)
@@ -97,6 +98,7 @@ plot_MS_eics <- function(ms_mixed, ms_pure_H = NULL, ms_level = c("MS1", "MS2"),
   if( is.null(ms_pure_H) ){
     return(p1)
   } else {
+    ms_pure_H <- t(apply(ms_pure_H, 1, function(x) x / max(x)))  # normalize every row
     # plot the PURE elution profiles
     ms_rt <- as.numeric(colnames(ms_mixed))
     ms1_pure_eics <- prepare_pure_eics(H = ms_pure_H, rt = ms_rt)
