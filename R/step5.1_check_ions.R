@@ -7,7 +7,7 @@
 #' @param rt_tol `numeric(1)` retention time tolerance.
 #'
 #' @return `numeric` MS1 peaks indexes.
-check_ms1_ions <- function(W_ms1, comp_ms1, ms1_peaks.df, rt_prec, rt_tol = 2){
+check_ms1_ions <- function(W_ms1, comp_ms1, ms1_peaks.df, rt_prec, rt_tol = 5){
   
   ions_maybe_peaks <- which(W_ms1[,comp_ms1] >= 0.8 * rowSums(W_ms1) )
   ions_maybe_peaks <- as.numeric(names(ions_maybe_peaks))

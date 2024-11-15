@@ -32,7 +32,7 @@ dia_nmf.f <- function(
     maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
     MS1_init_method = 'nndsvd', MS2_init_method = 'subSample', errors_print = FALSE,
     # rt tolerance is used to find MS1 ions that also detect as MS1 peaks
-    rt_tol = 3,
+    rt_tol = 5,
     # additional parameters from xcms::CentWaveParam to detect peaks
     ... ){
   
@@ -65,15 +65,20 @@ dia_nmf.f <- function(
   };
 
   ms1_peaks.df <- prepare_ms1_peaks(ms1_peaks = ms1_peaks);
+  ms1_peaks.df$r <- seq(1, nrow(ms1_peaks.df));
+  
   peak.idx <- 1;
   k <- 1;
   features.l <- list();
   
   while( peak.idx <= nrow(ms1_peaks.df) ){
-    if( isFALSE(ms1_peaks.df[peak.idx, 'is_ion']) ){
+    if( ms1_peaks.df[peak.idx, 'is_ion'] == 0 ){
       
-      # print(peak.idx)
-      
+      # print(peak.idx) 
+      ms1_peaks.df[peak.idx, "is_ion"] <- peak.idx
+      mz_prec <- as.numeric(ms1_peaks.df[peak.idx, 'mz']);
+      rt_prec <- as.numeric(ms1_peaks.df[peak.idx, 'rt']);
+
       ms1_mat <- extract_ms_matrix.f(peak.idx = peak.idx, ms1_peaks.df = ms1_peaks.df, rawData.onDiskMSnExp = rawData.onDiskMSnExp,
                                      ppm.n = ppm.n, rt_index = TRUE, mz_range = NULL, iso_win_index = NULL);
       if( nrow(ms1_mat) <= 1 ){
@@ -83,7 +88,7 @@ dia_nmf.f <- function(
       };
 
       # determine the rank of factorization
-      rank <- find_rank(ms1_peaks.df, peak.idx, rt_tol = rt_tol, max_r = ncol(ms1_mat));
+      rank <- find_rank(ms1_peaks.df, peak.idx, rt_prec, rt_tol = rt_tol, max_r = ncol(ms1_mat));
       if(rank == 0 ){
         print("No factorization")
         peak.idx <- peak.idx + 1
@@ -98,22 +103,12 @@ dia_nmf.f <- function(
       
       W_ms1 <- ngmcas_res$S
       H_ms1 <- ngmcas_res$A
-      # W_ms1 <- apply(W_ms1, 2, function(x) x / max(x));  # normalize every column (comp spectrum) by the max value
       
       # prepare pure MS1 spectra and choose the peak corresponding spectrum (the good spectrum)
-      mz_prec <- as.numeric(ms1_peaks.df[peak.idx, 'mz']);
-      rt_prec <- as.numeric(ms1_peaks.df[peak.idx, 'rt']);
-      
       # choose the good MS1 spectrum
       ms1_pure_data <- extract_ms1_pure_spectrum(W_ms1 = W_ms1, mz_prec = mz_prec);
       ms1_pure_spectrum <- ms1_pure_data$ms1_pure_spectrum;
       comp_ms1 <- ms1_pure_data$comp_ms1;
-      
-      # Test the chosen ms1 pure spectra ions, which will also be considered as peaks or not.
-      ions_are_peaks <- check_ms1_ions(W_ms1 = W_ms1, comp_ms1 = comp_ms1, ms1_peaks.df = ms1_peaks.df, rt_prec = rt_prec, rt_tol = rt_tol);
-      # these ions will not factorized again, but they may be used in different peaks factorization
-      ms1_peaks.df[ions_are_peaks, 'is_ion'] <- TRUE;
-      # --------------------------------------------------------------------------------------------------------- the peaks data.frame is updated :).
       
       if ( ms_level == "MS1" ){
         
@@ -164,6 +159,15 @@ dia_nmf.f <- function(
         
         # now I can delete the zero intensity fragments
         ms2_pure_spectrum <- ms2_pure_spectrum[ms2_pure_spectrum['intensity'] != 0, ];
+        
+        
+        # Test the chosen ms1 pure spectra ions, which will also be considered as peaks or not.--------------------------------------------------------
+        W <- apply(W_ms1, 2, function(x) x / max(x));  # normalize every column (comp spectrum) by the max value
+        ions_are_peaks <- check_ms1_ions(W_ms1 = W, comp_ms1 = comp_ms1, ms1_peaks.df = ms1_peaks.df, rt_prec = rt_prec, rt_tol = rt_tol);
+        # these ions will not factorized again, but they may be used in different peaks factorization
+        ms1_peaks.df[ions_are_peaks, 'is_ion'] <- peak.idx;
+        # --------------------------------------------------------------------------------------------------------- the peaks data.frame is updated :).
+        
         
         feature_sub.l <- list(
           'peak' = ms1_peaks.df[peak.idx, ],
