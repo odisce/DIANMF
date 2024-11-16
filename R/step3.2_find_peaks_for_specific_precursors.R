@@ -37,7 +37,7 @@ load_compounds_function.tb <- function(compound.c){
 #' @return MS1 selected peaks `matrix`.
 #' 
 #' @export
-search_for_ROIs_function.l <- function(compounds.df, ms1_peaks, mz_tol.n = 5, rt_tol.n = 5) {
+search_for_ROIs_function.l <- function(compounds.df, ms1_peaks, mz_tol.n =0.05, rt_tol.n = 10) {
   res <- lapply(1:nrow(compounds.df), function(i) {
     
     mz.n <- as.numeric(compounds.df[i, "mz"])

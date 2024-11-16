@@ -162,12 +162,11 @@ dia_nmf.f <- function(
         
         
         # Test the chosen ms1 pure spectra ions, which will also be considered as peaks or not.--------------------------------------------------------
-        W <- apply(W_ms1, 2, function(x) x / max(x));  # normalize every column (comp spectrum) by the max value
-        ions_are_peaks <- check_ms1_ions(W_ms1 = W, comp_ms1 = comp_ms1, ms1_peaks.df = ms1_peaks.df, rt_prec = rt_prec, rt_tol = rt_tol);
+        # W <- apply(W_ms1, 2, function(x) x / max(x));  # normalize every column (comp spectrum) by the max value
+        ions_are_peaks <- check_ms1_ions(W_ms1 = W_ms1, comp_ms1 = comp_ms1, ms1_peaks.df = ms1_peaks.df, rt_prec = rt_prec, rt_tol = rt_tol);
         # these ions will not factorized again, but they may be used in different peaks factorization
         ms1_peaks.df[ions_are_peaks, 'is_ion'] <- peak.idx;
         # --------------------------------------------------------------------------------------------------------- the peaks data.frame is updated :).
-        
         
         feature_sub.l <- list(
           'peak' = ms1_peaks.df[peak.idx, ],
