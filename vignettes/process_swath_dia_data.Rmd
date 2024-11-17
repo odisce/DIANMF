@@ -1,5 +1,5 @@
 ---
-title: "*DIANMF*"
+title: "*DIANMF:* Combined deconvolution of MS and MS/MS SWATH DIA data for comprehensive spectral characterization"
 author: "Diana Karaki"
 date: "`r Sys.Date()`"
 package: "`r pkg_ver('DIANMF')`"
@@ -52,7 +52,7 @@ A more detailed description of the implemented methods can be found in the [Intr
 
 # Introduction {#intro}
 
-One of the main challeng in untargeted metabolomics is molecule identification and annotation. Fragmentation methods are widely used in **M**ass **S**pectrometry (MS) based approches to gather specific information on unknown molecules. Different fragmentation methods exists, each one having a trade-off between specificity and coverage. A promising with wide coverage is the **S**equential **W**indow **A**cquisition of all **T**heoretical **D**ata-**I**ndependent **A**cquisition (SWATH-DIA) methods. However, the acquired MS2 spectra are hybrid mixtures, posing significant annotation challenges. We developed the **DIANMF** R package to adress to overcome this challenges and propose a robust and efficient way to unmix the spectra for untargeted metabolomics applications.
+One of the main challenge in untargeted metabolomics is molecule identification and annotation. Fragmentation methods are widely used in **M**ass **S**pectrometry (MS) based approaches to gather specific information on unknown molecules. Different fragmentation methods exists, each one having a trade-off between specificity and coverage. A promising with wide coverage is the **S**equential **W**indow **A**cquisition of all **T**heoretical **D**ata-**I**ndependent **A**cquisition (SWATH-DIA) methods. However, the acquired MS2 spectra are hybrid mixtures, posing significant annotation challenges. We developed the **DIANMF** R package to adress to overcome this challenges and propose a robust and efficient way to unmix the spectra for untargeted metabolomics applications.
 
 Non-negative matrix factorization is widely used for analyzing high-dimensional data and feature extraction [@Fu_2019_NonnegativeMatrixFactorization]. It automatically extracts meaningful features from a set of non-negative linear mixtures. This non-negativity arises naturally in many real problems such as hyperspectral sensors [@Brezini_2020_NMFBasedMethodHyperspectral], audio processing [@Fevotte_2009_NonnegativeMatrixFactorization], clustering [@Kim_2008_SparseNonnegativeMatrix], and spectrometry [@Dubroca_2012_WeightedNMFHighresolution]. It has been recently applied to LC-MS [@Rapin_2016_ApplicationNonnegativeMatrix]and has been shown superior to model peak algorithms for gas chromatography (GC)-MS data [@Smirnov_2019_ADAPGCApplicationClusteringAssisted]. Furthermore, on the assumption that for every metabolite, the existing information in the MS1 data correlates in the same sample with its MS2 data. Exploits this quantitative information to deconvolute complex SWATH DIA spectra.
 
@@ -107,9 +107,9 @@ MS2_features is an R object consisting of all peaks processing information in th
 
 The pure MS2 spectra are the most interesting and needed by the user; these information can be exported using [extract_pureSpect(features, spec_level)]{style="background-color: rgba(169, 169, 169, 0.4);"}. Where [spec_level]{style="background-color: rgba(169, 169, 169, 0.4);"} determine the type of the pure spectrum:
 
-1.  *MS1* MS1 spectrum
-2.  *MS2* MS2 spectrum contains all precursor fragments, including the precursor adducts, losses, and isotope fragments.
-3.  *MS2_specific* is the spectrum related to the precursor and its fragments without its adducts and loss fragments.
+1.  *MS1 spectrum*
+2.  *MS2 spectrum* contains all precursor fragments, including the precursor adducts, losses, and isotope fragments.
+3.  *Specific MS2 spectrum* is the MS2 spectrum related to the precursor and its fragments without its adducts and loss fragments.
 
 ```{r extract pure spectra, echo=TRUE }
 # extract MS1 pure spectra
@@ -122,9 +122,6 @@ ms2_spectra <- extract_pureSpect(features = MS2_features, spec_level = "MS2")
 ms2_SpecificSpectra <- extract_pureSpect(features = MS2_features, spec_level = "MS2_specific")
 ```
 
-... some plots ...
-
-.. some words regarding the next section ..
 
 # Use-Case 2: Step-by-Step Processing {#caseB}
 
@@ -225,8 +222,6 @@ mixed_eics <- plot_MS_eics(ms_mixed = X1, ms_level = "MS1", rt_prec = rt_prec)
 mixed_eics
 ```
 
-... plot also here the mixed MS1 spectrum .......
-
 <hr style="border: 1px solid red;">
 
 **All fragments from the same MS1 parent ion have the same elution profile**. Without integrating other compounds, we are engaging in the elution profiles (or chromatograms) related to the precursor at rt `r round(rt_prec,4)`. In other words, we want to un-mix or extract this mixed data's main features (basis). These bases are of positive intensities, and their corresponding spectra are positive and sparse in real life. Thus, one of the main strengths of our approach to deconvolute data is the non-negative matrix factorization (NMF), which is different from the traditional method of model peak selection.
@@ -280,8 +275,6 @@ p_spectra
 ## MS2 data processing
 
 In the xcms framework, the MS2 spectrum of each fragment ion must be reconstructed using the available MS2 data (i.e., the chromatographic peaks detected at the MS2 level). Specifically, for SWATH data, the fragment ion signals should be found within the **same isolation window** containing the precursor ion's $m/z$, and the chromatographic peak profile of the MS2 peaks should exhibit similar retention times and shapes to the MS1 peak of the precursor. However, we disagree with the first assumption. Depending on this fact, the pure MS2 data for each peak aligns with the MS1 data is more reasonable. Additionally, the MS1 pure spectrum ions often have significantly different $m/z$ values from the precursor's $m/z$, indicating that these ions were fragmented in **distinct isolation windows** at the MS2 level.
-
-Improve the plot .....
 
 The definition of these isolation windows (SWATH pockets) is imported from the metadata of the mzML file. Below we inspect the respective information using [isolationWindows.range()]{style="background-color: rgba(169, 169, 169, 0.4);"} function given the `r class(data_test)` raw data. The upper and lower isolation window $m/z$ bounds are available within "LowerMz" and "UpperMz" respectively.
 

@@ -184,6 +184,18 @@ plot_spectra_vs <- function(measured_spectrum, library_spectrum){
 
 #-------------------------------------------------------------------------------
 
+# plot_ms2spectra_detailes <- function(){
+#   
+#   
+#   
+#   
+#   
+#   
+# }
+
+
+#-------------------------------------------------------------------------------
+
 # plot_all_info <- function(d.plot,
 #                           peak.idx,
 #                           ms_mixed1, ms_mixed2,

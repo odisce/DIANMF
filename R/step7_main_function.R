@@ -110,6 +110,13 @@ dia_nmf.f <- function(
       ms1_pure_spectrum <- ms1_pure_data$ms1_pure_spectrum;
       comp_ms1 <- ms1_pure_data$comp_ms1;
       
+      # Test the chosen ms1 pure spectra ions, which will also be considered as peaks or not.--------------------------------------------------------
+      W <- apply(W_ms1, 2, function(x) x / max(x));  # normalize every column (comp spectrum) by the max value
+      ions_are_peaks <- check_ms1_ions(W_ms1 = W, comp_ms1 = comp_ms1, ms1_peaks.df = ms1_peaks.df, rt_prec = rt_prec, rt_tol = rt_tol);
+      # these ions will not factorized again, but they may be used in different peaks factorization
+      ms1_peaks.df[ions_are_peaks, 'is_ion'] <- peak.idx;
+      # --------------------------------------------------------------------------------------------------------- the peaks data.frame is updated :).
+      
       if ( ms_level == "MS1" ){
         
         feature_sub.l <- list( 
@@ -159,14 +166,6 @@ dia_nmf.f <- function(
         
         # now I can delete the zero intensity fragments
         ms2_pure_spectrum <- ms2_pure_spectrum[ms2_pure_spectrum['intensity'] != 0, ];
-        
-        
-        # Test the chosen ms1 pure spectra ions, which will also be considered as peaks or not.--------------------------------------------------------
-        # W <- apply(W_ms1, 2, function(x) x / max(x));  # normalize every column (comp spectrum) by the max value
-        ions_are_peaks <- check_ms1_ions(W_ms1 = W_ms1, comp_ms1 = comp_ms1, ms1_peaks.df = ms1_peaks.df, rt_prec = rt_prec, rt_tol = rt_tol);
-        # these ions will not factorized again, but they may be used in different peaks factorization
-        ms1_peaks.df[ions_are_peaks, 'is_ion'] <- peak.idx;
-        # --------------------------------------------------------------------------------------------------------- the peaks data.frame is updated :).
         
         feature_sub.l <- list(
           'peak' = ms1_peaks.df[peak.idx, ],

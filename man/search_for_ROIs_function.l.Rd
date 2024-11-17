@@ -4,7 +4,12 @@
 \alias{search_for_ROIs_function.l}
 \title{Search for the peaks suggestions for compounds using the mz and retention time info.}
 \usage{
-search_for_ROIs_function.l(compounds.df, ms1_peaks, mz_tol.n = 5, rt_tol.n = 5)
+search_for_ROIs_function.l(
+  compounds.df,
+  ms1_peaks,
+  mz_tol.n = 0.05,
+  rt_tol.n = 10
+)
 }
 \arguments{
 \item{compounds.df}{\code{data.frame}}
