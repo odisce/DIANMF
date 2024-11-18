@@ -56,7 +56,7 @@ filter_ms2_spectrum <- function(ms2_pure_spectrum, ms2_matrices, mz_prec, info.s
     start <- total_rows_before_level(my_list = ms2_matrices, level_index = idx.swath)
     end <- start + nrow(ms2_matrices[[idx.swath]])
     ms2_pure_spectrum_new <- ms2_pure_spectrum[ (start+1):end, ]
-    ms2_pure_spectrum_new$intensity <-  ms2_pure_spectrum_new$intensity / max( ms2_pure_spectrum_new$intensity)
+    # ms2_pure_spectrum_new$intensity <-  ms2_pure_spectrum_new$intensity / max( ms2_pure_spectrum_new$intensity)
     ms2_pure_spectrum_new <- ms2_pure_spectrum_new[ms2_pure_spectrum_new['intensity'] != 0, ]
     
     ms2_pure_spectrum_new <- as.data.frame(ms2_pure_spectrum_new)

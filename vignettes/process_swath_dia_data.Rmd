@@ -357,9 +357,10 @@ To extract the specific MS2 spectrum of the precursor, which contains just the p
 
 ```{r choose the specific MS2 spectrum, echo=TRUE }
 ms2_pure_spectrum_specific <- filter_ms2_spectrum(ms2_pure_spectrum = ms2_pure_spectrum, ms2_matrices = res_ms2, mz_prec = mz_prec, info.swath = info.swath)
-```
 
-... I want to make some changes here, plot just 1 pure MS2 spectrum, but label the specific fragments of the precursor ...
+p <- plot_ms2spectra_detailes(ms2_spectrum = ms2_pure_spectrum, ms2_specific_spectrum = ms2_pure_spectrum_specific)
+p
+```
 
 ## Spectral matching
 
@@ -400,7 +401,7 @@ reference_spectrum <- sub_database$spectra[[ spect_idx ]]
 p <- plot_spectra_vs(measured_spectrum = ms2_pure_spectrum_specific, library_spectrum = reference_spectrum)
 p
 ```
-
+ 
 Our extracted spectrum matched correctly with the library spectrum of `r scores$name.`. It fits relatively well with the best-match library spectrum, with high scores of `r scores$dot_prod`,`r scores$rev_prod`, and `r scores$presence` for the dot product, inverse dot product, and presence of fragments, respectively. The peak representing the precursor (the highest peak) still exists in both spectra with many other fragments. Also, two groups of peaks with slight differences in $m/z$ can be observed by closely inspecting the spectrum. These could represent fragments from isotopes of the original compound.
 
  ... add details about the isotopes, adducts, indicated them ...
@@ -421,7 +422,7 @@ where $W \in \mathbf{R}^{m \times r}$ is the basis matrix and $H \in \mathbf{R}^
 
 The rank of factorization ($r$) remains a challenge in NMF problems. However, it is robust in our case, meaning ranking over estimations is worse than assigning a fixed tiny rank. Until now, we have set it to three, so we are confident that one pure component is related to the precursor we are attempting to identify, one to another precursor, and the third may collect all noise in the matrix.
 
-Solving problem [1](#mainproblem) can be written under the constrained form:
+Solving problem [(1)](#mainproblem) can be written under the constrained form:
 
 \begin{align} \label{eq2} 
 \underset{\substack{W, H \geqslant 0}}{\text{argmin}} \, \mathcal{D}(X \parallel WH) + J(W). 
@@ -448,6 +449,7 @@ nGMCA$^s$ alternatively minimizes the constrained sub-problems to obtain stable 
 
 These sub-problems can be solved by the forward-backward splitting algorithm (FBS) [@Combettes_2005_SignalRecoveryProximal] from proximal splitting methods.
 
+
 ## Process LC-MS1 data
 
 **DIANMF** R package was designed to process SWATH DIA LC-MS/MS data. However, since our approach mainly relies on processing the MS1 data, processing MS1 data can be done using our workflow.
@@ -464,8 +466,10 @@ MS1_features <- dia_nmf.f( mzML_path = file,
 
 MS1_features is an R object that contains all MS1 features of the peaks: MS1 peaks, mixed MS1 matrices, pure spectra, elution profiles, and the associated MS1 pure spectra.
 
+
 # Cheat sheet
 ![DIANMF Cheat sheet](figures/snip.svg)
+
 
 # Session info
 
@@ -474,5 +478,6 @@ Here is the output of `sessionInfo()` on the system on which this document was c
 ```{r sessionInfo, echo=FALSE}
 sessionInfo()
 ```
+
 
 # References

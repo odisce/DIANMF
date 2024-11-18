@@ -31,6 +31,8 @@ test_that("Extract the MS1 peaks", {
   expect_true( !is.null(features.l_ms1[[1]]) ) 
 
   
+  p <- plot_ms2spectra_detailes(features.l_ms1[[1]]$MS2_pure_spectrum, features.l_ms1[[1]]$MS2_pure_spectrum_specific )
+  
   # # I need to plot 3 spectra of Dextromorphan: NMF MS2 pure spectrum, dia spectrum and dda spectrum
   # 
   # nmf_spectrum_specific <- features.l_ms2[[1]]$MS2_pure_spectrum_specific
@@ -42,9 +44,5 @@ test_that("Extract the MS1 peaks", {
   # plot_spectra_vs(measured_spectrum = nmf_spectrum_specific, library_spectrum = dia_spectrum)
   # plot_spectra_vs(measured_spectrum = nmf_spectrum, library_spectrum = dia_spectrum)
   # plot_spectra_vs(measured_spectrum = nmf_spectrum, library_spectrum = dda_spectrum)
-  
-  
-  
-  
   
 })

@@ -80,8 +80,9 @@ choose_ms2_pure_spectrum <- function(W_ms2, choosen_comp){
   ms2_pure_spectra <- prepare_pure_spectra(W_ms2);
   
   ms2_pure_spectra <-  ms2_pure_spectra %>%
-    group_by(comp_nb) %>%
-    mutate(intensity = intensity / max(intensity));
+    group_by(comp_nb) 
+  # %>%
+  #   mutate(intensity = intensity / max(intensity));
   
   ms2_pure_spectrum <- subset(ms2_pure_spectra, comp_nb == paste0('comp',choosen_comp));
   ms2_pure_spectrum <- ms2_pure_spectrum[, c('mz_value','intensity')];

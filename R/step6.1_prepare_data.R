@@ -37,8 +37,9 @@ prepare_pure_spectra <- function(W){
   W <- reshape2::melt(W)
   colnames(W) <- c("mz_value", "comp_nb", "intensity")
   W <- W %>% 
-    group_by(comp_nb) %>%
-    mutate(intensity = intensity / max(intensity)) 
+    group_by(comp_nb) 
+  # %>%
+  #   mutate(intensity = intensity / max(intensity)) 
   
   return(W)
 }
@@ -173,8 +174,8 @@ plot_spectra_vs <- function(measured_spectrum, library_spectrum){
   library_spectrum$intensity <- library_spectrum$intensity / max(library_spectrum$intensity)
   
   p <- ggplot2::ggplot( ) +
-    geom_linerange(data = measured_spectrum, stat = "identity", aes( x = mz_value, y = intensity, ymin = 0, ymax = intensity)) +
-    geom_linerange(data = library_spectrum, stat = "identity", aes( x = mz_value, y = -intensity, ymin = -intensity, ymax = 0, color = 'red')) +
+    geom_linerange(data = measured_spectrum, stat = "identity", aes( x = mz_value, y = intensity, ymin = 0, ymax = intensity), size = 1) +
+    geom_linerange(data = library_spectrum, stat = "identity", aes( x = mz_value, y = -intensity, ymin = -intensity, ymax = 0, color = 'red'), size = 1) +
     guides(color = FALSE) +
     labs( caption = "measured VS library spectra.") +
     theme_bw();
@@ -184,15 +185,39 @@ plot_spectra_vs <- function(measured_spectrum, library_spectrum){
 
 #-------------------------------------------------------------------------------
 
-# plot_ms2spectra_detailes <- function(){
-#   
-#   
-#   
-#   
-#   
-#   
-# }
+#' Plot the complete MS2 spectrum.
+#'
+#' @param ms2_spectrum MS2 spectrum contains all fragments of the precursor and its adducts and losses. 
+#' @param ms2_specific_spectrum MS2 spectrum of the precursor fragments.
+#'
+#' @return ggplot2 plot
+#' @export
+#' 
+#' @import ggplot2
+plot_ms2spectra_detailes <- function(ms2_spectrum, ms2_specific_spectrum){
 
+  ms2_spectrum <- as.data.frame(ms2_spectrum)
+  max_int <- max(ms2_spectrum$intensity)
+  ms2_spectrum$intensity <- ms2_spectrum$intensity / max_int
+  
+  ms2_specific_spectrum <- as.data.frame(ms2_specific_spectrum)
+  ms2_specific_spectrum$intensity <- ms2_specific_spectrum$intensity / max_int
+  
+  ms2_spectrum <- ms2_spectrum %>%
+    mutate(fragments = ifelse(mz_value %in% ms2_specific_spectrum$mz_value, "precursor fragments", "other fragments"))
+
+  p <- ggplot() + 
+    geom_linerange(data = ms2_spectrum, aes(x = mz_value, ymin = 0, ymax = intensity, color = fragments), size = 1) +
+    scale_color_manual(values = c("precursor fragments" = "blue", "other fragments" = "red")) +
+    # guides(color = FALSE) +
+    labs(
+         x = "m/z (mass-to-charge ratio)",
+         y = "Intensity" ) +
+    theme_bw(base_size = 14) +
+    theme( plot.caption = element_text(hjust = 0.5, face = "italic"))
+ 
+ return(p)
+}
 
 #-------------------------------------------------------------------------------
 

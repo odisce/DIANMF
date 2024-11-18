@@ -32,9 +32,9 @@ find_rank <- function(ms1_peaks.df, peak.idx, rt_prec, rt_tol = 5, max_r){
     } else {
       r <- r + 2
       # print(paste(r-1, "co-eluting peaks"))
-      r <- min(r, 5)
+      r <- min(r, 10)
     }
-    if( r > 5 | r > max_r ){
+    if( r > 10 | r > max_r ){
       return(0)  }
   }
   
