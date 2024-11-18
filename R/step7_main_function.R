@@ -195,5 +195,7 @@ dia_nmf.f <- function(
       peak.idx <- peak.idx + 1
   }
   
+  saveRDS(ms1_peaks, file = paste0(d.out, '/ms1_peaks_updated.rds'))
+  
   return(features.l)
 }
