@@ -90,7 +90,7 @@ dia_nmf.f <- function(
       # determine the rank of factorization
       rank <- find_rank(ms1_peaks.df, peak.idx, rt_prec, rt_tol = rt_tol, max_r = ncol(ms1_mat));
       if(rank == 0 ){
-        # print("No factorization")
+        # print(paste(peak.idx, "No factorization"))
         peak.idx <- peak.idx + 1
         next
       };
