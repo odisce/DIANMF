@@ -82,14 +82,14 @@ updateS.f <- function(Y, A, S_init, lambda, maxFBIteration, toleranceFB){
     # Check for NA values
     if (any(is.na(Snext)) || any(is.na(S))) {
       print("NA values detected in Snext or S")
-      Snext <- NULL
+      S <- Snext <- NULL
       break
     }
     # Check for zero norm to avoid division by zero
     norm_S <- norm(S, 'F')
     if (norm_S == 0) {
       print("Norm of S is zero, leading to division by zero")
-      Snext <- NULL
+      S <- Snext <- NULL
       break
     }
     if (norm(Snext - S, 'F') / norm_S < toleranceFB) {
