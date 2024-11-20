@@ -38,8 +38,6 @@ prepare_pure_spectra <- function(W){
   colnames(W) <- c("mz_value", "comp_nb", "intensity")
   W <- W %>% 
     group_by(comp_nb) 
-  # %>%
-  #   mutate(intensity = intensity / max(intensity)) 
   
   return(W)
 }

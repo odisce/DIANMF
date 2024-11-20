@@ -81,12 +81,16 @@ updateS.f <- function(Y, A, S_init, lambda, maxFBIteration, toleranceFB){
     R <- Snext + ((t - 1) / tnext) * (Snext - S)
     # Check for NA values
     if (any(is.na(Snext)) || any(is.na(S))) {
-      stop("NA values detected in Snext or S")
+      print("NA values detected in Snext or S")
+      Snext <- NULL
+      break
     }
     # Check for zero norm to avoid division by zero
     norm_S <- norm(S, 'F')
     if (norm_S == 0) {
-      stop("Norm of S is zero, leading to division by zero")
+      print("Norm of S is zero, leading to division by zero")
+      Snext <- NULL
+      break
     }
     if (norm(Snext - S, 'F') / norm_S < toleranceFB) {
       S <- Snext
@@ -142,13 +146,15 @@ nGMCAs <- function(X.m, rank,
     print('error! H_sub must be !NULL when using the subSample initialization')
   }
   
+  if(is.null(data$S)){ return(NULL) }
+  
   lambda <- 0.8 * max(X.m)
   for (i in 1:maximumIteration) {
     
     data$S <- t(apply( data$S, 1, function(x) x / max(x)))
     data$S <- updateS.f( Y = X.m, A = data$A, S_init = data$S, lambda = lambda,
                          maxFBIteration = maxFBIteration, toleranceFB = toleranceFB ) 
-
+    
     data$A <- updateA.f(Y = X.m, A_init = data$A, S = data$S,
                         maxFBIteration = maxFBIteration, toleranceFB = toleranceFB)
     

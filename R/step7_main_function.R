@@ -101,11 +101,15 @@ dia_nmf.f <- function(
                            initialization_method = MS1_init_method,
                            errors_print = errors_print);
       
+      if( is.null(ngmcas_res) ){ 
+        peak.idx <- peak.idx + 1
+        next
+      };
+      
       W_ms1 <- ngmcas_res$S
       H_ms1 <- ngmcas_res$A
       
-      # prepare pure MS1 spectra and choose the peak corresponding spectrum (the good spectrum)
-      # choose the good MS1 spectrum
+      # choose the peak corresponding spectrum (the good spectrum)
       ms1_pure_data <- extract_ms1_pure_spectrum(W_ms1 = W_ms1, mz_prec = mz_prec);
       ms1_pure_spectrum <- ms1_pure_data$ms1_pure_spectrum;
       comp_ms1 <- ms1_pure_data$comp_ms1;
@@ -155,8 +159,7 @@ dia_nmf.f <- function(
                                  errors_print = errors_print);
         W_ms2 <- ngmcas_res_all$S;
         H_ms2 <- ngmcas_res_all$A;
-        # W_ms2 <- apply(W_ms2, 2, function(x) x / max(x));  # normalize every column (comp spectrum) by the max value
-        
+
         # choose the good MS2 spectrum
         comp_ms2 <- elutions_corelation(chromo_main = H_ms1[comp_ms1, ], chromos = H_ms2);
         ms2_pure_spectrum <- choose_ms2_pure_spectrum(W_ms2 = W_ms2, choosen_comp = comp_ms2);
@@ -195,7 +198,9 @@ dia_nmf.f <- function(
       peak.idx <- peak.idx + 1
   }
   
-  saveRDS(ms1_peaks, file = paste0(d.out, '/ms1_peaks_updated.rds'))
+  if (!is.null(d.out)){
+    saveRDS(ms1_peaks, file = paste0(d.out, '/ms1_peaks_updated.rds'))
+  }
   
   return(features.l)
 }

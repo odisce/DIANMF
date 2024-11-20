@@ -42,12 +42,12 @@ elutions_corelation <- function(chromo_main, chromos){
 #' 
 extract_ms1_pure_spectrum <- function(W_ms1, mz_prec){
   
-  ms1_pure_spectra <- prepare_pure_spectra(W_ms1)
-  
+  W <- apply(W_ms1, 2, function(x) x / max(x))
   mz_ms1_ions <- round(as.numeric(rownames(W_ms1)), 4)
   closest_row <- which.min(abs(mz_ms1_ions - mz_prec))
-  choosen_comp_ms1 <- which.max(W_ms1[closest_row, ])
+  choosen_comp_ms1 <- which.max(W[closest_row, ])
   
+  ms1_pure_spectra <- prepare_pure_spectra(W_ms1)
   ms1_pure_spectrum <- ms1_pure_spectra[ms1_pure_spectra$comp_nb == paste0('comp',choosen_comp_ms1), ]
   ms1_pure_spectrum <- ms1_pure_spectrum[, c('mz_value', 'intensity')]
   ms1_pure_spectrum <- ms1_pure_spectrum[ms1_pure_spectrum['intensity'] != 0, ]
@@ -56,7 +56,6 @@ extract_ms1_pure_spectrum <- function(W_ms1, mz_prec){
     'ms1_pure_spectrum' = ms1_pure_spectrum,
     'comp_ms1' = choosen_comp_ms1  ))
 }
-
 
 #' Select the good MS2 spectrum related to the MS1 peak.
 #'
@@ -80,9 +79,7 @@ choose_ms2_pure_spectrum <- function(W_ms2, choosen_comp){
   ms2_pure_spectra <- prepare_pure_spectra(W_ms2);
   
   ms2_pure_spectra <-  ms2_pure_spectra %>%
-    group_by(comp_nb) 
-  # %>%
-  #   mutate(intensity = intensity / max(intensity));
+    group_by(comp_nb)
   
   ms2_pure_spectrum <- subset(ms2_pure_spectra, comp_nb == paste0('comp',choosen_comp));
   ms2_pure_spectrum <- ms2_pure_spectrum[, c('mz_value','intensity')];
