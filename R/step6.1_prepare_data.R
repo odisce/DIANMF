@@ -79,20 +79,32 @@ prepare_pure_eics <- function(H, rt){
 #' @export
 #' 
 #' @import ggplot2
-#' @import patchwork
+#' @import patchwork        
 plot_MS_eics <- function(ms_mixed, ms_pure_H = NULL, ms_level = c("MS1", "MS2"), rt_prec, choosen_comp){
   
   ms_mixed <- ms_mixed / max(ms_mixed)
+  
+  # # find the precursor elution profile
+  # mz_ions <- as.numeric(rownames(ms_mixed))
+  # closest_row <- which.min(abs(mz_ions - mz_prec))
+  # prec_eic_row <- mz_ions[closest_row]
+  
   # plot the MIXED elution profiles 
   ms1_mixed_eics <- prepare_mixed_data(ms_mixed = ms_mixed, mz_values = as.numeric(rownames(ms_mixed)), rts = as.numeric(colnames(ms_mixed)) )
   ms1_mixed_eics$mz_value <- paste0(ms_level, ms1_mixed_eics$mz_value)
   p1 <- ggplot2::ggplot( data = ms1_mixed_eics, aes(x = rt, y = intensity, color = mz_value)) + 
-    geom_vline( xintercept = rt_prec, colour = "red", linetype = 1, linewidth = 0.5 ) +
+    geom_vline( xintercept = rt_prec, colour = "red", linetype = 2, linewidth = 0.5 ) +
     geom_line() +
     geom_point() +
+    # geom_line(data = ms1_mixed_eics[ms1_mixed_eics$mz_value == paste0(ms_level,prec_eic_row), ], aes(x = rt, y = intensity), color = "black")+
     xlim( min(ms1_mixed_eics$rt), max(ms1_mixed_eics$rt) ) +
     guides(color = 'none')
   
+  # if( !is.null(peak_info) ){
+  #   p1 <- p1 + 
+  #     geom_vline( xintercept = peak_info$rtmin, colour = "red", linetype = 1, linewidth = 0.5 ) +
+  #     geom_vline( xintercept = peak_info$rtmax, colour = "red", linetype = 1, linewidth = 0.5 )
+  # }
   
   if( is.null(ms_pure_H) ){
     return(p1)

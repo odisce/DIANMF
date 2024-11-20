@@ -157,6 +157,12 @@ dia_nmf.f <- function(
                                  maximumIteration = maximumIteration, maxFBIteration = maxFBIteration, toleranceFB = toleranceFB,
                                  initialization_method = MS2_init_method, H_sub = H_ms1,
                                  errors_print = errors_print);
+        
+        if( is.null(ngmcas_res_all) ){ 
+          peak.idx <- peak.idx + 1
+          next
+        };
+        
         W_ms2 <- ngmcas_res_all$S;
         H_ms2 <- ngmcas_res_all$A;
 

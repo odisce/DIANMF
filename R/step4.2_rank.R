@@ -31,8 +31,9 @@ find_rank <- function(ms1_peaks.df, peak.idx, rt_prec, rt_tol = 5, max_r){
       return(3)  # this can be improved (I have something in mined)
     } else {
       r <- r + 3
+      r <- min(r, 10)
     }
-    if( r > 10 | r > max_r ){
+    if( r > max_r ){
       return(0)  }
   }
   

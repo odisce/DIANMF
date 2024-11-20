@@ -57,10 +57,15 @@ subsample_init <- function(Y, rank, H_sub){  # This method is just for NMF of MS
   lambda <- 0.8 * max(Y)
   S <- updateS.f( Y, A = t(H_sub), S_init = S, lambda = lambda,
                        maxFBIteration = 10, toleranceFB = 1e-5 ) 
+ 
+   if( is.null(S) ){
+    retun(NULL)
+  } else {
+    return(list(
+      'A' = t(H_sub),
+      'S' = S ))
+  }
   
-  return(list(
-    'A' = t(H_sub),
-    'S' = S ))
 }
 #-------------------------------------------------------------------------------
 

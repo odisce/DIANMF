@@ -140,13 +140,14 @@ nGMCAs <- function(X.m, rank,
     data$S <- res_random$H
   } else if( initialization_method == 'subSample' & !is.null(H_sub) ){
     res_subSample <- subsample_init(Y = X.m, rank = rank, H_sub)
+    if( is.null(res_subSample) ){ return(NULL) }
     data$A <- res_subSample$A
     data$S <- res_subSample$S
   } else {
     print('error! H_sub must be !NULL when using the subSample initialization')
   }
   
-  if(is.null(data$S)){ return(NULL) }
+  if( is.null(data$S) ){ return(NULL) }
   
   lambda <- 0.8 * max(X.m)
   for (i in 1:maximumIteration) {
