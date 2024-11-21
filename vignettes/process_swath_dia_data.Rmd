@@ -84,7 +84,7 @@ The [dia_nmf.f()]{style="background-color: rgba(169, 169, 169, 0.4);"} function 
 ```{r main function MS2 level, echo=TRUE }
 MS2_features <- dia_nmf.f( mzML_path = file,
                        ms_level = "MS2",
-                       peaks_by_xcms = TRUE, ms1_peaks = NULL,
+                       peaks_by_xcms = TRUE, ms1_peaks = NULL, d.out = "~/DIA_NMF_R_package/dianmf",
                        ppm = 6, peakwidth = c(3,60), snthresh = 0,
                        prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
                        integrate = 2, mzdiff = -0.001, noise = 0,

@@ -155,6 +155,7 @@ nGMCAs <- function(X.m, rank,
     data$S <- t(apply( data$S, 1, function(x) x / max(x)))
     data$S <- updateS.f( Y = X.m, A = data$A, S_init = data$S, lambda = lambda,
                          maxFBIteration = maxFBIteration, toleranceFB = toleranceFB ) 
+    if( is.null(data$S) ) { return(NULL) }
     
     data$A <- updateA.f(Y = X.m, A_init = data$A, S = data$S,
                         maxFBIteration = maxFBIteration, toleranceFB = toleranceFB)
