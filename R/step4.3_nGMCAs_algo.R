@@ -152,7 +152,13 @@ nGMCAs <- function(X.m, rank,
   lambda <- 0.8 * max(X.m)
   for (i in 1:maximumIteration) {
     
-    data$S <- t(apply( data$S, 1, function(x) x / max(x)))
+    # data$A <- apply(data$A, 2, function(col) {
+    #   norm <- sqrt(sum(col^2))
+    #   col / norm
+    # });
+    
+    # data$S <- t(apply( data$S, 1, function(x) x / max(x)))
+    
     data$S <- updateS.f( Y = X.m, A = data$A, S_init = data$S, lambda = lambda,
                          maxFBIteration = maxFBIteration, toleranceFB = toleranceFB ) 
     if( is.null(data$S) ) { return(NULL) }
