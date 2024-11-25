@@ -37,9 +37,10 @@ prepare_pure_spectra <- function(W){
   W <- reshape2::melt(W)
   colnames(W) <- c("mz_value", "comp_nb", "intensity")
   W <- W %>% 
-    group_by(comp_nb) %>%
-    mutate(intensity = intensity / max(intensity)) %>%
-    ungroup()
+    group_by(comp_nb)
+    # %>%
+    # mutate(intensity = intensity / max(intensity)) %>%
+    # ungroup()
   
   return(W)
 }
