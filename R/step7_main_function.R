@@ -10,6 +10,7 @@
 #' @param MS2_init_method `character` MS2 initialization method.
 #' @inheritParams check_ms1_ions
 #' @inheritParams extract_ms_matrix.f
+#' @inheritParams pure_sources
 #' @param ... Additional parameters passed to \code{\link[xcms]{CentWaveParam}}.
 #'
 #' @return `list` of identified features.
@@ -88,7 +89,8 @@ dia_nmf.f <- function(
       };
 
       # determine the rank of factorization
-      rank <- find_rank(ms1_peaks.df, peak.idx, rt_prec, rt_tol = rt_tol, max_r = ncol(ms1_mat));
+      # rank <- find_rank(ms1_peaks.df, peak.idx, rt_prec, rt_tol = rt_tol, max_r = ncol(ms1_mat));
+      rank <- min(15, ncol(ms1_mat))
       if(rank == 0 ){
         # print(paste(peak.idx, "No factorization"))
         peak.idx <- peak.idx + 1
@@ -106,17 +108,27 @@ dia_nmf.f <- function(
         next
       };
       
-      W_ms1 <- ngmcas_res$S
-      H_ms1 <- ngmcas_res$A
+      W_ms1 <- ngmcas_res$S;
+      H_ms1 <- ngmcas_res$A;
+      colnames(H_ms1) <- colnames(ms1_mat);
       
-      # choose the peak corresponding spectrum (the good spectrum)
-      ms1_pure_data <- extract_ms1_pure_spectrum(W_ms1 = W_ms1, mz_prec = mz_prec);
+      # retrieve the MS1 sources
+      ms1_pure_sources <- pure_sources(W = W_ms1, H = H_ms1, ms_type = "sum");
+      
+      # prepare pure MS1 spectra and choose the peak corresponding spectrum (the good spectrum)
+      # choose the good MS1 spectrum
+      ms1_spectra_mat <- matrix(0, nrow = nrow(ms1_pure_sources[[1]]$source_spect), ncol = length(ms1_pure_sources));
+      for(i in 1:length(ms1_pure_sources)){
+        ms1_spectra_mat[, i] <- ms1_pure_sources[[i]]$source_spect$intensity
+      };
+      rownames(ms1_spectra_mat) <- ms1_pure_sources[[i]]$source_spect$mz_value;
+      
+      ms1_pure_data <- extract_ms1_pure_spectrum(W_ms1 = ms1_spectra_mat, mz_prec = mz_prec);
       ms1_pure_spectrum <- ms1_pure_data$ms1_pure_spectrum;
       comp_ms1 <- ms1_pure_data$comp_ms1;
       
       # Test the chosen ms1 pure spectra ions, which will also be considered as peaks or not.--------------------------------------------------------
-      # W <- apply(W_ms1, 2, function(x) x / max(x));  # normalize every column (comp spectrum) by the max value
-      ions_are_peaks <- check_ms1_ions(W_ms1 = W_ms1, comp_ms1 = comp_ms1, ms1_peaks.df = ms1_peaks.df, rt_prec = rt_prec, rt_tol = rt_tol);
+      ions_are_peaks <- check_ms1_ions(W_ms1 = ms1_spectra_mat, comp_ms1 = comp_ms1, ms1_peaks.df = ms1_peaks.df, rt_prec = rt_prec, rt_tol = rt_tol);
       # these ions will not factorized again, but they may be used in different peaks factorization
       ms1_peaks.df[ions_are_peaks, 'is_ion'] <- peak.idx;
       # --------------------------------------------------------------------------------------------------------- the peaks data.frame is updated :).
@@ -125,12 +137,14 @@ dia_nmf.f <- function(
         
         feature_sub.l <- list( 
           'peak' = ms1_peaks.df[peak.idx, ],
-          'MS1_pure_spectrum' = ms1_pure_spectrum,
           'MS1_mixed_mat' = ms1_mat,
           'W_ms1' = W_ms1,
           'H_ms1' = H_ms1,
           'comp_ms1' = comp_ms1,
-          'ms1_ions_are_peaks' = ions_are_peaks  );
+          'rank' = rank,
+          'ms1_ions_are_peaks' = ions_are_peaks,
+          'MS1_pure_spectrum' = ms1_pure_spectrum, 
+          'ms1_pure_sources' = ms1_pure_sources  );
         
       } else { # the user want to process the MS2 data also
         
@@ -157,18 +171,27 @@ dia_nmf.f <- function(
                                  maximumIteration = maximumIteration, maxFBIteration = maxFBIteration, toleranceFB = toleranceFB,
                                  initialization_method = MS2_init_method, H_sub = H_ms1,
                                  errors_print = errors_print);
-        
         if( is.null(ngmcas_res_all) ){ 
           peak.idx <- peak.idx + 1
           next
         };
         
         W_ms2 <- ngmcas_res_all$S;
+        rownames(W_ms2) <- rownames(ms2_matrices);
         H_ms2 <- ngmcas_res_all$A;
 
+        # retrieve the MS2 sources
+        ms2_pure_sources <- pure_sources(W = W_ms2, H = H_ms2, ms_type = "sum");
+        
         # choose the good MS2 spectrum
+        ms2_spectra_mat <- matrix(0, nrow = nrow(ms2_pure_sources[[1]]$source_spect), ncol = length(ms2_pure_sources));
+        for(i in 1:length(ms2_pure_sources)){
+          ms2_spectra_mat[, i] <- ms2_pure_sources[[i]]$source_spect$intensity
+        };
+        rownames(ms2_spectra_mat) <- ms2_pure_sources[[i]]$source_spect$mz_value;
+        
         comp_ms2 <- elutions_corelation(chromo_main = H_ms1[comp_ms1, ], chromos = H_ms2);
-        ms2_pure_spectrum <- choose_ms2_pure_spectrum(W_ms2 = W_ms2, choosen_comp = comp_ms2);
+        ms2_pure_spectrum <- choose_ms2_pure_spectrum(W_ms2 = ms2_spectra_mat, choosen_comp = comp_ms2);
         
         # Filter the ms2 pure spectra to get only the fragments related to the precursor from the SWATH window where it was fragmented
         ms2_pure_spectrum_specific <- filter_ms2_spectrum(ms2_pure_spectrum = ms2_pure_spectrum, ms2_matrices = res_ms2, mz_prec, info.swath = info.swath, peak.idx);
@@ -178,9 +201,6 @@ dia_nmf.f <- function(
         
         feature_sub.l <- list(
           'peak' = ms1_peaks.df[peak.idx, ],
-          'MS1_pure_spectrum' = ms1_pure_spectrum,
-          'MS2_pure_spectrum' = ms2_pure_spectrum,
-          'MS2_pure_spectrum_specific' = ms2_pure_spectrum_specific,
           'MS1_mixed_mat' = ms1_mat,
           'MS2_mixed_mat' = res_ms2,
           'W_ms1' = W_ms1,
@@ -190,7 +210,12 @@ dia_nmf.f <- function(
           'comp_ms1' = comp_ms1,
           'comp_ms2' = comp_ms2,
           'ions_are_peaks' = ions_are_peaks,
-          'rank' = rank );
+          'rank' = rank,
+          'ms1_pure_sources' = ms1_pure_sources,  # real sources
+          'ms2_pure_sources' = ms2_pure_sources,
+          'MS1_pure_spectrum' = ms1_pure_spectrum,   # real spectra
+          'MS2_pure_spectrum' = ms2_pure_spectrum,
+          'MS2_pure_spectrum_specific' = ms2_pure_spectrum_specific  );
         
       }
 
