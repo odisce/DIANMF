@@ -10,7 +10,7 @@
 #' @param MS2_init_method `character` MS2 initialization method.
 #' @inheritParams check_ms1_ions
 #' @inheritParams extract_ms_matrix.f
-#' @inheritParams pure_sources
+#' @inheritParams pure_sources.f
 #' @param ... Additional parameters passed to \code{\link[xcms]{CentWaveParam}}.
 #'
 #' @return `list` of identified features.
@@ -26,14 +26,16 @@ dia_nmf.f <- function(
     mzML_path = NULL,
     ms_level = "MS2",
     # parameters to detect peaks by xcms, or input the peak matrix or data.frame
-    peaks_by_xcms = TRUE, ms1_peaks = NULL, d.out = NULL,
+    peaks_by_xcms = c(TRUE, FALSE), ms1_peaks = NULL, d.out = NULL,
     # parameters to extract MS1 & MS2 mixed matrices
     ppm.n = 7,
     # NMF parameters
     maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
-    MS1_init_method = 'nndsvd', MS2_init_method = 'subSample', errors_print = FALSE,
+    MS1_init_method = c('nndsvd', 'random'), MS2_init_method = c('nndsvd', 'subSample', 'random'), errors_print = c(TRUE, FALSE),
     # rt tolerance is used to find MS1 ions that also detect as MS1 peaks
     rt_tol = 5,
+    # pure sources parameters
+    ms_type = c('max', 'mean', 'sum'),
     # additional parameters from xcms::CentWaveParam to detect peaks
     ... ){
   
@@ -113,7 +115,7 @@ dia_nmf.f <- function(
       colnames(H_ms1) <- colnames(ms1_mat);
       
       # retrieve the MS1 sources
-      ms1_pure_sources <- pure_sources(W = W_ms1, H = H_ms1, ms_type = "sum");
+      ms1_pure_sources <- pure_sources.f(W = W_ms1, H = H_ms1, ms_type = ms_type);
       
       # prepare pure MS1 spectra and choose the peak corresponding spectrum (the good spectrum)
       # choose the good MS1 spectrum
@@ -181,7 +183,7 @@ dia_nmf.f <- function(
         H_ms2 <- ngmcas_res_all$A;
 
         # retrieve the MS2 sources
-        ms2_pure_sources <- pure_sources(W = W_ms2, H = H_ms2, ms_type = "sum");
+        ms2_pure_sources <- pure_sources.f(W = W_ms2, H = H_ms2, ms_type = ms_type);
         
         # choose the good MS2 spectrum
         ms2_spectra_mat <- matrix(0, nrow = nrow(ms2_pure_sources[[1]]$source_spect), ncol = length(ms2_pure_sources));

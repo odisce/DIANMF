@@ -1,14 +1,15 @@
 #' Retrieve pure sources: elution profiles and there spectra
 #'
-#' @param W 
-#' @param H 
-#' @param ms_type 
+#' @param W `matrix` basis.
+#' @param H `matrix` corresponding coefficient. 
+#' @param ms_type `character` c('max', 'mean', 'sum'). Indicate how to compute the spectrum, i.e., how to calculate the intensity of ions/fragments of the same mz.
 #'
-#' @return list of pure sources
+#' @return `list` of pure sources. Each list contains pure elution profiles and the pure spectrum. 
+#' 
 #' @export 
 #' 
-#' @import dplyr
-pure_sources <- function(W, H, ms_type = c("max", "mean", "sum")){
+#' @import magrittr
+pure_sources.f <- function(W, H, ms_type = c('max', 'mean', 'sum')){
   res <- lapply(1:ncol(W), function(s){
     # s <- 1
     spect <- as.matrix(W[, s], ncol = 1)

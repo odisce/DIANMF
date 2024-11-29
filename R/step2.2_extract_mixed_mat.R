@@ -27,7 +27,7 @@ has_four_consecutive_non_zero <- function(row) {
 #' @inheritParams extract_eics
 #' @param iso_win_index `numeric(1)` SWATH isolation window index; just for MS2 level.
 #'
-#' @return Mixed `matrix` related peak.idx.
+#' @return Mixed `matrix` related to peak.idx.
 #' 
 #' @export
 #' 
