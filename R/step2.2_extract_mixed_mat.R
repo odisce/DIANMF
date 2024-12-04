@@ -131,6 +131,7 @@ extract_ms2_matrices <- function(peak.idx, ms1_peaks.df, ppm.n, ms1_pure_spectru
   res_ms2 <- lapply(idx.swath, function(i){
     ms2_mat <- extract_ms_matrix.f(peak.idx = peak.idx, ms1_peaks.df = ms1_peaks.df, rawData.onDiskMSnExp = rawData.onDiskMSnExp,
                                    ppm.n = ppm.n, rt_index = TRUE, mz_range = NULL, iso_win_index = i);
+    
     return(ms2_mat)
   });
 

@@ -24,7 +24,7 @@
 #' @importFrom MSnbase readMSData
 dia_nmf.f <- function(
     mzML_path = NULL,
-    ms_level = "MS2",
+    ms_level = c("MS1" ,"MS2"),
     # parameters to detect peaks by xcms, or input the peak matrix or data.frame
     peaks_by_xcms = c(TRUE, FALSE), ms1_peaks = NULL, d.out = NULL,
     # parameters to extract MS1 & MS2 mixed matrices
@@ -91,9 +91,8 @@ dia_nmf.f <- function(
       };
 
       # determine the rank of factorization
-      # rank <- find_rank(ms1_peaks.df, peak.idx, rt_prec, rt_tol = rt_tol, max_r = ncol(ms1_mat));
-      rank <- min(15, ncol(ms1_mat))
-      if(rank == 0 ){
+      rank <- find_rank(ms1_peaks.df, peak.idx, rt_prec, rt_tol = rt_tol, max_r = ncol(ms1_mat));
+      if( rank == 0 ){
         # print(paste(peak.idx, "No factorization"))
         peak.idx <- peak.idx + 1
         next
@@ -197,9 +196,13 @@ dia_nmf.f <- function(
         
         # Filter the ms2 pure spectra to get only the fragments related to the precursor from the SWATH window where it was fragmented
         ms2_pure_spectrum_specific <- filter_ms2_spectrum(ms2_pure_spectrum = ms2_pure_spectrum, ms2_matrices = res_ms2, mz_prec, info.swath = info.swath, peak.idx);
+        ms2_pure_spectrum_specific$mz_value <- gsub("\\.\\d$", "", ms2_pure_spectrum_specific$mz_value); # Remove trailing '.X' where X is any digit
+        ms2_pure_spectrum_specific$mz_value <- as.numeric(ms2_pure_spectrum_specific$mz_value);
         
         # now I can delete the zero intensity fragments
         ms2_pure_spectrum <- ms2_pure_spectrum[ms2_pure_spectrum['intensity'] != 0, ];
+        ms2_pure_spectrum$mz_value <- gsub("\\.\\d$", "", ms2_pure_spectrum$mz_value); # Remove trailing '.X' where X is any digit
+        ms2_pure_spectrum$mz_value <- as.numeric(ms2_pure_spectrum$mz_value);
         
         feature_sub.l <- list(
           'peak' = ms1_peaks.df[peak.idx, ],

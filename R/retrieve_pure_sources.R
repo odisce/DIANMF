@@ -46,7 +46,7 @@ pure_sources.f <- function(W, H, ms_type = c('max', 'mean', 'sum')){
 }
 
 
-plot_eics <- function(eics_mat, ms_level = "MS1"){
+plot_eics <- function(eics_mat, ms_level = "MS1", prec_eic_row = NULL){
   
   eics_mat$mz_value <- paste0(ms_level, eics_mat$mz_value)
   
@@ -57,9 +57,9 @@ plot_eics <- function(eics_mat, ms_level = "MS1"){
     xlim( min(eics_mat$rt), max(eics_mat$rt) ) +
     guides(color = 'none')
   
-  # if(!is.null(prec_eic_row)){
-  #   p <- p +  geom_line(data = eics_mat[eics_mat$mz_value == paste0(ms_level, prec_eic_row), ], aes(x = rt, y = intensity), color = "black")
-  # }
+  if(!is.null(prec_eic_row)){
+    p <- p + geom_line(data = eics_mat[eics_mat$mz_value == paste0(ms_level, prec_eic_row), ], aes(x = rt, y = intensity), color = "black")
+  }
   
   return(p)
 }
@@ -86,7 +86,7 @@ plot_spectrum <- function(pure_spect){
 }
 
 
-plot_peak_info <- function(ms_mixed = ms1_mat, W = W_ms1, H = H_ms1, mz_prec, ms_level = c("MS1", "MS2"), pure_sources.l){
+plot_peak_info <- function(ms_mixed = ms1_mat, W = W_ms1, H = H_ms1, mz_prec, rt_prec, ms_level = c("MS1", "MS2"), pure_sources.l, good_source){
   
   mz_ions <- as.numeric(rownames(ms_mixed))
   closest_row <- which.min(abs(mz_ions - mz_prec))
@@ -95,8 +95,7 @@ plot_peak_info <- function(ms_mixed = ms1_mat, W = W_ms1, H = H_ms1, mz_prec, ms
   # plot the mixed elution profiles 
   mixed_data <- prepare_mixed_data(ms_mixed = ms_mixed, mz_values = as.numeric(rownames(ms_mixed)), rts = as.numeric(colnames(ms_mixed)) )
   ms1_mixed_eics <- mixed_data
-  ms1_mixed_eics$mz_value <- paste0(ms_level, ms1_mixed_eics$mz_value)
-  p_mixed_eics <- plot_eics(eics_mat = ms1_mixed_eics)
+  p_mixed_eics <- plot_eics(eics_mat = ms1_mixed_eics, prec_eic_row = prec_eic_row)
   
   # plot mixed spectrum
   ms1_mixed_spectrum <- mixed_data
@@ -118,7 +117,12 @@ plot_peak_info <- function(ms_mixed = ms1_mat, W = W_ms1, H = H_ms1, mz_prec, ms
   p_mixed <- patchwork::wrap_plots(list(p_mixed_eics, p_mixed_spect), ncol = 2)
   p_pure <-  patchwork::wrap_plots(list(p_pure_eics, p_pure_spect), ncol = 2)
   
-  p_all <- patchwork::wrap_plots(list(p_mixed, p_pure), ncol = 1)
+  p_all <- patchwork::wrap_plots(list(p_mixed, p_pure), ncol = 1) +
+    patchwork::plot_annotation(
+      title = paste0("Ms level:", ms_level, "  mz:", round(mz_prec,3), "  rt:", round(rt_prec,3), "  good source:", good_source)
+      # subtitle = "Optional Subtitle Here",
+      # caption = "Optional Caption Here"
+    )
   
   return(p_all)
 }
