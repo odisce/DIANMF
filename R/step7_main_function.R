@@ -78,7 +78,6 @@ dia_nmf.f <- function(
     if( ms1_peaks.df[peak.idx, 'is_ion'] == 0 ){
       
       # print(peak.idx) 
-      ms1_peaks.df[peak.idx, "is_ion"] <- peak.idx
       mz_prec <- as.numeric(ms1_peaks.df[peak.idx, 'mz']);
       rt_prec <- as.numeric(ms1_peaks.df[peak.idx, 'rt']);
 
@@ -127,6 +126,8 @@ dia_nmf.f <- function(
       ms1_pure_data <- extract_ms1_pure_spectrum(W_ms1 = ms1_spectra_mat, mz_prec = mz_prec);
       ms1_pure_spectrum <- ms1_pure_data$ms1_pure_spectrum;
       comp_ms1 <- ms1_pure_data$comp_ms1;
+      
+      ms1_peaks.df[peak.idx, "is_ion"] <- peak.idx;
       
       # Test the chosen ms1 pure spectra ions, which will also be considered as peaks or not.--------------------------------------------------------
       ions_are_peaks <- check_ms1_ions(W_ms1 = ms1_spectra_mat, comp_ms1 = comp_ms1, ms1_peaks.df = ms1_peaks.df, rt_prec = rt_prec, rt_tol = rt_tol);
