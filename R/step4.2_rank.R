@@ -13,7 +13,7 @@
 #' @return rank of factorization (number of pure compounds)
 find_rank <- function(ms1_peaks.df, peak.idx, rt_prec, rt_tol = 5, max_r){
   if( peak.idx == 1 ){
-    return( min(15, max_r) )
+    return( min(10, max_r) )
   } else {
     ms1_peaks_sub <- ms1_peaks.df[ 1:(peak.idx-1), ] # processed peaks
     peak_rtmin <- ms1_peaks.df[peak.idx, "rtmin"]
@@ -28,10 +28,10 @@ find_rank <- function(ms1_peaks.df, peak.idx, rt_prec, rt_tol = 5, max_r){
     r <- length(unique(coelute_peaks))
     
     if(r == 0){
-      return( min(15, max_r) )  # this can be improved (I have something in mined)
+      return( min(10, max_r) )  # this can be improved (I have something in mined)
     } else {
       r <- r + 5
-      r <- min(r, 15)
+      r <- min(r, 10)
     }
   }
   
