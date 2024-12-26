@@ -85,6 +85,7 @@ The [dia_nmf.f()]{style="background-color: rgba(169, 169, 169, 0.4);"} function 
 MS2_features <- dia_nmf.f( mzML_path = file,
                        ms_level = "MS2",
                        peaks_by_xcms = TRUE, ms1_peaks = NULL,
+                       ms_type = "sum",
                        ppm = 6, peakwidth = c(3,60), snthresh = 0,
                        prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
                        integrate = 2, mzdiff = -0.001, noise = 0,
@@ -122,7 +123,6 @@ ms2_spectra <- extract_pureSpect(features = MS2_features, spec_level = "MS2")
 ms2_SpecificSpectra <- extract_pureSpect(features = MS2_features, spec_level = "MS2_specific")
 ```
 
-
 # Use-Case 2: Step-by-Step Processing {#caseB}
 
 ## Chromatographic peak detection
@@ -133,15 +133,15 @@ The first main step in processing raw metabolomic data is to detect the ion peak
 
 2.  Provide the MS1 peaks as a matrix or data.frame R object, involving these sufficient information for every peak: **mz**, **mzmin**, **mzmax**, **rt**, **rtmin**, **rtmax**, and **into**.
 
-[ detect_peaks_by_xcms()]{style="background-color: rgba(169, 169, 169, 0.4);"} parameters are:
+[detect_peaks_by_xcms()]{style="background-color: rgba(169, 169, 169, 0.4);"} parameters are:
 
--   [ rawData.onDiskMSnExp]{style="background-color: rgba(169, 169, 169, 0.4);"} mzML file mass-spectrometry data.
+-   [rawData.onDiskMSnExp]{style="background-color: rgba(169, 169, 169, 0.4);"} mzML file mass-spectrometry data.
 -   [ppm]{style="background-color: rgba(169, 169, 169, 0.4);"} numeric(1) defining the maximal tolerated m/z deviation in consecutive scans in parts per million (ppm) for the initial ROI definition.
 -   [peakwidth]{style="background-color: rgba(169, 169, 169, 0.4);"} numeric(2) with the expected approximate peak width in chromatographic space. Given as a range (min, max) in seconds.
 -   [snthresh]{style="background-color: rgba(169, 169, 169, 0.4);"} numeric(1) defining the signal to noise ratio cutoff.
 -   [prefilter]{style="background-color: rgba(169, 169, 169, 0.4);"} numeric(2) c(k, I) specifying the prefilter step for the first analysis step (ROI detection). Mass traces are only retained if they contain at least k peaks with intensity \>= I.
 
-To import the mass-spectrometry raw data from the mzML file, we will use the [readMSData()]{style="background-color: rgba(169, 169, 169, 0.4);"} function from [ MSnbase]{style="background-color: rgba(169, 169, 169, 0.4);"} package. Just by specifying the mzML file path in [files]{style="background-color: rgba(169, 169, 169, 0.4);"} and [ mode = "onDisk"]{style="background-color: rgba(169, 169, 169, 0.4);"} in order to only generates the object and the raw data is accessed on disk when needed without loading it in the memory.
+To import the mass-spectrometry raw data from the mzML file, we will use the [readMSData()]{style="background-color: rgba(169, 169, 169, 0.4);"} function from [MSnbase]{style="background-color: rgba(169, 169, 169, 0.4);"} package. Just by specifying the mzML file path in [files]{style="background-color: rgba(169, 169, 169, 0.4);"} and [mode = "onDisk"]{style="background-color: rgba(169, 169, 169, 0.4);"} in order to only generates the object and the raw data is accessed on disk when needed without loading it in the memory.
 
 ```{r detect MS1 peaks using xcms, echo=TRUE, message=FALSE, warning=FALSE}
 library(MSnbase)
@@ -401,10 +401,10 @@ reference_spectrum <- sub_database$spectra[[ spect_idx ]]
 p <- plot_spectra_vs(measured_spectrum = ms2_pure_spectrum_specific, library_spectrum = reference_spectrum)
 p
 ```
- 
+
 Our extracted spectrum matched correctly with the library spectrum of `r scores$name.`. It fits relatively well with the best-match library spectrum, with high scores of `r scores$dot_prod`,`r scores$rev_prod`, and `r scores$presence` for the dot product, inverse dot product, and presence of fragments, respectively. The peak representing the precursor (the highest peak) still exists in both spectra with many other fragments. Also, two groups of peaks with slight differences in $m/z$ can be observed by closely inspecting the spectrum. These could represent fragments from isotopes of the original compound.
 
- ... add details about the isotopes, adducts, indicated them ...
+... add details about the isotopes, adducts, indicated them ...
 
 # Appendix
 
@@ -449,7 +449,6 @@ nGMCA$^s$ alternatively minimizes the constrained sub-problems to obtain stable 
 
 These sub-problems can be solved by the forward-backward splitting algorithm (FBS) [@Combettes_2005_SignalRecoveryProximal] from proximal splitting methods.
 
-
 ## Process LC-MS1 data
 
 **DIANMF** R package was designed to process SWATH DIA LC-MS/MS data. However, since our approach mainly relies on processing the MS1 data, processing MS1 data can be done using our workflow.
@@ -458,6 +457,7 @@ These sub-problems can be solved by the forward-backward splitting algorithm (FB
 MS1_features <- dia_nmf.f( mzML_path = file,
                        ms_level = "MS1",
                        peaks_by_xcms = TRUE, ms1_peaks = NULL,
+                       ms_type = "sum",
                        ppm = 6, peakwidth = c(3,60), snthresh = 0,
                        prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
                        integrate = 2, mzdiff = -0.001, noise = 0,
@@ -466,10 +466,9 @@ MS1_features <- dia_nmf.f( mzML_path = file,
 
 MS1_features is an R object that contains all MS1 features of the peaks: MS1 peaks, mixed MS1 matrices, pure spectra, elution profiles, and the associated MS1 pure spectra.
 
-
 # Cheat sheet
-![DIANMF Cheat sheet](figures/snip.svg)
 
+![DIANMF Cheat sheet](figures/snip.svg)
 
 # Session info
 
@@ -478,6 +477,5 @@ Here is the output of `sessionInfo()` on the system on which this document was c
 ```{r sessionInfo, echo=FALSE}
 sessionInfo()
 ```
-
 
 # References
