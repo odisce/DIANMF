@@ -42,8 +42,8 @@ elutions_corelation <- function(chromo_main, chromos){
 #' 
 extract_ms1_pure_spectrum <- function(W_ms1, mz_prec){
   
-  W <- apply(W_ms1, 2, function(column) column / max(column))
-  # W <- W_ms1
+  # W <- apply(W_ms1, 2, function(column) column / max(column))
+  W <- W_ms1
   mz_ms1_ions <- round(as.numeric(rownames(W_ms1)), 4)
   closest_row <- which.min(abs(mz_ms1_ions - mz_prec))
   choosen_comp_ms1 <- which.max(W[closest_row, ])
