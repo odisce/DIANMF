@@ -9,7 +9,7 @@
 #' @return `numeric` MS1 peaks indexes.
 check_ms1_ions <- function(W_ms1, comp_ms1, ms1_peaks.df, rt_prec, rt_tol = 5){
   
-  ions_maybe_peaks <- which( W_ms1[,comp_ms1] >= 0.7 * rowSums(W_ms1) )  # 1st method
+  ions_maybe_peaks <- which( W_ms1[,comp_ms1] >= 0.6 * rowSums(W_ms1) )  # 1st method
   # ions_maybe_peaks <- which( W_ms1[,comp_ms1] >= rowSums(W_ms1[, -comp_ms1]) ) # 2nd method
   
   # ions_maybe_peaks <- apply(W_ms1, 1, function(row) {  # 3rd method: very bad
