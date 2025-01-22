@@ -9,6 +9,7 @@
 #' @param MS1_init_method `character` MS1 initialization method.
 #' @param MS2_init_method `character` MS2 initialization method.
 #' @inheritParams check_ms1_ions
+#' @inheritParams find_rank
 #' @inheritParams extract_ms_matrix.f
 #' @inheritParams pure_sources.f
 #' @param ... Additional parameters passed to \code{\link[xcms]{CentWaveParam}}.
@@ -32,8 +33,9 @@ dia_nmf.f <- function(
     # NMF parameters
     maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
     MS1_init_method = c('nndsvd', 'random'), MS2_init_method = c('nndsvd', 'subSample', 'random'), errors_print = c(TRUE, FALSE),
-    # rt tolerance is used to find MS1 ions that also detect as MS1 peaks
-    rt_tol = 5,
+    # rt tolerance 
+    rt_tol_rank = 20, # used to check overlapping peaks
+    rt_tol_ions = 5, # used to find MS1 ions that also detect as MS1 peaks
     # pure sources parameters
     ms_type = c('max', 'mean', 'sum'),
     # additional parameters from xcms::CentWaveParam to detect peaks
@@ -77,7 +79,7 @@ dia_nmf.f <- function(
   while( peak.idx <= nrow(ms1_peaks.df) ){
     if( ms1_peaks.df[peak.idx, 'is_ion'] == 0 ){
       
-      # print(peak.idx) 
+      print(peak.idx) 
       mz_prec <- as.numeric(ms1_peaks.df[peak.idx, 'mz']);
       rt_prec <- as.numeric(ms1_peaks.df[peak.idx, 'rt']);
 
@@ -90,7 +92,7 @@ dia_nmf.f <- function(
       };
 
       # determine the rank of factorization
-      rank <- find_rank(ms1_peaks.df, peak.idx, rt_prec, rt_tol = rt_tol, max_r = ncol(ms1_mat));
+      rank <- find_rank(ms1_peaks.df, peak.idx,  rt_tol_rank = 20, max_r = ncol(ms1_mat));
       if( rank == 0 ){
         # print(paste(peak.idx, "No factorization"))
         peak.idx <- peak.idx + 1
@@ -130,7 +132,7 @@ dia_nmf.f <- function(
       ms1_peaks.df[peak.idx, "is_ion"] <- peak.idx;
       
       # Test the chosen ms1 pure spectra ions, which will also be considered as peaks or not.--------------------------------------------------------
-      ions_are_peaks <- check_ms1_ions(W_ms1 = ms1_spectra_mat, comp_ms1 = comp_ms1, ms1_peaks.df = ms1_peaks.df, rt_prec = rt_prec, rt_tol = rt_tol);
+      ions_are_peaks <- check_ms1_ions(W_ms1 = ms1_spectra_mat, comp_ms1 = comp_ms1, ms1_peaks.df = ms1_peaks.df, rt_prec = rt_prec, rt_tol_ions = rt_tol_ions);
       # these ions will not factorized again, but they may be used in different peaks factorization
       ms1_peaks.df[ions_are_peaks, 'is_ion'] <- peak.idx;
       # --------------------------------------------------------------------------------------------------------- the peaks data.frame is updated :).
@@ -140,8 +142,8 @@ dia_nmf.f <- function(
         feature_sub.l <- list( 
           'peak' = ms1_peaks.df[peak.idx, ],
           'MS1_mixed_mat' = ms1_mat,
-          'W_ms1' = W_ms1,
-          'H_ms1' = H_ms1,
+          # 'W_ms1' = W_ms1,
+          # 'H_ms1' = H_ms1,
           'comp_ms1' = comp_ms1,
           'rank' = rank,
           'ms1_ions_are_peaks' = ions_are_peaks,
@@ -209,10 +211,10 @@ dia_nmf.f <- function(
           'peak' = ms1_peaks.df[peak.idx, ],
           'MS1_mixed_mat' = ms1_mat,
           'MS2_mixed_mat' = res_ms2,
-          'W_ms1' = W_ms1,
-          'H_ms1' = H_ms1,
-          'W_ms2' = W_ms2,
-          'H_ms2' = H_ms2,
+          # 'W_ms1' = W_ms1,
+          # 'H_ms1' = H_ms1,
+          # 'W_ms2' = W_ms2,
+          # 'H_ms2' = H_ms2,
           'comp_ms1' = comp_ms1,
           'comp_ms2' = comp_ms2,
           'ions_are_peaks' = ions_are_peaks,
