@@ -3,9 +3,9 @@
 #' @param mzML_path mzML file path.
 #' @inheritParams extract_mixedMat
 #' @param peaks_by_xcms `Logical` `TRUE` if the user wants to detect MS1 levels using XCMS, `FALSE` if the user will provide the peaks matrix or data frame to be identified.
-#' @param put_sn_thr `numeric` to put sn threshold on the peaks, else NULL.
 #' @inheritParams prepare_ms1_peaks
 #' @param d.out `character` file path to save the MS1 peaks matrix if detected by XCMS.
+#' @param put_sn_thr `numeric` to put sn threshold on the peaks, else NULL.
 #' @inheritParams nGMCAs
 #' @param MS1_init_method `character` MS1 initialization method.
 #' @param MS2_init_method `character` MS2 initialization method.
@@ -35,7 +35,6 @@ dia_nmf.f <- function(
     maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
     MS1_init_method = c('nndsvd', 'random'), MS2_init_method = c('nndsvd', 'subSample', 'random'), errors_print = FALSE,
     # rt tolerance 
-    # rt_tol_rank = 20, # used to check overlapping peaks
     rt_tol_ions = 2, # used to find MS1 ions that also detect as MS1 peaks
     # pure sources parameters
     ms_type = 'sum',
