@@ -116,7 +116,7 @@ dia_nmf.f <- function(
       rt_prec <- as.numeric(ms1_peaks.df[peak.idx, 'rt']);
 
       ms1_mat <- extract_ms_matrix.f(peak.idx = peak.idx, ms1_peaks.df = ms1_peaks.df, rawData.onDiskMSnExp = rawData.onDiskMSnExp,
-                                     ppm.n = ppm.n, rt_index = TRUE, mz_range = NULL, iso_win_index = NULL);
+                                     ppm.n = ppm.n, rt_index = TRUE, mz_range = TRUE, iso_win_index = NULL);
       if( is.null(ms1_mat) ){
         print(paste( peak.idx, 'No MS1 data.'))
         peak.idx <- peak.idx + 1
