@@ -22,7 +22,7 @@
 #' @import magrittr
 #' @import dplyr 
 #' @importFrom data.table %between%
-#' @importFrom MSnbase readMSData
+#' @import MSnbase
 dia_nmf.f <- function(
     mzML_path = NULL,
     ms_level = c("MS1" ,"MS2"),
