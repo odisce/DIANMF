@@ -3,6 +3,7 @@
 #' @param mzML_path mzML file path.
 #' @inheritParams extract_mixedMat
 #' @param peaks_by_xcms `Logical` `TRUE` if the user wants to detect MS1 levels using XCMS, `FALSE` if the user will provide the peaks matrix or data frame to be identified.
+#' @param put_sn_thr `numeric` to put sn threshold on the peaks, else NULL.
 #' @inheritParams prepare_ms1_peaks
 #' @param d.out `character` file path to save the MS1 peaks matrix if detected by XCMS.
 #' @inheritParams nGMCAs
@@ -27,17 +28,17 @@ dia_nmf.f <- function(
     mzML_path = NULL,
     ms_level = c("MS1" ,"MS2"),
     # parameters to detect peaks by xcms, or input the peak matrix or data.frame
-    peaks_by_xcms = c(TRUE, FALSE), ms1_peaks = NULL, d.out = NULL,
+    peaks_by_xcms = c(TRUE, FALSE), ms1_peaks = NULL, d.out = NULL, put_sn_thr = 3,
     # parameters to extract MS1 & MS2 mixed matrices
     ppm.n = 7,
     # NMF parameters
     maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
-    MS1_init_method = c('nndsvd', 'random'), MS2_init_method = c('nndsvd', 'subSample', 'random'), errors_print = c(TRUE, FALSE),
+    MS1_init_method = c('nndsvd', 'random'), MS2_init_method = c('nndsvd', 'subSample', 'random'), errors_print = FALSE,
     # rt tolerance 
     # rt_tol_rank = 20, # used to check overlapping peaks
     rt_tol_ions = 2, # used to find MS1 ions that also detect as MS1 peaks
     # pure sources parameters
-    ms_type = c('max', 'mean', 'sum'),
+    ms_type = 'sum',
     # additional parameters from xcms::CentWaveParam to detect peaks
     ... ){
   
@@ -69,10 +70,11 @@ dia_nmf.f <- function(
     }
   };
 
-  # Delete peaks of sn <= 5
-  ms1_peaks <- as.data.frame(ms1_peaks)
-  ms1_peaks <- ms1_peaks[ms1_peaks$sn >= 5, ]
-  
+  if( isTRUE(put_sn_thr) ){  # Delete peaks of sn <= put_sn_thr
+    ms1_peaks <- as.data.frame(ms1_peaks)
+    ms1_peaks <- ms1_peaks[ms1_peaks$sn >= put_sn_thr, ]
+  }
+
   ms1_peaks.df <- prepare_ms1_peaks(ms1_peaks = ms1_peaks);
   ms1_peaks.df$r <- seq(1, nrow(ms1_peaks.df));
   
@@ -133,7 +135,8 @@ dia_nmf.f <- function(
       };
 
       # determine the rank of factorization
-      rank <- find_rank(ms1_peaks.df, peak.idx, min_rt = rt_axis[[1]], max_rt = rt_axis[[length(rt_axis)]], max_r = ncol(ms1_mat));
+      rt_axis <- as.numeric(colnames(ms1_mat))
+      rank <-  find_rank(ms1_peaks.df, peak.idx, min_rt = rt_axis[[1]], max_rt = rt_axis[[length(rt_axis)]], max_r = ncol(ms1_mat));
       if( rank == 0 ){
         # print(paste(peak.idx, "No factorization"))
         peak.idx <- peak.idx + 1
@@ -175,7 +178,7 @@ dia_nmf.f <- function(
       # these ions will not factorized again, but they may be used in different peaks factorization
       ms1_peaks.df[ions_are_peaks, 'is_ion'] <- peak.idx;
       
-      # ms1_peaks.df[peak.idx, "is_ion"] <- peak.idx; # no need, for sure the precursor is one of the ions peaks
+      ms1_peaks.df[peak.idx, "is_ion"] <- peak.idx; # no need, for sure the precursor is one of the ions peaks
       # --------------------------------------------------------------------------------------------------------- the peaks data.frame is updated :).
       
       if ( ms_level == "MS1" ){
