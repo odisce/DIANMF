@@ -7,7 +7,7 @@
 #' @param rt_tol_ions `numeric(1)` retention time tolerance, to check if an ion is also a detected peak from the peaks data frame.
 #'
 #' @return `numeric` MS1 peaks indexes.
-check_ms1_ions <- function(W_ms1, comp_ms1, ms1_peaks.df, rt_prec, rt_min, rt_max, rt_tol_ions = 2){
+check_ms1_ions <- function(W_ms1, comp_ms1, ms1_peaks.df, rt_prec, rt_tol_ions = 2){
   
   # ions_maybe_peaks <- which( W_ms1[,comp_ms1] >= rowSums(W_ms1) )  # 1st method
   # ions_maybe_peaks <- which( W_ms1[,comp_ms1] >= rowSums(W_ms1[, -comp_ms1]) ) # 2nd method, bad

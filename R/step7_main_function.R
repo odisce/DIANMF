@@ -34,8 +34,8 @@ dia_nmf.f <- function(
     maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
     MS1_init_method = c('nndsvd', 'random'), MS2_init_method = c('nndsvd', 'subSample', 'random'), errors_print = c(TRUE, FALSE),
     # rt tolerance 
-    rt_tol_rank = 20, # used to check overlapping peaks
-    rt_tol_ions = 5, # used to find MS1 ions that also detect as MS1 peaks
+    # rt_tol_rank = 20, # used to check overlapping peaks
+    rt_tol_ions = 2, # used to find MS1 ions that also detect as MS1 peaks
     # pure sources parameters
     ms_type = c('max', 'mean', 'sum'),
     # additional parameters from xcms::CentWaveParam to detect peaks
