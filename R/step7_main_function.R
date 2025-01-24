@@ -81,7 +81,7 @@ dia_nmf.f <- function(
       
       print(peak.idx)
       
-      # check if it is a real peak or noise --------------------------------------
+      # check if it is a real peak or noise ------------------------------------
       peak <- ms1_peaks.df[peak.idx, ]
       rtr <- c(peak$rtmin-5, peak$rtmax+5)
       mzr <- c(peak$mzmin, peak$mzmax)
@@ -110,7 +110,7 @@ dia_nmf.f <- function(
         peak.idx <- peak.idx + 1
         next 
       };
-      # -------------------------------------------------------------------------- Done;
+      # ------------------------------------------------------------------------Done;
       
       mz_prec <- as.numeric(ms1_peaks.df[peak.idx, 'mz']);
       rt_prec <- as.numeric(ms1_peaks.df[peak.idx, 'rt']);
