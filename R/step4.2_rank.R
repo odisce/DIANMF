@@ -38,7 +38,7 @@ find_rank <- function(ms1_peaks.df, peak.idx, min_rt, max_rt, max_r){
       return( min(10, max_r) )  # I should find a way
     } else {
       r <- r + 5
-      r <- min(r, 10) 
+      r <- min(r, 10)
     }
   }
   
@@ -46,25 +46,4 @@ find_rank <- function(ms1_peaks.df, peak.idx, min_rt, max_rt, max_r){
     r <- max_r  }
   
   return(r)
-}
-
-
-# check the peak from the raw data
-is_true_peak <- function(chromatogram = chrom) {
-  if (!is.data.frame(chromatogram)) {
-    stop("empty data, no chromatogram.")  }
-  
-  apex_index <- which.max(chromatogram$intensity)
-  if (apex_index == 1 || apex_index == nrow(chromatogram)) {
-    return(FALSE)  }
-  
-  intensities <- chromatogram$intensity
-  apex_intensity <- intensities[apex_index]
-  
-  left_valid <- all(intensities[(apex_index - 2):(apex_index - 1)] < apex_intensity) &&  # no need for the 1st condition !!
-    (intensities[apex_index - 2] < intensities[apex_index - 1])
-  right_valid <- all(intensities[(apex_index + 1):(apex_index + 2)] < apex_intensity) &&
-    (intensities[apex_index + 1] > intensities[apex_index + 2])
-  
-  return(left_valid && right_valid)
 }

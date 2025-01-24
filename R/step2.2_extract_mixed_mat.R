@@ -150,7 +150,25 @@ extract_ms2_matrices <- function(peak.idx, ms1_peaks.df, ppm.n, ms1_pure_spectru
   return(res_ms2)
 }
 
-
+# check the peak from the raw data
+is_true_peak <- function(chromatogram = chrom) {
+  if (!is.data.frame(chromatogram)) {
+    stop("empty data, no chromatogram.")  }
+  
+  apex_index <- which.max(chromatogram$intensity)
+  if (apex_index == 1 || apex_index == nrow(chromatogram)) {
+    return(FALSE)  }
+  
+  intensities <- chromatogram$intensity
+  apex_intensity <- intensities[apex_index]
+  
+  left_valid <- all(intensities[(apex_index - 2):(apex_index - 1)] < apex_intensity) &&  # no need for the 1st condition !!
+    (intensities[apex_index - 2] < intensities[apex_index - 1])
+  right_valid <- all(intensities[(apex_index + 1):(apex_index + 2)] < apex_intensity) &&
+    (intensities[apex_index + 1] > intensities[apex_index + 2])
+  
+  return(left_valid && right_valid)
+}
 #-------------------------------------------------------------------------------------------------------------------------------------
 # old functions
 # extract_ms1_matrix.f <- function(idx.pg, eics_peaks.mat, rawData.onDiskMSnExp, ppm = 7, rt_index = TRUE, mz_range = TRUE){

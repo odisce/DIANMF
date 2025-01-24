@@ -69,6 +69,10 @@ dia_nmf.f <- function(
     }
   };
 
+  # Delete peaks of sn <= 5
+  ms1_peaks <- as.data.frame(ms1_peaks)
+  ms1_peaks <- ms1_peaks[ms1_peaks$sn >= 5, ]
+  
   ms1_peaks.df <- prepare_ms1_peaks(ms1_peaks = ms1_peaks);
   ms1_peaks.df$r <- seq(1, nrow(ms1_peaks.df));
   
