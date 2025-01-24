@@ -18,11 +18,11 @@
 #' 
 #' @export
 #' 
-#' @importFrom purrr map
+#' @import MSnbase
 #' @import magrittr
 #' @import dplyr 
+#' @importFrom purrr map
 #' @importFrom data.table %between%
-#' @import MSnbase
 dia_nmf.f <- function(
     mzML_path = NULL,
     ms_level = c("MS1" ,"MS2"),
@@ -79,12 +79,49 @@ dia_nmf.f <- function(
   while( peak.idx <= nrow(ms1_peaks.df) ){
     if( ms1_peaks.df[peak.idx, 'is_ion'] == 0 ){
       
-      print(peak.idx) 
+      print(peak.idx)
+      
+      # check if it is a real peak or noise --------------------------------------
+      peak <- ms1_peaks.df[peak.idx, ]
+      rtr <- c(peak$rtmin-5, peak$rtmax+5)
+      mzr <- c(peak$mzmin, peak$mzmax)
+      xic_data <- rawData.onDiskMSnExp |>
+        MSnbase::filterMsLevel(1L) |>
+        MSnbase::filterRt(rt = rtr) |>
+        MSnbase::filterMz(mz = mzr)
+      
+      rt <- unname(rtime(xic_data))      
+      inten <- intensity(xic_data)
+      for( x in 1:length(inten) ){
+        if(length(inten[[x]]) == 0){
+          inten[[x]] <- 0  }  }
+      for( x in 1:length(inten) ){
+        inten[[x]] <- sum(inten[[x]])  }
+      
+      inten <- unname(unlist(inten))
+      
+      chrom <- data.frame(
+        'rt' = rt,
+        'intensity' = inten )
+      
+      is.peak <- is_true_peak(chromatogram = chrom) 
+      if( isFALSE(is.peak) ){
+        print(paste( peak.idx, 'Not a real peak; noise.'))
+        peak.idx <- peak.idx + 1
+        next 
+      };
+      # -------------------------------------------------------------------------- Done;
+      
       mz_prec <- as.numeric(ms1_peaks.df[peak.idx, 'mz']);
       rt_prec <- as.numeric(ms1_peaks.df[peak.idx, 'rt']);
 
       ms1_mat <- extract_ms_matrix.f(peak.idx = peak.idx, ms1_peaks.df = ms1_peaks.df, rawData.onDiskMSnExp = rawData.onDiskMSnExp,
                                      ppm.n = ppm.n, rt_index = TRUE, mz_range = NULL, iso_win_index = NULL);
+      if( is.null(ms1_mat) ){
+        print(paste( peak.idx, 'No MS1 data.'))
+        peak.idx <- peak.idx + 1
+        next 
+      };
       if( nrow(ms1_mat) <= 1 ){
         print(paste( peak.idx, 'No MS1 data.'))
         peak.idx <- peak.idx + 1
@@ -92,7 +129,7 @@ dia_nmf.f <- function(
       };
 
       # determine the rank of factorization
-      rank <- find_rank(ms1_peaks.df, peak.idx,  rt_tol_rank = 20, max_r = ncol(ms1_mat));
+      rank <- find_rank(ms1_peaks.df, peak.idx, min_rt = rt_axis[[1]], max_rt = rt_axis[[length(rt_axis)]], max_r = ncol(ms1_mat));
       if( rank == 0 ){
         # print(paste(peak.idx, "No factorization"))
         peak.idx <- peak.idx + 1
@@ -129,12 +166,12 @@ dia_nmf.f <- function(
       ms1_pure_spectrum <- ms1_pure_data$ms1_pure_spectrum;
       comp_ms1 <- ms1_pure_data$comp_ms1;
       
-      ms1_peaks.df[peak.idx, "is_ion"] <- peak.idx;
-      
       # Test the chosen ms1 pure spectra ions, which will also be considered as peaks or not.--------------------------------------------------------
       ions_are_peaks <- check_ms1_ions(W_ms1 = ms1_spectra_mat, comp_ms1 = comp_ms1, ms1_peaks.df = ms1_peaks.df, rt_prec = rt_prec, rt_tol_ions = rt_tol_ions);
       # these ions will not factorized again, but they may be used in different peaks factorization
       ms1_peaks.df[ions_are_peaks, 'is_ion'] <- peak.idx;
+      
+      # ms1_peaks.df[peak.idx, "is_ion"] <- peak.idx; # no need, for sure the precursor is one of the ions peaks
       # --------------------------------------------------------------------------------------------------------- the peaks data.frame is updated :).
       
       if ( ms_level == "MS1" ){
