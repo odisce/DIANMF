@@ -46,7 +46,7 @@ pure_sources.f <- function(W, H, ms_type = c('max', 'mean', 'sum')){
 }
 
 
-plot_eics <- function(eics_mat, ms_level = "MS1", prec_eic_row = NULL){
+plot_eics <- function(eics_mat, rt_prec, ms_level = "MS1", prec_eic_row = NULL){
   
   eics_mat$mz_value <- paste0(ms_level, eics_mat$mz_value)
   
@@ -95,7 +95,7 @@ plot_peak_info <- function(ms_mixed = ms1_mat, W = W_ms1, H = H_ms1, mz_prec, rt
   # plot the mixed elution profiles 
   mixed_data <- prepare_mixed_data(ms_mixed = ms_mixed, mz_values = as.numeric(rownames(ms_mixed)), rts = as.numeric(colnames(ms_mixed)) )
   ms1_mixed_eics <- mixed_data
-  p_mixed_eics <- plot_eics(eics_mat = ms1_mixed_eics, prec_eic_row = prec_eic_row)
+  p_mixed_eics <- plot_eics(eics_mat = ms1_mixed_eics, rt_prec, prec_eic_row = prec_eic_row)
   
   # plot mixed spectrum
   ms1_mixed_spectrum <- mixed_data
@@ -105,7 +105,7 @@ plot_peak_info <- function(ms_mixed = ms1_mat, W = W_ms1, H = H_ms1, mz_prec, rt
   
   # plot pure sources
   p_pure_eics <- lapply(1:ncol(W), function(s){
-    p_eics <- plot_eics(eics_mat = pure_sources.l[[s]]$source_eic,  ms_level = "MS1")
+    p_eics <- plot_eics(eics_mat = pure_sources.l[[s]]$source_eic, rt_prec,  ms_level = "MS1")
   })
   p_pure_eics <- patchwork::wrap_plots(p_pure_eics, ncol = 1)  
   

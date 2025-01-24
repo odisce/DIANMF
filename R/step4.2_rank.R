@@ -8,20 +8,22 @@
 #'
 #' @inheritParams extract_ms_matrix.f
 #' @param max_r max rank allowed
-#' @param rt_tol_rank `numeric`
+#' @param min_rt `numeric`
+#' @param max_rt `numeric`
 #'
 #' @return rank of factorization (number of pure compounds)
-find_rank <- function(ms1_peaks.df, peak.idx, rt_tol_rank = 20, max_r){
+find_rank <- function(ms1_peaks.df, peak.idx, min_rt, max_rt, max_r){
   if( peak.idx == 1 ){
     return( min(10, max_r) )
   } else {
     ms1_peaks_sub <- ms1_peaks.df[ 1:(peak.idx-1), ] # processed peaks
     
     # 1st method
-    peak_rtmin <- ms1_peaks.df[peak.idx, "rtmin"]
-    peak_rtmax <- ms1_peaks.df[peak.idx, "rtmax"]
-    left_coelute <- which( ms1_peaks_sub[, "rtmax"] > peak_rtmin & ms1_peaks_sub[, "rtmin"] < peak_rtmin & (rt_prec-ms1_peaks_sub[, "rt"]) < rt_tol_rank )
-    right_coelute <- which( ms1_peaks_sub[, "rtmin"] < peak_rtmax & ms1_peaks_sub[, "rtmax"] > peak_rtmax & (ms1_peaks_sub[, "rt"] - rt_prec) < rt_tol_rank )
+    # peak_rtmin <- ms1_peaks.df[peak.idx, "rtmin"]
+    # peak_rtmax <- ms1_peaks.df[peak.idx, "rtmax"]
+    
+    left_coelute <- which( ms1_peaks_sub[, "rtmax"] > min_rt & ms1_peaks_sub[, "rtmin"] < min_rt )
+    right_coelute <- which( ms1_peaks_sub[, "rtmin"] < max_rt & ms1_peaks_sub[, "rtmax"] > max_rt )
     
     # # 2nd method
     # left_coelute <- which( ms1_peaks_sub[, "rtmax"] > window_rt_min & ms1_peaks_sub[, "rtmin"] < window_rt_min )
@@ -36,7 +38,7 @@ find_rank <- function(ms1_peaks.df, peak.idx, rt_tol_rank = 20, max_r){
       return( min(10, max_r) )  # I should find a way
     } else {
       r <- r + 5
-      r <- min(r, 10)  # just to force big rank
+      r <- min(r, 10) 
     }
   }
   
@@ -46,3 +48,23 @@ find_rank <- function(ms1_peaks.df, peak.idx, rt_tol_rank = 20, max_r){
   return(r)
 }
 
+
+# check the peak from the raw data
+is_true_peak <- function(chromatogram = chrom) {
+  if (!is.data.frame(chromatogram)) {
+    stop("empty data, no chromatogram.")  }
+  
+  apex_index <- which.max(chromatogram$intensity)
+  if (apex_index == 1 || apex_index == nrow(chromatogram)) {
+    return(FALSE)  }
+  
+  intensities <- chromatogram$intensity
+  apex_intensity <- intensities[apex_index]
+  
+  left_valid <- all(intensities[(apex_index - 2):(apex_index - 1)] < apex_intensity) &&  # no need for the 1st condition !!
+    (intensities[apex_index - 2] < intensities[apex_index - 1])
+  right_valid <- all(intensities[(apex_index + 1):(apex_index + 2)] < apex_intensity) &&
+    (intensities[apex_index + 1] > intensities[apex_index + 2])
+  
+  return(left_valid && right_valid)
+}

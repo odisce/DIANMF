@@ -6,7 +6,7 @@
 has_four_consecutive_non_zero <- function(row) {
   # Find consecutive non-zero values
   non_zero_streaks <- rle(row != 0)
-  any(non_zero_streaks$lengths[non_zero_streaks$values] >= 4)
+  any(non_zero_streaks$lengths[non_zero_streaks$values] >= 5)
 }
 # mat <- matrix(c(
 #   7, 1, 2, 3, 0,
@@ -91,6 +91,18 @@ extract_ms_matrix.f <- function(peak.idx, ms1_peaks.df, rawData.onDiskMSnExp, pp
     info.swath <- isolationWindows.range(rawData.onDiskMSnExp)
     idx.swath <- which( info.swath[, 'lowerMz'] <= mz & info.swath[, 'upperMz'] >= mz )
     mz_range <- info.swath[idx.swath, ]
+    
+    if( nrow(mz_range) > 1 ){
+      mz_range$midpoint <- (mz_range$lowerMz + mz_range$upperMz) / 2
+      mz_range$distance <- abs(mz_range$midpoint - mz)
+      mz_range <- mz_range[which.min(mz_range$distance), ]
+      mz_range <- mz_range[1, c("lowerMz", "upperMz")]
+    }
+    
+    if( nrow(mz_range) == 0 ){
+      return(NULL)
+    }
+    
   };
   if (isFALSE(ms1_L) & !is.null(mz_range)) {
     warning("Selected MS2 data, the mz_range was set to NULL")
