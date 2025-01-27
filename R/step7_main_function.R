@@ -73,7 +73,7 @@ dia_nmf.f <- function(
     ms1_peaks <- as.data.frame(ms1_peaks)
     ms1_peaks <- ms1_peaks[ms1_peaks$sn >= put_sn_thr, ]
     saveRDS(ms1_peaks, file = paste0(d.out, '/ms1_peaks.rds'))
-  }
+  };
 
   ms1_peaks.df <- prepare_ms1_peaks(ms1_peaks = ms1_peaks);
   ms1_peaks.df$r <- seq(1, nrow(ms1_peaks.df));
@@ -123,6 +123,17 @@ dia_nmf.f <- function(
 
       ms1_mat <- extract_ms_matrix.f(peak.idx = peak.idx, ms1_peaks.df = ms1_peaks.df, rawData.onDiskMSnExp = rawData.onDiskMSnExp,
                                      ppm.n = ppm.n, rt_index = TRUE, mz_range = 1, iso_win_index = NULL);
+      if( is.null(ms1_mat) ){
+        print(paste( peak.idx, 'No MS1 data.'))
+        peak.idx <- peak.idx + 1
+        next 
+      };
+      if( nrow(ms1_mat) <= 1 ){
+        print(paste( peak.idx, 'No MS1 data.'))
+        peak.idx <- peak.idx + 1
+        next 
+      };
+      
       ms1_mat <- ms1_mat[apply(ms1_mat, 1, has_peak_shape), ] # filter some eics
       
       if( is.null(nrow(ms1_mat)) ){  # if it contains only 1 eic
@@ -130,6 +141,7 @@ dia_nmf.f <- function(
         peak.idx <- peak.idx + 1
         next 
       };
+      
       if( is.null(ms1_mat) ){
         print(paste( peak.idx, 'No MS1 data.'))
         peak.idx <- peak.idx + 1
