@@ -121,7 +121,14 @@ dia_nmf.f <- function(
       rt_prec <- as.numeric(ms1_peaks.df[peak.idx, 'rt']);
 
       ms1_mat <- extract_ms_matrix.f(peak.idx = peak.idx, ms1_peaks.df = ms1_peaks.df, rawData.onDiskMSnExp = rawData.onDiskMSnExp,
-                                     ppm.n = ppm.n, rt_index = TRUE, mz_range = TRUE, iso_win_index = NULL);
+                                     ppm.n = ppm.n, rt_index = TRUE, mz_range = 1, iso_win_index = NULL);
+      ms1_mat <- ms1_mat[apply(ms1_mat, 1, has_peak_shape), ] # filter some eics
+      
+      if( is.null(nrow(ms1_mat)) ){  # if it contains only 1 eic
+        print(paste( peak.idx, 'No MS1 data.'))
+        peak.idx <- peak.idx + 1
+        next 
+      };
       if( is.null(ms1_mat) ){
         print(paste( peak.idx, 'No MS1 data.'))
         peak.idx <- peak.idx + 1

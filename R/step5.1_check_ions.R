@@ -24,7 +24,7 @@ check_ms1_ions <- function(W_ms1, comp_ms1, ms1_peaks.df, rt_prec, rt_tol_ions =
   # 5th method, use the frequency of each ion; i.e. how many times it is part from other components
   # if it is involved in many other sources 
   non_zero_counts <- rowSums(W_ms1[, -comp_ms1] != 0)
-  ions_maybe_peaks <- as.numeric(rownames(W_ms1)[non_zero_counts < floor( (ncol(W_ms1) -1) /2 )])
+  ions_maybe_peaks <- as.numeric(rownames(W_ms1)[non_zero_counts < max( floor( (ncol(W_ms1) -1) /2 )-1, 2 ) ])
 
   ions_peaks <- c()
   for (i in 1:length(ions_maybe_peaks)) {
