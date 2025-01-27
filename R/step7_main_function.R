@@ -69,9 +69,10 @@ dia_nmf.f <- function(
     }
   };
 
-  if( isTRUE(put_sn_thr) ){  # Delete peaks of sn <= put_sn_thr
+  if( !is.null(put_sn_thr) ){  # Delete peaks of sn <= put_sn_thr
     ms1_peaks <- as.data.frame(ms1_peaks)
     ms1_peaks <- ms1_peaks[ms1_peaks$sn >= put_sn_thr, ]
+    saveRDS(ms1_peaks, file = paste0(d.out, '/ms1_peaks.rds'))
   }
 
   ms1_peaks.df <- prepare_ms1_peaks(ms1_peaks = ms1_peaks);
