@@ -44,12 +44,12 @@ total_rows_before_level <- function(my_list, level_index) {
 #' @return `data.frame` MS2 spectrum of the precursor.
 #' 
 #' @export
-filter_ms2_spectrum <- function(ms2_pure_spectrum, ms2_matrices, mz_prec, info.swath, peak.idx = NULL){
+filter_ms2_spectrum <- function(ms2_pure_spectrum, ms2_matrices, mz_prec, info.swath){
 
   idx.swath <- which(info.swath$lowerMz <= mz_prec & info.swath$upperMz >= mz_prec)
   if(length(idx.swath) > 1){
     print("warning, this peak belong to more than isolation window!")
-    idx.swath <- idx.swath[1]
+    idx.swath <- idx.swath[1]   # it should be changed!!!!!!!!!!!!!!!!!!!!!!!!!!!
   }
   
   if( length(idx.swath) > 0 ){
@@ -62,11 +62,7 @@ filter_ms2_spectrum <- function(ms2_pure_spectrum, ms2_matrices, mz_prec, info.s
     ms2_pure_spectrum_new <- as.data.frame(ms2_pure_spectrum_new)
     
   } else{  # if the mz_prec not included in any SWATH window, don't filter (this peaks wasn't fragmented in the MS2 level)
-    if( !is.null(peak.idx) ){
-      print(paste(peak.idx, 'No specific MS2 fragments.'))
-    } else {
       print('No specific MS2 fragments.')
-    }
     return(NULL)
   }
  

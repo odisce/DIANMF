@@ -30,7 +30,7 @@ dia_nmf.f <- function(
     # parameters to detect peaks by xcms, or input the peak matrix or data.frame
     peaks_by_xcms = c(TRUE, FALSE), ms1_peaks = NULL, d.out = NULL, put_sn_thr = 3,
     # parameters to extract MS1 & MS2 mixed matrices
-    ppm.n = 7,
+    ppm.n = 7, mz_range = NULL,
     # NMF parameters
     maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
     MS1_init_method = c('nndsvd', 'random'), MS2_init_method = c('nndsvd', 'subSample', 'random'), errors_print = FALSE,
@@ -122,25 +122,7 @@ dia_nmf.f <- function(
       rt_prec <- as.numeric(ms1_peaks.df[peak.idx, 'rt']);
 
       ms1_mat <- extract_ms_matrix.f(peak.idx = peak.idx, ms1_peaks.df = ms1_peaks.df, rawData.onDiskMSnExp = rawData.onDiskMSnExp,
-                                     ppm.n = ppm.n, rt_index = TRUE, mz_range = NULL, iso_win_index = NULL);
-      if( is.null(ms1_mat) ){
-        print(paste( peak.idx, 'No MS1 data.'))
-        peak.idx <- peak.idx + 1
-        next 
-      };
-      if( nrow(ms1_mat) <= 1 ){
-        print(paste( peak.idx, 'No MS1 data.'))
-        peak.idx <- peak.idx + 1
-        next 
-      };
-      
-      ms1_mat <- ms1_mat[apply(ms1_mat, 1, has_peak_shape), ]; # filter some eics
-      
-      if( is.null(nrow(ms1_mat)) ){  # if it contains only 1 eic
-        print(paste( peak.idx, 'No MS1 data.'))
-        peak.idx <- peak.idx + 1
-        next 
-      };
+                                     ppm.n = ppm.n, rt_index = TRUE, mz_range = mz_range, iso_win_index = NULL);
       if( is.null(ms1_mat) ){
         print(paste( peak.idx, 'No MS1 data.'))
         peak.idx <- peak.idx + 1
@@ -260,9 +242,9 @@ dia_nmf.f <- function(
         ms2_pure_spectrum <- choose_ms2_pure_spectrum(W_ms2 = ms2_spectra_mat, choosen_comp = comp_ms2);
         
         # Filter the ms2 pure spectra to get only the fragments related to the precursor from the SWATH window where it was fragmented
-        ms2_pure_spectrum_specific <- filter_ms2_spectrum(ms2_pure_spectrum = ms2_pure_spectrum, ms2_matrices = res_ms2, mz_prec, info.swath = info.swath, peak.idx);
-        ms2_pure_spectrum_specific$mz_value <- gsub("\\.\\d$", "", ms2_pure_spectrum_specific$mz_value); # Remove trailing '.X' where X is any digit
-        ms2_pure_spectrum_specific$mz_value <- as.numeric(ms2_pure_spectrum_specific$mz_value);
+        # ms2_pure_spectrum_specific <- filter_ms2_spectrum(ms2_pure_spectrum = ms2_pure_spectrum, ms2_matrices = res_ms2, mz_prec, info.swath = info.swath);
+        # ms2_pure_spectrum_specific$mz_value <- gsub("\\.\\d$", "", ms2_pure_spectrum_specific$mz_value); # Remove trailing '.X' where X is any digit
+        # ms2_pure_spectrum_specific$mz_value <- as.numeric(ms2_pure_spectrum_specific$mz_value);
         
         # now I can delete the zero intensity fragments
         ms2_pure_spectrum <- ms2_pure_spectrum[ms2_pure_spectrum['intensity'] != 0, ];
@@ -284,8 +266,8 @@ dia_nmf.f <- function(
           'ms1_pure_sources' = ms1_pure_sources,  # real sources
           'ms2_pure_sources' = ms2_pure_sources,
           'MS1_pure_spectrum' = ms1_pure_spectrum,   # real spectra
-          'MS2_pure_spectrum' = ms2_pure_spectrum,
-          'MS2_pure_spectrum_specific' = ms2_pure_spectrum_specific  );
+          'MS2_pure_spectrum' = ms2_pure_spectrum );
+          # 'MS2_pure_spectrum_specific' = ms2_pure_spectrum_specific  );
         
       }
 

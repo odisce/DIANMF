@@ -92,7 +92,7 @@ extract_ms_matrix.f <- function(peak.idx, ms1_peaks.df, rawData.onDiskMSnExp, pp
     idx.swath <- which( info.swath[, 'lowerMz'] <= mz & info.swath[, 'upperMz'] >= mz )
     mz_range <- info.swath[idx.swath, ]
     
-    if( nrow(mz_range) > 1 ){
+    if( nrow(mz_range) > 1 ){ # in case the peak is related to several isolation window
       mz_range$midpoint <- (mz_range$lowerMz + mz_range$upperMz) / 2
       mz_range$distance <- abs(mz_range$midpoint - mz)
       mz_range <- mz_range[which.min(mz_range$distance), ]
@@ -100,7 +100,7 @@ extract_ms_matrix.f <- function(peak.idx, ms1_peaks.df, rawData.onDiskMSnExp, pp
     }
     
     if( nrow(mz_range) == 0 ){
-      return(NULL)
+      mz_range <- NULL 
     }
     
   };
@@ -171,20 +171,20 @@ is_true_peak <- function(chromatogram = chrom) {
 }
 
 
-has_peak_shape <- function(intensities) {
-  apex_index <- which.max(intensities)
-  
-  if ( apex_index <= 3 || apex_index >= (length(intensities) - 3) ) {
-    return(FALSE)
-  }
-  
-  left_valid <- (intensities[apex_index - 2] < intensities[apex_index - 1]) &&
-    (intensities[apex_index - 3] < intensities[apex_index - 2])
-  right_valid <- (intensities[apex_index + 1] > intensities[apex_index + 2]) &&
-    (intensities[apex_index + 2] > intensities[apex_index + 3])
-  
-  return(left_valid | right_valid)
-}
+# has_peak_shape <- function(intensities) {
+#   apex_index <- which.max(intensities)
+#   
+#   if ( apex_index <= 3 || apex_index >= (length(intensities) - 3) ) {
+#     return(FALSE)
+#   }
+#   
+#   left_valid <- (intensities[apex_index - 2] < intensities[apex_index - 1]) &&
+#     (intensities[apex_index - 3] < intensities[apex_index - 2])
+#   right_valid <- (intensities[apex_index + 1] > intensities[apex_index + 2]) &&
+#     (intensities[apex_index + 2] > intensities[apex_index + 3])
+#   
+#   return(left_valid | right_valid)
+# }
 
 #-------------------------------------------------------------------------------------------------------------------------------------
 # old functions
