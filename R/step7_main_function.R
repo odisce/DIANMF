@@ -87,36 +87,36 @@ dia_nmf.f <- function(
       
       print(peak.idx)
       
-      # check if it is a real peak or noise ------------------------------------
-      peak <- ms1_peaks.df[peak.idx, ]
-      rtr <- c(peak$rtmin-5, peak$rtmax+5)
-      mzr <- c(peak$mzmin, peak$mzmax)
-      xic_data <- rawData.onDiskMSnExp |>
-        MSnbase::filterMsLevel(1L) |>
-        MSnbase::filterRt(rt = rtr) |>
-        MSnbase::filterMz(mz = mzr)
-      
-      rt <- unname(rtime(xic_data))      
-      inten <- intensity(xic_data)
-      for( x in 1:length(inten) ){
-        if(length(inten[[x]]) == 0){
-          inten[[x]] <- 0  }  }
-      for( x in 1:length(inten) ){
-        inten[[x]] <- sum(inten[[x]])  }
-      
-      inten <- unname(unlist(inten))
-      
-      chrom <- data.frame(
-        'rt' = rt,
-        'intensity' = inten )
-      
-      is.peak <- is_true_peak(chromatogram = chrom) 
-      if( isFALSE(is.peak) ){
-        print(paste( peak.idx, 'Not a real peak; noise.'))
-        peak.idx <- peak.idx + 1
-        next 
-      };
-      # ------------------------------------------------------------------------Done;
+      # # check if it is a real peak or noise ------------------------------------
+      # peak <- ms1_peaks.df[peak.idx, ]
+      # rtr <- c(peak$rtmin-5, peak$rtmax+5)
+      # mzr <- c(peak$mzmin, peak$mzmax)
+      # xic_data <- rawData.onDiskMSnExp |>
+      #   MSnbase::filterMsLevel(1L) |>
+      #   MSnbase::filterRt(rt = rtr) |>
+      #   MSnbase::filterMz(mz = mzr)
+      # 
+      # rt <- unname(rtime(xic_data))      
+      # inten <- intensity(xic_data)
+      # for( x in 1:length(inten) ){
+      #   if(length(inten[[x]]) == 0){
+      #     inten[[x]] <- 0  }  }
+      # for( x in 1:length(inten) ){
+      #   inten[[x]] <- sum(inten[[x]])  }
+      # 
+      # inten <- unname(unlist(inten))
+      # 
+      # chrom <- data.frame(
+      #   'rt' = rt,
+      #   'intensity' = inten )
+      # 
+      # is.peak <- is_true_peak(chromatogram = chrom) 
+      # if( isFALSE(is.peak) ){
+      #   print(paste( peak.idx, 'Not a real peak; noise.'))
+      #   peak.idx <- peak.idx + 1
+      #   next 
+      # };
+      # # ------------------------------------------------------------------------Done;
       
       mz_prec <- as.numeric(ms1_peaks.df[peak.idx, 'mz']);
       rt_prec <- as.numeric(ms1_peaks.df[peak.idx, 'rt']);
