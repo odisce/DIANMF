@@ -28,7 +28,8 @@ Imports:
     purrr (>= 1.0.2),
     reshape2 (>= 1.4.4),
     stats (>= 4.3.0),
-    xcms (>= 3.22.0)
+    xcms (>= 4.4.0),
+    MsExperiment
 Suggests: 
     knitr,
     rmarkdown,
@@ -38,7 +39,7 @@ Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Depends: 
     R (>= 3.5.0)
 VignetteBuilder: knitr

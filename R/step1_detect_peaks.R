@@ -1,23 +1,60 @@
 #' Detect MS1 peaks using XCMS.
 #'
-#' @param rawData.onDiskMSnExp `OnDiskMSnExp` object for `onDisk` mode.
-#' @param ... Additional parameters passed to \code{\link[xcms]{CentWaveParam}}.
+#' @param sequence_table A data.frame with at least [mzml_path, class, InjectionOrder].
+#' @param params A list to set the parameters from xcms pipeline steps.
+#'               List names should be xcms parameters methods (ex: `list("CentWaveParam" = CentWaveParam()`)
+#' @return MsExperiment objects
+#' 
+#' @export
+#' 
+#' @import MsExperiment MsFeatures xcms data.table magrittr
+detect_xcms_peaks <- function(
+  sequence_table,
+  params = list(
+    "CentWaveParam" = xcms::CentWaveParam(),
+    "MergeNeighboringPeaksParam" = xcms::MergeNeighboringPeaksParam(),
+    "ObiwarpParam" = xcms::ObiwarpParam(),
+    "PeakDensityParam" = xcms::PeakDensityParam(sampleGroups = NA),
+    "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
+  )
+){
+  sequence_table <- data.table::as.data.table(sequence_table)
+  sequence_table <- sequence_table[order(InjectionOrder), ]
+  xcms_obj <- MsExperiment::readMsExperiment(spectraFiles = sequence_table$mzml_path, sampleData = sequence_table)
+  if (length(params$PeakDensityParam@sampleGroups) == 1 && is.na(params$PeakDensityParam@sampleGroups)) {
+    params$PeakDensityParam@sampleGroups <- sampleData(xcms_obj)$class
+  }
+  xcms_obj_peaks <- xcms::findChromPeaks(
+    xcms_obj,
+    param = params$CentWaveParam
+  ) %>% 
+    refineChromPeaks(., param = params$MergeNeighboringPeaksParam, msLevel = 1L)
+  if (length(xcms::fileNames(xcms_obj_peaks)) > 1) {
+    xcms_obj_peaks <- adjustRtime(xcms_obj_peaks, param = params$ObiwarpParam)
+  }
+  output <- groupChromPeaks(xcms_obj_peaks, param = params$PeakDensityParam)
+  
+  if (length(xcms::fileNames(xcms_obj_peaks)) > 1) {
+    output <- fillChromPeaks(output, param = params$ChromPeakAreaParam)
+  }
+  return(output)
+}
+
+#' Detect MS1 peaks using XCMS.
+#'
+#' @param MsExperiment.obj `MsExperiment` object obtained from xcms or with `DIANMF::detect_xcms_peaks()`.
+#' @param sample_nb Index of the sample to extract peaks from.
 #'
 #' @return MS1 peaks `matrix`.
 #' 
 #' @export
 #' 
 #' @importFrom xcms findChromPeaks CentWaveParam chromPeaks
-detect_peaks_by_xcms <- function(rawData.onDiskMSnExp, ...){
-  
-  # create centwave parameter object
-  cwp <- xcms::CentWaveParam(...)
-  # detect EIC peaks
-  detected_eics <- xcms::findChromPeaks(rawData.onDiskMSnExp, param = cwp)
-  
-  ms1_peaks.mat <- xcms::chromPeaks(detected_eics)
-  
-  return(ms1_peaks.mat)
+#' @import magrittr MsExperiment
+extract_xcms_peaks <- function(MsExperiment.obj, sample_nb = 1) {
+  filterFile(MsExperiment.obj, sample_nb) %>%
+    xcms::chromPeaks(.) %>%
+    return()
 }
 
 
