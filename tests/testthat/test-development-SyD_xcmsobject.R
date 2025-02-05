@@ -61,8 +61,9 @@ bpparam()
 
 ## Detect LCpeaks ----------------------------
 temp_saveL <- T
-subset_rt <- 348 + c(-20, +20) # mz = 611.16
-subet_rt <- 498 + c(-20, +20) # 498 mz=500.303
+# subset_rt <- 348 + c(-20, +20) # mz = 611.16
+# subet_rt <- 498 + c(-20, +20) # 498 mz=500.303
+subset_rt <- 49.8 + c(-20, +20) # mz = 138.055
 # xcms_obj <- detect_xcms_peaks(mzml_dt[, lapply(.SD, head, 1), by = .(class)], params_ls)
 if (temp_saveL) {
   save_path <- "./temp/data/"
@@ -73,7 +74,8 @@ if (temp_saveL) {
   } else {
     xcms_obj <- detect_xcms_peaks(
       sequence_table = mzml_dt[, lapply(.SD, head, 1), by = .(class)],
-      params = params_ls
+      params = params_ls,
+      rt_range = subset_rt
     )
     saveRDS(xcms_obj, file = xcms_obj_path)
   }

@@ -20,6 +20,7 @@ create_seq <- function(mzML_path) {
 #' @param params A list to set the parameters from xcms pipeline steps.
 #'               List names should be xcms parameters methods (ex: `list("CentWaveParam" = CentWaveParam()`)
 #' @return MsExperiment objects
+#' @param rt_range (Optional) rt range to subset before running peak detection
 #' 
 #' @export
 #' 
@@ -32,7 +33,8 @@ detect_xcms_peaks <- function(
     "ObiwarpParam" = xcms::ObiwarpParam(),
     "PeakDensityParam" = xcms::PeakDensityParam(sampleGroups = NA),
     "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
-  )
+  ),
+  rt_range = NULL
 ){
   sequence_table <- data.table::as.data.table(sequence_table)
   sequence_table <- sequence_table[order(InjectionOrder), ]
@@ -40,6 +42,9 @@ detect_xcms_peaks <- function(
     spectraFiles = sequence_table$mzml_path,
     sampleData = sequence_table
   )
+  if (!is.null(rt_range)) {
+    xcms_obj <- xcms::filterRt(xcms_obj, rt_range)
+  }
   if (length(params$PeakDensityParam@sampleGroups) == 1 && is.na(params$PeakDensityParam@sampleGroups)) {
     params$PeakDensityParam@sampleGroups <- sampleData(xcms_obj)$class
   }
