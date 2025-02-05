@@ -13,91 +13,104 @@
 #' @inheritParams find_rank
 #' @inheritParams extract_ms_matrix.f
 #' @inheritParams pure_sources.f
+#' @inheritParams detect_xcms_peaks
 #' @param ... Additional parameters passed to \code{\link[xcms]{CentWaveParam}}.
 #'
 #' @return `list` of identified features.
 #' 
 #' @export
 #' 
-#' @import MSnbase
+#' @import MsExperiment
 #' @import magrittr
-#' @import dplyr 
+#' @import dplyr
 #' @importFrom purrr map
 #' @importFrom data.table %between%
 dia_nmf.f <- function(
     mzML_path = NULL,
-    ms_level = c("MS1" ,"MS2"),
-    # parameters to detect peaks by xcms, or input the peak matrix or data.frame
-    peaks_by_xcms = c(TRUE, FALSE), ms1_peaks = NULL, d.out = NULL, put_sn_thr = 3,
-    # parameters to extract MS1 & MS2 mixed matrices
-    ppm.n = 7, mz_range = NULL,
-    # NMF parameters
-    maximumIteration = 10, maxFBIteration = 10, toleranceFB = 1e-5,
-    MS1_init_method = c('nndsvd', 'random'), MS2_init_method = c('nndsvd', 'subSample', 'random'), errors_print = FALSE,
-    # rt tolerance 
-    rt_tol_ions = 2, # used to find MS1 ions that also detect as MS1 peaks
-    # pure sources parameters
+    ms_level = c("MS1", "MS2"),
+    peaks_by_xcms = c(TRUE, FALSE),
+    ms1_peaks = NULL,
+    d.out = NULL,
+    put_sn_thr = 3,
+    ppm.n = 7,
+    mz_range = NULL,
+    maximumIteration = 10,
+    maxFBIteration = 10,
+    toleranceFB = 1e-5,
+    MS1_init_method = c('nndsvd', 'random'),
+    MS2_init_method = c('nndsvd', 'subSample', 'random'),
+    errors_print = FALSE,
+    rt_tol_ions = 2,
     ms_type = 'sum',
-    # additional parameters from xcms::CentWaveParam to detect peaks
-    ... ){
-  
-  rawData.onDiskMSnExp <- MSnbase::readMSData(mzML_path, mode = "onDisk");
-  
-  if( ms_level == "MS1" & !(1 %in% unique(MSnbase::msLevel(rawData.onDiskMSnExp))) ){
+    params = list(
+    "CentWaveParam" = xcms::CentWaveParam(),
+    "MergeNeighboringPeaksParam" = xcms::MergeNeighboringPeaksParam(),
+    "ObiwarpParam" = xcms::ObiwarpParam(),
+    "PeakDensityParam" = xcms::PeakDensityParam(sampleGroups = NA),
+    "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
+  )
+) {
+  rawData.onDiskMSnExp <- MsExperiment::readMsExperiment(spectraFiles = mzML_path)
+  if (ms_level == "MS1" & !(1 %in% get_mslevels(rawData.onDiskMSnExp))){
     print("Error, No MS1 data in this file.")
     return(NULL)
-  };
-  
-  if( ms_level == "MS2" & !(2 %in% unique(MSnbase::msLevel(rawData.onDiskMSnExp))) ){
+  }
+  if (ms_level == "MS2" & !(2 %in% get_mslevels(rawData.onDiskMSnExp))){
     print("Error, No MS2 data in this file.")
     return(NULL)
-  };
-  
-  if( peaks_by_xcms == TRUE & is.null(ms1_peaks) ){
-    ms1_peaks <- detect_peaks_by_xcms(rawData.onDiskMSnExp, ...)
-    
+  }
+  if (!is.null(d.out)) {
+    if (!dir.exists(d.out)) {dir.create(d.out)}
+  } else {
+    d.out <- NULL
+  }
+  if (peaks_by_xcms == TRUE & is.null(ms1_peaks)) {
+    if ("character" %in% class(mzML_path)) {
+      seq_path <- create_seq(mzML_path)
+    } else if ("data.frame" %in% class(mzML_path)) {
+      seq_path <- mzML_path
+    }
+    rawData.onDiskMSnExp <- detect_xcms_peaks(seq_path, params = params)
+    ms1_peaks <- extract_xcms_peaks(rawData.onDiskMSnExp)
     if (!is.null(d.out)) {     # save the peak matrix
-      if (!dir.exists(d.out)) {
-        dir.create(d.out)
-      }
       saveRDS(ms1_peaks, file = paste0(d.out, '/ms1_peaks.rds'))
     }
-    
-    if( nrow(ms1_peaks) == 0 ){
+    if (nrow(ms1_peaks) == 0) {
       print("No detected MS1 peaks!")
       return(NULL)
     }
-  };
+  }
 
-  if( !is.null(put_sn_thr) ){  # Delete peaks of sn <= put_sn_thr
+  if (!is.null(put_sn_thr)) {  # Delete peaks of sn <= put_sn_thr
     ms1_peaks <- as.data.frame(ms1_peaks)
     ms1_peaks <- ms1_peaks[ms1_peaks$sn >= put_sn_thr, ]
-    saveRDS(ms1_peaks, file = paste0(d.out, '/ms1_peaks.rds'))
-  };
+    if (!is.null(d.out)) {
+      saveRDS(ms1_peaks, file = paste0(d.out, '/ms1_peaks.rds'))
+    }
+  }
 
-  ms1_peaks.df <- prepare_ms1_peaks(ms1_peaks = ms1_peaks);
-  ms1_peaks.df$r <- seq(1, nrow(ms1_peaks.df));
+  ms1_peaks.df <- prepare_ms1_peaks(ms1_peaks = ms1_peaks)
+  ms1_peaks.df$r <- seq(1, nrow(ms1_peaks.df))
   
-  peak.idx <- 1;
-  k <- 1;
-  features.l <- list();
+  peak.idx <- 1
+  k <- 1
+  features.l <- list()
   
-  while( peak.idx <= nrow(ms1_peaks.df) ){
-    if( ms1_peaks.df[peak.idx, 'is_ion'] == 0 ){
-      
+  while (peak.idx <= nrow(ms1_peaks.df)) {
+    if (ms1_peaks.df[peak.idx, 'is_ion'] == 0) {
       print(peak.idx)
-      
       # check if it is a real peak or noise ------------------------------------
       peak <- ms1_peaks.df[peak.idx, ]
-      rtr <- c(peak$rtmin-5, peak$rtmax+5)
+      rtr <- c(peak$rtmin - 5, peak$rtmax + 5)
       mzr <- c(peak$mzmin, peak$mzmax)
-      xic_data <- rawData.onDiskMSnExp |>
-        MSnbase::filterMsLevel(1L) |>
-        MSnbase::filterRt(rt = rtr) |>
-        MSnbase::filterMz(mz = mzr)
-
-      rt <- unname(rtime(xic_data))
-      inten <- intensity(xic_data)
+      peak_xic <- xcms::chromPeakChromatograms(object = rawData.onDiskMSnExp, peaks = rownames(peak))
+      
+      # xic_data <- rawData.onDiskMSnExp |>
+      #   MSnbase::filterMsLevel(1L) |>
+      #   MSnbase::filterRt(rt = rtr) |>
+      #   MSnbase::filterMz(mz = mzr)
+      rt <- rtime(peak_xic[[1]])
+      inten <- intensity(peak_xic[[1]])
       for( x in 1:length(inten) ){
         if(length(inten[[x]]) == 0){
           inten[[x]] <- 0  }  }
@@ -108,31 +121,39 @@ dia_nmf.f <- function(
 
       chrom <- data.frame(
         'rt' = rt,
-        'intensity' = inten )
+        'intensity' = inten
+      )
 
       is.peak <- is_true_peak(chromatogram = chrom)
       if( isFALSE(is.peak) ){
         print(paste( peak.idx, 'Not a real peak; noise.'))
         peak.idx <- peak.idx + 1
         next
-      };
+      }
       # ------------------------------------------------------------------------Done;
       
       mz_prec <- as.numeric(ms1_peaks.df[peak.idx, 'mz']);
       rt_prec <- as.numeric(ms1_peaks.df[peak.idx, 'rt']);
 
-      ms1_mat <- extract_ms_matrix.f(peak.idx = peak.idx, ms1_peaks.df = ms1_peaks.df, rawData.onDiskMSnExp = rawData.onDiskMSnExp,
-                                     ppm.n = ppm.n, rt_index = TRUE, mz_range = mz_range, iso_win_index = NULL);
-      if( is.null(ms1_mat) ){
+      ms1_mat <- extract_ms_matrix.f(
+        peak.idx = peak.idx,
+        ms1_peaks.df = ms1_peaks.df,
+        rawData.onDiskMSnExp = rawData.onDiskMSnExp,
+        ppm.n = ppm.n,
+        rt_index = TRUE,
+        mz_range = mz_range,
+        iso_win_index = NULL
+      )
+      if (is.null(ms1_mat)) {
         print(paste( peak.idx, 'No MS1 data.'))
         peak.idx <- peak.idx + 1
-        next 
-      };
-      if( nrow(ms1_mat) <= 1 ){
+        next
+      }
+      if( nrow(ms1_mat) <= 1 ) {
         print(paste( peak.idx, 'No MS1 data.'))
         peak.idx <- peak.idx + 1
-        next 
-      };
+        next
+      }
 
       # determine the rank of factorization
       rt_axis <- as.numeric(colnames(ms1_mat))
@@ -144,10 +165,15 @@ dia_nmf.f <- function(
       };
       
       # NMF on MS1 data
-      ngmcas_res <- nGMCAs(X.m = ms1_mat, rank = rank,
-                           maximumIteration = maximumIteration, maxFBIteration = maxFBIteration, toleranceFB = toleranceFB,
-                           initialization_method = MS1_init_method,
-                           errors_print = errors_print);
+      ngmcas_res <- nGMCAs(
+        X.m = ms1_mat,
+        rank = rank,
+        maximumIteration = maximumIteration,
+        maxFBIteration = maxFBIteration,
+        toleranceFB = toleranceFB,
+        initialization_method = MS1_init_method,
+        errors_print = errors_print
+      )
       
       if( is.null(ngmcas_res) ){ 
         peak.idx <- peak.idx + 1
@@ -181,8 +207,7 @@ dia_nmf.f <- function(
       ms1_peaks.df[peak.idx, "is_ion"] <- peak.idx; # no need, for sure the precursor is one of the ions peaks
       # --------------------------------------------------------------------------------------------------------- the peaks data.frame is updated :).
       
-      if ( ms_level == "MS1" ){
-        
+      if (ms_level == "MS1"){
         feature_sub.l <- list( 
           'peak' = ms1_peaks.df[peak.idx, ],
           'MS1_mixed_mat' = ms1_mat,
@@ -198,9 +223,14 @@ dia_nmf.f <- function(
         
         info.swath <- isolationWindows.range(rawData.onDiskMSnExp);
         
-        res_ms2 <- extract_ms2_matrices(peak.idx = peak.idx, ms1_peaks.df = ms1_peaks.df,
-                                        ppm.n = ppm.n, ms1_pure_spectrum = ms1_pure_spectrum,
-                                        rawData.onDiskMSnExp = rawData.onDiskMSnExp, info.swath = info.swath );
+        res_ms2 <- extract_ms2_matrices(
+          peak.idx = peak.idx,
+          ms1_peaks.df = ms1_peaks.df,
+          ppm.n = ppm.n,
+          ms1_pure_spectrum = ms1_pure_spectrum,
+          rawData.onDiskMSnExp = rawData.onDiskMSnExp,
+          info.swath = info.swath
+        )
         if( length(res_ms2) == 0 ){
           print(paste( peak.idx,'No MS2 data.'))
           peak.idx <- peak.idx + 1
@@ -215,10 +245,16 @@ dia_nmf.f <- function(
   
         # NMF on MS2 data
         rownames(H_ms1) <- NULL; 
-        ngmcas_res_all <- nGMCAs(X.m = ms2_matrices, rank = rank,
-                                 maximumIteration = maximumIteration, maxFBIteration = maxFBIteration, toleranceFB = toleranceFB,
-                                 initialization_method = MS2_init_method, H_sub = H_ms1,
-                                 errors_print = errors_print);
+        ngmcas_res_all <- nGMCAs(
+          X.m = ms2_matrices,
+          rank = rank,
+          maximumIteration = maximumIteration,
+          maxFBIteration = maxFBIteration,
+          toleranceFB = toleranceFB,
+          initialization_method = MS2_init_method,
+          H_sub = H_ms1,
+          errors_print = errors_print
+        )
         if( is.null(ngmcas_res_all) ){ 
           peak.idx <- peak.idx + 1
           next

@@ -1,7 +1,7 @@
 # file <- "C:/Users/DK273056/Documents/1workflow/DIA_NMF_workflow/mzML/20170803_FS-DIA-E2-10ng-rep3_pos_51.mzML";
 # rawData.onDiskMSnExp <- MSnbase::readMSData(file, mode = "onDisk");
 # 
-# eics_peaks.mat <- detect_peaks_by_xcms(rawData.onDiskMSnExp = rawData.onDiskMSnExp,
+# eics_peaks.mat <- extract_xcms_peaks(rawData.onDiskMSnExp = rawData.onDiskMSnExp,
 #                                        ppm = 7, peakwidth = c(6,60), snthresh = 1,
 #                                        prefilter = c(5,4000), mzCenterFun = "wMeanApex3",
 #                                        integrate = 2, mzdiff = -0.001, noise = 0,

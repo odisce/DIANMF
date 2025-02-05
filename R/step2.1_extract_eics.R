@@ -1,6 +1,6 @@
 #' Extract the isolation windows of SWATH data.
 #'
-#' @inheritParams detect_peaks_by_xcms
+#' @inheritParams extract_xcms_peaks
 #'
 #' @return `data.frame` SWATH isolation windows.
 #' 
@@ -12,8 +12,8 @@ isolationWindows.range <- function(rawData.onDiskMSnExp){
   ms2_spectra <- MSnbase::filterMsLevel(rawData.onDiskMSnExp, msLevel = 2) # filter MS2 scans
   # Extract isolation window lower and upper m/z values
   isolation_windows <- data.frame(
-    lowerMz = unique(MSnbase::isolationWindowLowerMz(ms2_spectra)),
-    upperMz = unique(MSnbase::isolationWindowUpperMz(ms2_spectra))
+    lowerMz = unique(MSnbase::isolationWindowLowerMz(spectra(ms2_spectra))),
+    upperMz = unique(MSnbase::isolationWindowUpperMz(spectra(ms2_spectra)))
   )
   
   return(isolation_windows)
@@ -46,9 +46,8 @@ PpmRange <-  function(ref, ppm.n) {
 #' @import magrittr
 #' @importFrom stats end start
 #' @importFrom utils head
-extract_eics <- function(spectra_list, ppm.n = 7, apex_index, rt_index = TRUE, mz_range = TRUE) {
-  
-  full_table <- data.table::rbindlist(spectra_list, idcol = "spectra_index")
+extract_eics <- function(spectra_list, ppm.n = 7, apex_index, mz_range = TRUE) {
+  full_table <- spectra_list
   if (!is.null(mz_range)) {
     full_table <- full_table[mz %between% mz_range,]
   }
@@ -74,9 +73,6 @@ extract_eics <- function(spectra_list, ppm.n = 7, apex_index, rt_index = TRUE, m
   
   mixed_table <- data.table::dcast(output, meanmz ~ spectra_index, value.var = "intensity")
   mixed_matrix <- as.matrix(mixed_table, rownames = 1)
-  if (!is.null(rt_index)) {
-    colnames(mixed_matrix) <- rt_index[as.integer(colnames(mixed_matrix))] %>% sprintf("%.3f", .)
-  }
   mixed_matrix[is.na(mixed_matrix)] <- 0
   return(mixed_matrix)
 }

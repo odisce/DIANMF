@@ -1,3 +1,19 @@
+#' Create simple sequence from a list of mzML paths
+#'
+#' @param mzML_path A character vector with mzML paths.
+#' @return a data.table corresponding to a sequence.
+#' 
+#' @export
+#' 
+#' @import data.table
+create_seq <- function(mzML_path) {
+  data.table(
+    "mzml_path" = mzML_path,
+    "class" = "A",
+    "InjectionOrder" = seq_len(length(mzML_path))
+  )
+}
+
 #' Detect MS1 peaks using XCMS.
 #'
 #' @param sequence_table A data.frame with at least [mzml_path, class, InjectionOrder].
@@ -20,7 +36,10 @@ detect_xcms_peaks <- function(
 ){
   sequence_table <- data.table::as.data.table(sequence_table)
   sequence_table <- sequence_table[order(InjectionOrder), ]
-  xcms_obj <- MsExperiment::readMsExperiment(spectraFiles = sequence_table$mzml_path, sampleData = sequence_table)
+  xcms_obj <- MsExperiment::readMsExperiment(
+    spectraFiles = sequence_table$mzml_path,
+    sampleData = sequence_table
+  )
   if (length(params$PeakDensityParam@sampleGroups) == 1 && is.na(params$PeakDensityParam@sampleGroups)) {
     params$PeakDensityParam@sampleGroups <- sampleData(xcms_obj)$class
   }
@@ -42,19 +61,24 @@ detect_xcms_peaks <- function(
 
 #' Detect MS1 peaks using XCMS.
 #'
-#' @param MsExperiment.obj `MsExperiment` object obtained from xcms or with `DIANMF::detect_xcms_peaks()`.
+#' @param msexp `MsExperiment` object obtained from xcms or with `DIANMF::detect_xcms_peaks()`.
 #' @param sample_nb Index of the sample to extract peaks from.
+#' @param orderL Logical to order the peaks by decreasing intensities (into).
 #'
 #' @return MS1 peaks `matrix`.
 #' 
 #' @export
 #' 
 #' @importFrom xcms findChromPeaks CentWaveParam chromPeaks
-#' @import magrittr MsExperiment
-extract_xcms_peaks <- function(MsExperiment.obj, sample_nb = 1) {
-  filterFile(MsExperiment.obj, sample_nb) %>%
+#' @import magrittr MsExperiment data.table
+extract_xcms_peaks <- function(msexp, sample_nb = 1, orderL = F) {
+  output <- xcms::filterFile(msexp, sample_nb) %>%
     xcms::chromPeaks(.) %>%
-    return()
+    data.table::as.data.table(keep.rownames = "peakid")
+  if (orderL) {
+    output <- output[order(-into), ]
+  }
+  return(output)
 }
 
 

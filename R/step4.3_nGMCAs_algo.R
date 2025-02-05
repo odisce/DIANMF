@@ -122,11 +122,16 @@ updateS.f <- function(Y, A, S_init, lambda, maxFBIteration, toleranceFB){
 #'  
 #' nGMCAs(X.m = m, rank = 2, maximumIteration = 10, maxFBIteration = 5, toleranceFB = 1e-5,
 #'  initialization_method = 'nndsvd')
-nGMCAs <- function(X.m, rank,
-                   maximumIteration = 50, maxFBIteration = 100, toleranceFB = 1e-5,
-                  initialization_method = c('nndsvd', 'random', 'subSample'), H_sub = NULL,
-                  errors_print = FALSE){
-
+nGMCAs <- function(
+  X.m,
+  rank,
+  maximumIteration = 50,
+  maxFBIteration = 100,
+  toleranceFB = 1e-5,
+  initialization_method = c('nndsvd', 'random', 'subSample'),
+  H_sub = NULL,
+  errors_print = FALSE
+){
   X.m <- base::t(X.m)
   data <- list()
   
@@ -159,12 +164,23 @@ nGMCAs <- function(X.m, rank,
     
     # data$S <- t(apply( data$S, 1, function(x) x / max(x)))
     
-    data$S <- updateS.f( Y = X.m, A = data$A, S_init = data$S, lambda = lambda,
-                         maxFBIteration = maxFBIteration, toleranceFB = toleranceFB ) 
+    data$S <- updateS.f(
+      Y = X.m,
+      A = data$A,
+      S_init = data$S,
+      lambda = lambda,
+      maxFBIteration = maxFBIteration,
+      toleranceFB = toleranceFB
+    ) 
     if( is.null(data$S) ) { return(NULL) }
     
-    data$A <- updateA.f(Y = X.m, A_init = data$A, S = data$S,
-                        maxFBIteration = maxFBIteration, toleranceFB = toleranceFB)
+    data$A <- updateA.f(
+      Y = X.m,
+      A_init = data$A,
+      S = data$S,
+      maxFBIteration = maxFBIteration,
+      toleranceFB = toleranceFB
+    )
     
     if(errors_print) {print( error_function(X.m, data$A, data$S )) }
   }

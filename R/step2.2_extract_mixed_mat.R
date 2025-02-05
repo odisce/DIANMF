@@ -22,7 +22,7 @@ has_four_consecutive_non_zero <- function(row) {
 #'
 #' @param peak.idx `numeric(1)` MS1 peak index.
 #' @param ms1_peaks.df MS1 peaks `data.frame`.  
-#' @inheritParams detect_peaks_by_xcms
+#' @inheritParams extract_xcms_peaks
 #' @param ppm.n `numeric(1)` defining the m/z tolerated deviation in parts per million (ppm).
 #' @inheritParams extract_eics
 #' @param iso_win_index `numeric(1)` SWATH isolation window index; just for MS2 level.
@@ -35,57 +35,53 @@ has_four_consecutive_non_zero <- function(row) {
 #' @importFrom MSnbase filterMsLevel filterRt fData filterIsolationWindow spectra rtime
 #' @import magrittr
 #' @importFrom stats spectrum
-extract_ms_matrix.f <- function(peak.idx, ms1_peaks.df, rawData.onDiskMSnExp, ppm.n = 7, rt_index = TRUE, mz_range = TRUE, iso_win_index = NULL){
-  
+extract_ms_matrix.f <- function(
+  peak.idx,
+  ms1_peaks.df,
+  rawData.onDiskMSnExp,
+  ppm.n = 7,
+  rt_index = TRUE,
+  mz_range = TRUE,
+  iso_win_index = NULL
+) {
   # raw_fdata <- fData(rawData.onDiskMSnExp) %>% as.data.table()
-  rawData_ms1 <- MSnbase::filterMsLevel(rawData.onDiskMSnExp, 1L) %>%
-    MSnbase::filterRt(., c(ms1_peaks.df[peak.idx, 'rtmin'], ms1_peaks.df[peak.idx, 'rtmax'])) %>%
-    MSnbase::fData(.) %>%
-    as.data.table(.)
+  MsObjSub <- xcms::filterMsLevel(rawData.onDiskMSnExp, 1L) %>%
+    xcms::filterRt(., c(ms1_peaks.df[peak.idx, 'rtmin'], ms1_peaks.df[peak.idx, 'rtmax']))
+  rawData_ms1 <-  MsObjSub %>%
+    get_spectra_index(.)
   
   if (!is.null(iso_win_index)) {
     iso_win_mat <- isolationWindows.range(rawData.onDiskMSnExp) %>%
       as.data.table()
-    iso_mass <- mean(unlist(iso_win_mat[iso_win_index,]))
+    iso_mass <- iso_win_mat[iso_win_index, mean(lowerMz, upperMz)]
     rawData_sub <- MSnbase::filterIsolationWindow(rawData.onDiskMSnExp, iso_mass) %>%
-      fData() %>%
-      as.data.table()
+      get_spectra_index(.)
     ms1_L <- FALSE
     ## Select the closest MS2 scans from MS1 inside the peak
     ## Extract MS1 scans belonging to the peak
     scans_info <- rawData_ms1 %>% {
       .[msLevel == 1, {
-        ms1_rt <- retentionTime
-        rawData_sub[which.min(abs(retentionTime - ms1_rt)),]
-      }, by = .(spectrum_ms1 = spectrum)]
+        ms1_rt <- rtime
+        rawData_sub[which.min(abs(rtime - ms1_rt)),]
+      }, by = .(spectrum_ms1 = scanIndex)]
     }
-    
   } else {
     scans_info <- rawData_ms1
     ms1_L <- TRUE
   }
   
   # idx.ms <- which(raw_fdata$spectrum %in% scans_info[, spectrum]);
-  idx.ms <- scans_info[, spectrum]
+  idx.ms <- scans_info[, scanIndex]
 
   mz <- ms1_peaks.df[peak.idx, 'mz'];  # mz of this peak
   peak_apex_rt <- ms1_peaks.df[peak.idx, 'rt']
 
-  idx.apex.ms <- which.min(abs(rawData_ms1$retentionTime - peak_apex_rt))
+  idx.apex.ms <- rawData_ms1[which.min(abs(rawData_ms1$rtime - peak_apex_rt)), scanIndex]
   
   # get the ms scans related to the ms peak
-  spec.exp_ms <- MSnbase::spectra(rawData.onDiskMSnExp[idx.ms])
-  
-  spec.exp_rt <- sapply(spec.exp_ms, rtime)
-  ## get retention time of each spectra: 
-  spec.exp_ms <- lapply(1:length(spec.exp_ms), function(i){
-    res <- data.table(
-      "mz" = mz(spec.exp_ms[[i]]),
-      "intensity" = intensity(spec.exp_ms[[i]])
-      # "rt" = rtime(spec.exp_ms1[[i]])
-    )
-    return(res)
-  });
+  spec.exp_ms <- get_spectra_values(MsObjSub)
+  ## get retention time of each spectra:
+  spec.exp_ms <- spec.exp_ms[, .(spectra_index = scanIndex, mz, intensity, rt = rtime)]
   
   if(!is.null(mz_range) && isTRUE(ms1_L)){ # the isolation window range of where this MS1 peak was fragmented
     info.swath <- isolationWindows.range(rawData.onDiskMSnExp)
@@ -109,14 +105,16 @@ extract_ms_matrix.f <- function(peak.idx, ms1_peaks.df, rawData.onDiskMSnExp, pp
     mz_range <- NULL
   }
   
-  ms_mixed_matrix <- extract_eics(spectra_list = spec.exp_ms, ppm.n = ppm.n,
-                                   apex_index = idx.apex.ms,
-                                   rt_index = spec.exp_rt, mz_range = mz_range);
+  ms_mixed_matrix <- extract_eics(
+    spectra_list = spec.exp_ms,
+    ppm.n = ppm.n,
+    apex_index = idx.apex.ms,
+    mz_range = mz_range
+  )
   
   # filter the rows; Keep only the ones that have at least 4 consecutive non-zero values
   row_filter <- apply(ms_mixed_matrix, 1, has_four_consecutive_non_zero)
   ms_mixed_matrix <- ms_mixed_matrix[row_filter, , drop = FALSE]
-  
   return(ms_mixed_matrix)
 }
 
@@ -125,7 +123,7 @@ extract_ms_matrix.f <- function(peak.idx, ms1_peaks.df, rawData.onDiskMSnExp, pp
 #'
 #' @inheritParams extract_ms_matrix.f
 #' @param ms1_pure_spectrum `data.frame` MS1 pure spectrum of the peak. 
-#' @inheritParams detect_peaks_by_xcms
+#' @inheritParams extract_xcms_peaks
 #' @param info.swath `data.frame` SWATH isolation windows.
 #'
 #' @return `list` of ms2 matrices, every matrix is from one isolation window.
@@ -133,16 +131,29 @@ extract_ms_matrix.f <- function(peak.idx, ms1_peaks.df, rawData.onDiskMSnExp, pp
 #' @export
 #' 
 #' @importFrom data.table %between%
-extract_ms2_matrices <- function(peak.idx, ms1_peaks.df, ppm.n, ms1_pure_spectrum, rawData.onDiskMSnExp, info.swath){
-  
+extract_ms2_matrices <- function(
+  peak.idx,
+  ms1_peaks.df,
+  ppm.n,
+  ms1_pure_spectrum,
+  rawData.onDiskMSnExp,
+  info.swath
+){  
   min_mz <- min(ms1_pure_spectrum$mz_value);
   max_mz <- max(ms1_pure_spectrum$mz_value);
   idx.swath <- which(info.swath$lowerMz < max_mz | info.swath$upperMz > min_mz); 
   
   # so from every isolation window in idx.swath we will extract the ms2 data
   res_ms2 <- lapply(idx.swath, function(i){
-    ms2_mat <- extract_ms_matrix.f(peak.idx = peak.idx, ms1_peaks.df = ms1_peaks.df, rawData.onDiskMSnExp = rawData.onDiskMSnExp,
-                                   ppm.n = ppm.n, rt_index = TRUE, mz_range = NULL, iso_win_index = i);
+    ms2_mat <- extract_ms_matrix.f(
+      peak.idx = peak.idx,
+      ms1_peaks.df = ms1_peaks.df,
+      rawData.onDiskMSnExp = rawData.onDiskMSnExp,
+      ppm.n = ppm.n,
+      rt_index = TRUE,
+      mz_range = NULL,
+      iso_win_index = i
+    )
     
     return(ms2_mat)
   });
