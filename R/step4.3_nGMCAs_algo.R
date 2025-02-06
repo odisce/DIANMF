@@ -9,6 +9,22 @@ error_function <- function(Y, A, S){
   norm(Y - A %*% S, '2') / norm(Y, '2')
 }
 
+#' Get first singular value using svd
+#'
+#' @param x `matrix`
+#' @param method Method to compute svd: "base", "fast" or "svds"
+#' @importFrom corpcor fast.svd
+#' @importFrom RSpectra svds
+#' @return` numeric(1)` relative error.
+get_svd_first <- function(x, method = c("base", "fast", "svds")) {
+  switch(
+    method,
+    "base" = svd(x)$d[1],
+    "fast" = corpcor::fast.svd(x)$d[1],
+    "svsd" = RSpectra::svds(x, 1)$d[1],
+    stop("method not available, choose one of: 'base', 'fast' or 'svds'")
+  )
+}
 
 #' Update A.
 #'
@@ -16,11 +32,12 @@ error_function <- function(Y, A, S){
 #' @param A_init `matrix` every column is an elution profile.
 #' @param maxFBIteration `numeric(1)` maximum number of iterations in the FB algorithm.
 #' @param toleranceFB `numeric(1)` tolerance or stopping value of the FB algorithm.
-#'
+#' @inheritParams get_svd_first
+#' @importFrom corpcor fast.svd
 #' @return `matrix` A of updated elution profiles.
-updateA.f <- function(Y, A_init, S, maxFBIteration, toleranceFB) {
+updateA.f <- function(Y, A_init, S, maxFBIteration, toleranceFB, method = c("base", "fast")) {
 
-  L <- svd( t(S) %*% S )$d[1]
+  L <- get_svd_first((t(S) %*% S), method = method)
   t <- 1
   R <- A_init
   A <- A_init
@@ -65,11 +82,12 @@ soft_threshold.f <- function(Y, threshold){
 #' @param S_init `matrix` every row is a pure spectrum.
 #' @param lambda `numeric(1)` sparsity parameter of the pure spectra.
 #' @inheritParams updateA.f
+#' @inheritParams get_svd_first
 #'
 #' @return `matrix` S of updated spectra.
-updateS.f <- function(Y, A, S_init, lambda, maxFBIteration, toleranceFB){
+updateS.f <- function(Y, A, S_init, lambda, maxFBIteration, toleranceFB, method = c("base", "fast")[2]){
  
-  L <- svd(A %*% t(A))$d[1]
+  L <- get_svd_first((A %*% t(A)), method = method)
   t <- 1
   R <- S_init
   S <- S_init
@@ -110,7 +128,9 @@ updateS.f <- function(Y, A, S_init, lambda, maxFBIteration, toleranceFB){
 #' @param errors_print `Logical` `TRUE` to print the error difference, `FALSE` otherwise. 
 #' @param initialization_method `character` to specify the initialization method: random, nndsvd or subSample. 
 #' @param maximumIteration `numeric(1)` maximum number of iterations.
+#' @param scaleL Logical to scale the data (row-wise) before applying NMF.
 #' @inheritParams updateA.f
+#' @inheritParams get_svd_first
 #' @param H_sub `matrix` of elution profiles used with subSample initialization method.
 #'
 #' @return `list` of 2 matrices A and S.
@@ -130,8 +150,13 @@ nGMCAs <- function(
   toleranceFB = 1e-5,
   initialization_method = c('nndsvd', 'random', 'subSample'),
   H_sub = NULL,
-  errors_print = FALSE
+  errors_print = FALSE,
+  scaleL = FALSE,
+  method
 ){
+  if (scaleL) {
+    X.m / rowMax(X.m)
+  }
   X.m <- base::t(X.m)
   data <- list()
   
@@ -156,7 +181,7 @@ nGMCAs <- function(
   
   lambda <- 0.8 * max(X.m)
   for (i in 1:maximumIteration) {
-    
+    # i <- 1
     # data$A <- apply(data$A, 2, function(col) {
     #   norm <- sqrt(sum(col^2))
     #   col / norm
@@ -170,7 +195,8 @@ nGMCAs <- function(
       S_init = data$S,
       lambda = lambda,
       maxFBIteration = maxFBIteration,
-      toleranceFB = toleranceFB
+      toleranceFB = toleranceFB,
+      method = method
     ) 
     if( is.null(data$S) ) { return(NULL) }
     
@@ -179,7 +205,8 @@ nGMCAs <- function(
       A_init = data$A,
       S = data$S,
       maxFBIteration = maxFBIteration,
-      toleranceFB = toleranceFB
+      toleranceFB = toleranceFB,
+      method = method
     )
     
     if(errors_print) {print( error_function(X.m, data$A, data$S )) }
