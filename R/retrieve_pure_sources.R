@@ -15,8 +15,8 @@ pure_sources.f <- function(W, H, ms_type = c('max', 'mean', 'sum')){
     spect <- as.matrix(W[, s], ncol = 1)
     elut <- as.matrix(H[s, ], nrow = 1) 
     source <- spect %*% t(elut)
-    colnames(source) <- colnames(H)
-    rownames(source) <- rownames(W)
+    colnames(source) <- as.numeric(colnames(H))
+    rownames(source) <- as.numeric(rownames(W)) 
     
     source <- prepare_mixed_data(ms_mixed = source, mz_values = as.numeric(rownames(source)), rts = as.numeric(colnames(source)) )
     
