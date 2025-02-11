@@ -67,7 +67,7 @@ bpparam()
 
 ## Detect LCpeaks ----------------------------
 temp_saveL <- T
-subset_rt <- 297 + c(-20, +20) 
+subset_rt <- 297 + c(-10, +10) 
 known_compounds <- input_targ[rt_sec %between% subset_rt ]
 
 
@@ -136,7 +136,7 @@ peaks_i[, peakfull := ifelse(
     geom_text(data = res, 
               aes(x = rt, y = mz, label = compound),
               color = 'black', vjust = -0.5, size = 3.5) +
-    geom_pointrange(data = peak_i, aes(x = rt, xmin = rtmin, xmax = rtmax), color = "gray") +
+    # geom_pointrange(data = peak_i, aes(x = rt, xmin = rtmin, xmax = rtmax), color = "gray") +
     geom_vline(xintercept = rt_range, linetype = 2, color = "red") +
     theme_bw() +
     labs(
@@ -218,13 +218,23 @@ xic_dt_ms2[, xic_label := paste0(xic_label, "-", isolationWindowTargetMz)]
     geom_line(data = xic_dt[peakid == peak_i[, peakid], ], color = "black") +
     facet_grid(msLevel ~ .) +
     theme_bw()
+  
   xic_dt_norm <- xic_dt %>%
     group_by(peakid) %>%
-    mutate(intensity_norm = intensity/log1p(intensity))
+    mutate(intensity_norm = intensity/sum(intensity))
   xic_dt_norm <- as.data.table(xic_dt_norm)
-  plot_xics <- ggplot(xic_dt_norm, aes(rtime, intensity_norm, group = peakid)) +
+  xic_dt_norm_sub <- xic_dt_norm[peakid %in% res[, peakid], ]
+  xic_dt_norm_sub <- merge(xic_dt_norm_sub, res, by = 'peakid')
+  xic_dt_norm_sub <- xic_dt_norm_sub %>%
+    group_by(peakid) %>%
+    arrange(-intensity_norm) %>%
+    slice(1)
+  plot_xics <- ggplot(xic_dt_norm, aes(rtime, intensity, group = peakid)) +
     geom_line(aes(color = peakfull)) +
-    geom_line(data = xic_dt_norm[peakid %in% res[, peakid], ], color = "black", linewidth = 1) +
+    geom_line(data = xic_dt_norm[peakid %in% res[, peakid], ],  aes( rtime, intensity), color = "black", linewidth = 0.8) +
+    geom_text(data = xic_dt_norm_sub,
+              aes(x = rt, y = intensity, label = compound),
+              color = 'red', angle = 0, vjust = 0, size = 3) +
     facet_grid(msLevel ~ .) +
     theme_bw() +
     guides(color = "none") +
@@ -281,6 +291,8 @@ REMOVE_COLINEARITY_L <- FALSE
 
 ## NMF
 rank <- 20
+row_filter <- apply(mixedmat, 1, has_four_consecutive_non_zero)
+mixedmat <- mixedmat[row_filter, , drop = FALSE]
 ngmcas_res <- nGMCAs(
   X.m = mixedmat,
   rank = rank,
@@ -328,116 +340,197 @@ ngmcas_res <- nGMCAs(
 }
 
 #--------------------------------------------------------------------------------
-# prepare the pure sources
-# pure sources
-# W <- ngmcas_res$S
-# rownames(W) <- pure_mz[rank == 1]$mz
-# H <- ngmcas_res$A
-# colnames(H) <- pure_rt[ rank == 1, ]$scan_norm
-# ms1_pure_sources <- pure_sources.f(W = W, H = H, ms_type = 'sum')
-
-source("C:/Users/DK273056/Documents/DIANMF_results/process_files/R/functions.R")
-NewDb_ms1 <- readRDS("~/DIANMF_results/process_files/ms1_database/NewDb_ms1.rds")
-subset_rt <- 300 + c(-20, +20)
-exist_comp <- input_targ[rt_sec %between% (subset_rt)]
-target_mz <- 304.1543
-ms1_mz_tolerance <- 0.007
-
-library(future.apply)
-plan(multisession, workers = 4)
-
-res <- future.apply::future_lapply(unique(pure_mz$rank), function(s){
-  # s = 1
-  ms1_spectrum <- pure_mz[rank == s & msLevel == 1]
-  colnames(ms1_spectrum) <- c("xic_label", "msLevel", "isolationWindowTargetMz", "mz_value", "rank", "intensity")
-  ms1_spectrum <- ms1_spectrum[ms1_spectrum$intensity > 0, ]
-  ms1_spectrum$intensity <- ms1_spectrum$intensity / max(ms1_spectrum$intensity)
-  ms1_spectrum$mz_value <- gsub("\\.\\d$", "",  ms1_spectrum$mz_value) # Remove trailing '.X' where X is any digit
-  ms1_spectrum$mz_value <- as.numeric( ms1_spectrum$mz_value)
-  ms1_spectrum <- as.data.frame(ms1_spectrum)
+# prepare MS1 pure sources and match them
+{
+  W <- ngmcas_res$S
+  rownames(W) <- pure_mz[rank == 1]$mz
+  H <- ngmcas_res$A
+  colnames(H) <- pure_rt[ rank == 1, ]$scan_norm
+  ms1_pure_sources <- pure_sources.f(W = W, H = H, ms_type = 'sum')
   
-  # ms1_spectrum <- ms1_pure_sources[[s]]$source_spect
-  # ms1_spectrum <- ms1_spectrum[ms1_spectrum$intensity > 0, ]
-  # ms1_spectrum$intensity <- ms1_spectrum$intensity / max(ms1_spectrum$intensity)
-  # ms1_spectrum <- as.data.frame(ms1_spectrum)
-  # ms1_spectrum$mz_value <- gsub("\\.\\d$", "",  ms1_spectrum$mz_value) # Remove trailing '.X' where X is any digit
-  # ms1_spectrum$mz_value <- as.numeric( ms1_spectrum$mz_value)
+  source("C:/Users/DK273056/Documents/DIANMF_results/process_files/R/functions.R")
+  NewDb_ms1 <- readRDS("~/DIANMF_results/process_files/ms1_database/NewDb_ms1.rds")
+  subset_rt <- 297 + c(-10, +10)
+  exist_comp <- input_targ[rt_sec %between% (subset_rt)]
+  target_mz <- 304.1543
+  ms1_mz_tolerance <- 0.007
   
-  res_sub1 <- lapply(unique(exist_comp$Compound), function(c){ #   names(NewDb_ms1)
-    # c <- "4-Pyridylacetic acid"
-    ms1_lib_spect <- NewDb_ms1[[c]]
+  library(future.apply)
+  plan(multisession, workers = 4)
+  
+  res <- future.apply::future_lapply(unique(pure_mz$rank), function(s){
+    # # s = 1
+    # ms1_spectrum <- pure_mz[rank == s & msLevel == 1]
+    # colnames(ms1_spectrum) <- c("xic_label", "msLevel", "isolationWindowTargetMz", "mz_value", "rank", "intensity")
+    # ms1_spectrum <- ms1_spectrum[ms1_spectrum$intensity > 0, ]
+    # ms1_spectrum$intensity <- ms1_spectrum$intensity / max(ms1_spectrum$intensity)
+    # ms1_spectrum$mz_value <- gsub("\\.\\d$", "",  ms1_spectrum$mz_value) # Remove trailing '.X' where X is any digit
+    # ms1_spectrum$mz_value <- as.numeric( ms1_spectrum$mz_value)
+    # ms1_spectrum <- as.data.frame(ms1_spectrum)
     
-    if( !is.null(ms1_lib_spect) ){
-      ms1_score <- lapply(1:length(ms1_lib_spect), function(j){
-        # j <- 1
-        # print(j)
-        ms1_lib_spectrum <- ms1_lib_spect[[j]]
-        ms1_lib_spectrum <- ms1_lib_spectrum[, c(4,3)]
-        colnames(ms1_lib_spectrum) <- c('mz_value', 'intensity')
-        
+    ms1_spectrum <- ms1_pure_sources[[s]]$source_spect
+    ms1_spectrum <- ms1_spectrum[ms1_spectrum$intensity > 0, ]
+    ms1_spectrum$intensity <- ms1_spectrum$intensity / max(ms1_spectrum$intensity)
+    ms1_spectrum <- as.data.frame(ms1_spectrum)
+    ms1_spectrum$mz_value <- gsub("\\.\\d$", "",  ms1_spectrum$mz_value) # Remove trailing '.X' where X is any digit
+    ms1_spectrum$mz_value <- as.numeric( ms1_spectrum$mz_value)
+    
+    res_sub1 <- lapply(unique(exist_comp$Compound), function(c){ #   names(NewDb_ms1)
+      # c <- "(-)-Scopolamine"
+      ms1_lib_spect <- NewDb_ms1[[c]]
+      
+      if( !is.null(ms1_lib_spect) ){
+        ms1_score <- lapply(1:length(ms1_lib_spect), function(j){
+          # j <- 1
+          # print(j)
+          ms1_lib_spectrum <- ms1_lib_spect[[j]]
+          ms1_lib_spectrum <- ms1_lib_spectrum[, c(4,3)]
+          colnames(ms1_lib_spectrum) <- c('mz_value', 'intensity')
+          
+          ms1_lib_spectrum <- as.data.frame(ms1_lib_spectrum)
+          ms1_lib_spectrum$intensity <- ms1_lib_spectrum$intensity / max(ms1_lib_spectrum$intensity)
+          
+          score1 <- round(GetSimpleDotProductSimilarity(ms1_spectrum, ms1_lib_spectrum, bin = ms1_mz_tolerance), 3)
+          score2 <-  round(getReverseSearchingSimilarity(measuredSpectra = ms1_spectrum, librarySpectra = ms1_lib_spectrum, bin = ms1_mz_tolerance), 3)
+          score3 <- round(GetPresenceSimilarity(ms1_spectrum, ms1_lib_spectrum, bin = ms1_mz_tolerance), 3) 
+          score <-  round( (score2 + score3) /2, 3)
+          
+          data.table(
+            "source" = s,
+            "name" = c, 
+            "lib_spect_idx" = j,
+            "dot_prod" = score1,
+            "rev_prod" = score2,
+            "presence" = score3,
+            "total_score" = score )
+        })
+        ms1_score <- do.call(rbind, ms1_score)
+        ms1_score <- ms1_score[ms1_score$total_score > 0, ]
+        ms1_score
+        if( nrow(ms1_score) == 0 ){
+          ms1_score <- NULL
+        }else{
+          lib_indx <- which.max(ms1_score$total_score)
+          ms1_score <- ms1_score[lib_indx, ]
+        }
+      }
+    })
+    names(res_sub1) <- exist_comp$Compound
+    res_sub1 <- do.call(rbind, res_sub1)
+    
+    d.plot <- file.path('~/DIA_NMF_R_package/Results2/ms1/')
+    if (!dir.exists(d.plot)) { dir.create(d.plot, recursive = TRUE) }
+    if(max(res_sub1$total_score) > 0.5){
+      res_sub2 <- res_sub1 %>% 
+        arrange(desc(total_score)) %>%
+        slice_head(n = 3)
+      
+      plots_list <- list()
+      for(i in 1:nrow(res_sub2)){
+        r <- res_sub2[i, ]
+        ms1_lib_spectrum <- NewDb_ms1[[r$name]][[r$lib_spect_idx]]
+        ms1_lib_spectrum <- ms1_lib_spectrum[, c(4,3,5)]
+        colnames(ms1_lib_spectrum) <- c('mz_value', 'intensity', 'annotation')
         ms1_lib_spectrum <- as.data.frame(ms1_lib_spectrum)
         ms1_lib_spectrum$intensity <- ms1_lib_spectrum$intensity / max(ms1_lib_spectrum$intensity)
-        
-        score1 <- round(GetSimpleDotProductSimilarity(ms1_spectrum, ms1_lib_spectrum, bin = ms1_mz_tolerance), 3)
-        score2 <-  round(getReverseSearchingSimilarity(measuredSpectra = ms1_spectrum, librarySpectra = ms1_lib_spectrum, bin = ms1_mz_tolerance), 3)
-        score3 <- round(GetPresenceSimilarity(ms1_spectrum, ms1_lib_spectrum, bin = ms1_mz_tolerance), 3) 
-        score <-  round( (score2 + score3) /2, 3)
-        
-        data.table(
-          "source" = s,
-          "name" = c, 
-          "lib_spect_idx" = j,
-          "dot_prod" = score1,
-          "rev_prod" = score2,
-          "presence" = score3,
-          "total_score" = score )
-      })
-      ms1_score <- do.call(rbind, ms1_score)
-      ms1_score <- ms1_score[ms1_score$total_score > 0, ]
-      ms1_score
-      if( nrow(ms1_score) == 0 ){
-        ms1_score <- NULL
-      }else{
-        lib_indx <- which.max(ms1_score$total_score)
-        ms1_score <- ms1_score[lib_indx, ]
+        p1 <- plot_spectra_vs1(workflow = "DIANMF", pure_spectrum = ms1_spectrum, lib_spectrum = ms1_lib_spectrum,
+                               dp = r$dot_prod, idp = r$rev_prod, fp = r$presence, name = r$name)
+        plots_list[[i]] <- p1
       }
+      
+      p_all <- patchwork::wrap_plots(plots_list, nrow = 3)
+      
+      eics_mat <- ms1_pure_sources[[s]]$source_eic
+      eics_mat$mz_value <- gsub("\\.\\d$", "",  eics_mat$mz_value)
+      eics_mat$mz_value <- as.numeric( eics_mat$mz_value)
+      eics_mat <- eics_mat %>%
+        group_by(mz_value) %>%
+        mutate(intensity_norm = intensity / max(intensity)) %>%
+        ungroup() %>%
+        mutate(intensity_norm = tidyr::replace_na(intensity_norm, 0))
+      
+      eics_mat <- eics_mat %>%
+        mutate(mz_group = cut(mz_value, breaks = seq(floor(min(mz_value)), ceiling(max(mz_value)) +100, by = 100), include.lowest = TRUE, right = FALSE))
+      
+      p1 <- ggplot(eics_mat, aes(x = rt, y = intensity, color = as.factor(mz_value))) + 
+        geom_line() +
+        geom_point() +
+        xlim(min(eics_mat$rt), max(eics_mat$rt)) +
+        facet_wrap(~ mz_group, scales = "free_y") +  # Facet by mz_group
+        guides(color = 'none') +
+        theme_minimal()
+      
+      p2 <- ggplot(eics_mat, aes(x = rt, y = intensity_norm, color = as.factor(mz_value))) + 
+        geom_line() +
+        geom_point() +
+        xlim(min(eics_mat$rt), max(eics_mat$rt)) +
+        facet_wrap(~ mz_group, scales = "free_y") + 
+        guides(color = 'none') +
+        theme_minimal()
+      
+      plots_eics <- list(
+        'p1' = p1,
+        'p2' = p2 )
+      p_eics <- patchwork::wrap_plots(plots_eics, nrow = 2)
+      
+      p <- list(
+        'spect' = p_all,
+        'eics' = p_eics
+      )
+      p <- patchwork::wrap_plots(p, ncol = 2)
+      
+      ggsave(paste0(d.plot, '/', 'source_', r$source, '_ms1.png'), p, w=15, h = 15, dpi = 300)
+      
     }
+    
+    return(res_sub1)
   })
-  names(res_sub1) <- exist_comp$Compound
-  res_sub1 <- do.call(rbind, res_sub1)
   
-  d.plot <- file.path('~/DIA_NMF_R_package/Results2/ms1/')
-  if (!dir.exists(d.plot)) { dir.create(d.plot, recursive = TRUE) }
-  if(max(res_sub1$total_score) > 0.5){
-    res_sub2 <- res_sub1 %>% 
-      arrange(desc(total_score)) %>%
-      slice_head(n = 3)
-    
-    plots_list <- list()
-    for(i in 1:nrow(res_sub2)){
-      r <- res_sub2[i, ]
-      ms1_lib_spectrum <- NewDb_ms1[[r$name]][[r$lib_spect_idx]]
-      ms1_lib_spectrum <- ms1_lib_spectrum[, c(4,3,5)]
-      colnames(ms1_lib_spectrum) <- c('mz_value', 'intensity', 'annotation')
-      ms1_lib_spectrum <- as.data.frame(ms1_lib_spectrum)
-      ms1_lib_spectrum$intensity <- ms1_lib_spectrum$intensity / max(ms1_lib_spectrum$intensity)
-      p1 <- plot_spectra_vs1(workflow = "DIANMF", pure_spectrum = ms1_spectrum, lib_spectrum = ms1_lib_spectrum,
-                             dp = r$dot_prod, idp = r$rev_prod, fp = r$presence, name = r$name)
-      plots_list[[i]] <- p1
-    }
-    
-    p_all <- patchwork::wrap_plots(plots_list, nrow = 3)
-    ggsave(paste0(d.plot, '/', 'source_', r$source, '_ms1.png'), p_all, w=15, h = 15, dpi = 300)
-    
-  }
-  
-  return(res_sub1)
-})
+  ress <- res
+  names(ress) <- paste0("source_", seq(1,rank))
+  ress <- do.call(rbind, ress)
+}
 
-ress <- res
-names(ress) <- paste0("source_", seq(1,rank))
-ress <- do.call(rbind, ress)
- 
+# contribution
+{
+  pure_mz_ms1 <- pure_mz[ msLevel == 1, ]
+  pure_mz_ms1 <- pure_mz_ms1 %>%
+    group_by(rank) %>%
+    mutate(total_value = sum(value, na.rm = TRUE),
+           contribution = value / total_value) %>%
+    ungroup()
+  
+  mz_tolerance <- 0.01  
+  
+  pure_mz_ms1 <- pure_mz_ms1 %>%
+    group_by(rank) %>%
+    mutate(value_norm = value/max(value)) %>%
+    ungroup()
+  
+  pure_mz_ms1 <- as.data.table(pure_mz_ms1)
+  
+  pure_mz_ms1_sub <- lapply(1:nrow(known_compounds), function(s){
+    mz_subset <- known_compounds[s, ]$mz_pos + c(-0.001, +0.001)
+    ions <- pure_mz_ms1[ mz %between% mz_subset, ]
+    ions <- ions[ value > 0,  ]
+    ions$compound <- known_compounds[s, ]$Compound
+    return(ions)
+  })
+  pure_mz_ms1_sub <- do.call(rbind, pure_mz_ms1_sub)
+  
+  ggplot() +
+    geom_hline(yintercept = 0) +
+    geom_linerange(data = pure_mz_ms1, aes(mz, value, ymin = 0, ymax = value)) +
+    geom_linerange(data = pure_mz_ms1_sub, aes(mz, value, ymin = 0, ymax = value, color = "red") ) +
+    geom_text(data = pure_mz_ms1_sub, 
+              aes(x = mz, y = value, label = paste(compound, round(contribution,3) )),
+              color = 'red', vjust = 0.1, size = 2.5) +
+    facet_wrap(rank ~ ., ncol = 2) +
+    theme_bw() +
+    scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+    guides(color = "none")
+}
+
 
 # match MS2 spectra
 ## for scopolamine
@@ -461,34 +554,6 @@ ggplot2::ggplot() +
   geom_linerange(data = ms2_scopol_spectrum, 
                aes(x = mz_value, ymin = 0, ymax = intensity), color = 'blue') +
   geom_linerange(data = lib_spectrum, aes(x = mz_value, ymin = -intensity, ymax = 0), color = 'red')
-
-
-
-# MS1 pure spectra
-pure_mz_ms1 <- pure_mz[ msLevel == 1, ]
-pure_mz_ms1 <- pure_mz_ms1 %>%
-  group_by(rank) %>%
-  mutate(total_value = sum(value, na.rm = TRUE),
-         contribution = value / total_value) %>%
-  ungroup()
-
-mz_tolerance <- 0.01  
-
-pure_mz_ms1 <- pure_mz_ms1 %>%
-  group_by(rank) %>%
-  mutate(value_norm = value/max(value)) %>%
-  ungroup()
-  
-
-ggplot() +
-  geom_hline(yintercept = 0) +
-  geom_linerange(data = pure_mz_ms1, aes(mz, value_norm, ymin = 0, ymax = value_norm)) +
-  facet_wrap(rank ~ ., ncol = 2) +
-  theme_bw() +
-  scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
-  guides(color = "none")
-
-##
 
 
 
