@@ -70,7 +70,6 @@ temp_saveL <- T
 subset_rt <- 297 + c(-10, +10) 
 known_compounds <- input_targ[rt_sec %between% subset_rt ]
 
-
 target_mz <- 304.1543 
 # xcms_obj <- detect_xcms_peaks(mzml_dt[, lapply(.SD, head, 1), by = .(class)], params_ls)
 if (temp_saveL) {
@@ -98,7 +97,6 @@ cpnt <- 1
 # for (i in seq_len(ms1_peaks[, .N])) {
 # i <- 1
 i <- search_target_peak <- ms1_peaks[, which(mz %between% (target_mz + c(-0.001, +0.001)))]
-
 
 res <- lapply(1:nrow(known_compounds), function(h){
   # h = 2
@@ -166,15 +164,38 @@ raw_dt <- merge(
   by = c("rtime", "msLevel", "isolationWindowTargetMz")
 )
 
-## build MS1 xics from peak list
-# ### just peaks of peaks_i$fullpeak == full
-# peaks_i <- peaks_i[ peaks_i$peakfull == "full", ]
-  
-xic_dt <- peaks_i[, {
-  mzrange <- c(mzmin, mzmax)
-  raw_dt[msLevel == 1 & mz %between% mzrange, .(mz, scan_norm, rtime, intensity, msLevel, isolationWindowTargetMz, collisionEnergy)]
-}, by = .(peakid, peakfull)]
-xic_dt[, xic_label := paste0(peakid, "-", msLevel), by = .(peakid, msLevel)]
+# ## build MS1 xics from peak list
+# # ### just peaks of peaks_i$fullpeak == full
+# # peaks_i <- peaks_i[ peaks_i$peakfull == "full", ]
+#   
+# xic_dt <- peaks_i[, {
+#   mzrange <- c(mzmin, mzmax)
+#   raw_dt[msLevel == 1 & mz %between% mzrange, .(mz, scan_norm, rtime, intensity, msLevel, isolationWindowTargetMz, collisionEnergy)]
+# }, by = .(peakid, peakfull)]
+# xic_dt[, xic_label := paste0(peakid, "-", msLevel), by = .(peakid, msLevel)]
+
+## build MS1 xics from raw data
+### Combine all MS1 spectra
+MS1_peaklist <- xcms::filterRt(xcms_obj, rt_range) %>%
+  xcms::filterFile(., 1) %>%
+  xcms::filterMsLevel(., 1) %>%
+  xcms::spectra() %>%
+  Spectra::combineSpectra(ppm = 3, tolerance = 0.005, minProp = 0.001) %>%  # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  Spectra::asDataFrame() %>%
+  data.table::as.data.table() %>%
+  {.[, .(msLevel, mz, rtime, intensity)]}
+MS1_peaklist[, xic_label := paste0(seq_len(.N), "-", 1)]
+### Extract XICs
+xic_dt_ms1 <- MS1_peaklist[, {
+  mzrange <- PpmRange(mz, 7) #  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  raw_dt[msLevel == 1 & mz %between% mzrange, .(mz, rtime, intensity, msLevel)]
+}, by = .(xic_label)]
+xic_dt_ms1 <- xic_dt_ms1[xic_label %in% xic_dt_ms1[, .N, by = xic_label][N >= 4, xic_label]]
+xic_dt_ms1 <- merge(
+  xic_dt_ms1,
+  time_dic,
+  by = c("rtime", "msLevel")
+)
 
 ## build MS2 xics from raw data
 ### Combine all MS2 spectra
@@ -213,32 +234,41 @@ xic_dt_ms2[, xic_label := paste0(xic_label, "-", isolationWindowTargetMz)]
 # }
 {
   # plot xics
-  plot_peak_map <- ggplot(xic_dt, aes(rtime, mz, group = peakid)) +
-    geom_line(aes(color = peakfull)) +
-    geom_line(data = xic_dt[peakid == peak_i[, peakid], ], color = "black") +
-    facet_grid(msLevel ~ .) +
-    theme_bw()
+  # plot_peak_map <- ggplot(xic_dt, aes(rtime, mz, group = peakid)) +
+  #   geom_line(aes(color = peakfull)) +
+  #   geom_line(data = xic_dt[peakid == peak_i[, peakid], ], color = "black") +
+  #   facet_grid(msLevel ~ .) +
+  #   theme_bw()
+  # 
+  # xic_dt_norm <- xic_dt %>%
+  #   group_by(peakid) %>%
+  #   mutate(intensity_norm = intensity/sum(intensity))
+  # xic_dt_norm <- as.data.table(xic_dt_norm)
+  # xic_dt_norm_sub <- xic_dt_norm[peakid %in% res[, peakid], ]
+  # xic_dt_norm_sub <- merge(xic_dt_norm_sub, res, by = 'peakid')
+  # xic_dt_norm_sub <- xic_dt_norm_sub %>%
+  #   group_by(peakid) %>%
+  #   arrange(-intensity_norm) %>%
+  #   slice(1)
+  # plot_xics <- ggplot(xic_dt_norm, aes(rtime, intensity, group = peakid)) +
+  #   geom_line(aes(color = peakfull)) +
+  #   geom_line(data = xic_dt_norm[peakid %in% res[, peakid], ],  aes( rtime, intensity), color = "black", linewidth = 0.8) +
+  #   geom_text(data = xic_dt_norm_sub,
+  #             aes(x = rt, y = intensity, label = compound),
+  #             color = 'red', angle = 0, vjust = 0, size = 3) +
+  #   geom_point() +
+  #   facet_grid(msLevel ~ .) +
+  #   theme_bw() +
+  #   guides(color = "none") +
+  #   scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
   
-  xic_dt_norm <- xic_dt %>%
-    group_by(peakid) %>%
-    mutate(intensity_norm = intensity/sum(intensity))
-  xic_dt_norm <- as.data.table(xic_dt_norm)
-  xic_dt_norm_sub <- xic_dt_norm[peakid %in% res[, peakid], ]
-  xic_dt_norm_sub <- merge(xic_dt_norm_sub, res, by = 'peakid')
-  xic_dt_norm_sub <- xic_dt_norm_sub %>%
-    group_by(peakid) %>%
-    arrange(-intensity_norm) %>%
-    slice(1)
-  plot_xics <- ggplot(xic_dt_norm, aes(rtime, intensity, group = peakid)) +
-    geom_line(aes(color = peakfull)) +
-    geom_line(data = xic_dt_norm[peakid %in% res[, peakid], ],  aes( rtime, intensity), color = "black", linewidth = 0.8) +
-    geom_text(data = xic_dt_norm_sub,
-              aes(x = rt, y = intensity, label = compound),
-              color = 'red', angle = 0, vjust = 0, size = 3) +
-    facet_grid(msLevel ~ .) +
+  plot_xics <- ggplot(xic_dt_ms1, aes(rtime, intensity, group = xic_label, color = xic_label)) +
+    geom_line() +
+    geom_point() +
     theme_bw() +
     guides(color = "none") +
     scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
+  
   plot_xics_ms2 <- ggplot(xic_dt_ms2, aes(rtime, intensity, group = xic_label)) +
     geom_line(aes(color = as.factor(isolationWindowTargetMz))) +
     facet_grid(isolationWindowTargetMz ~ .) +
@@ -260,16 +290,23 @@ xic_dt_ms2[, xic_label := paste0(xic_label, "-", isolationWindowTargetMz)]
     align = 'hv',
     heights = c(1,3)
   )
-  plot_peak_map
+  # plot_peak_map
   plot_spectrum
 }
 
 
 ## build matrix (only on xcms peaks for now)
 MS1MS2_L <- F
-ms1_mixeddt <- dcast(xic_dt[msLevel == 1, ], xic_label ~ scan_norm, value.var = "intensity", fun.aggregate = max, fill = 0)
+# ms1 matrix from xcms eics
+# ms1_mixeddt <- dcast(xic_dt[msLevel == 1, ], xic_label ~ scan_norm, value.var = "intensity", fun.aggregate = max, fill = 0)
+# ms1_mixedmat <- as.matrix(ms1_mixeddt, rownames = TRUE)
+# ms1_infos <- xic_dt[msLevel == 1, ][, .(mz = median(mz)), by = .(xic_label, msLevel, isolationWindowTargetMz)]
+
+# ms1 matrix from raw data
+ms1_mixeddt <- dcast(xic_dt_ms1, xic_label ~ scan_norm, value.var = "intensity", fun.aggregate = max, fill = 0)
 ms1_mixedmat <- as.matrix(ms1_mixeddt, rownames = TRUE)
-ms1_infos <- xic_dt[msLevel == 1, ][, .(mz = median(mz)), by = .(xic_label, msLevel, isolationWindowTargetMz)]
+ms1_infos <- xic_dt_ms1[msLevel == 1, ][, .(mz = median(mz)), by = .(xic_label, msLevel, isolationWindowTargetMz)]
+
 if (MS1MS2_L) {
   ms2_mixeddt <- dcast(xic_dt_ms2, xic_label ~ scan_norm, value.var = "intensity", fun.aggregate = max, fill = 0)
   ms2_mixedmat <- as.matrix(ms2_mixeddt, rownames = TRUE)
@@ -290,14 +327,29 @@ if (MS1MS2_L) {
 REMOVE_COLINEARITY_L <- FALSE
 
 ## NMF
-rank <- 20
+rank <- 10
 row_filter <- apply(mixedmat, 1, has_four_consecutive_non_zero)
 mixedmat <- mixedmat[row_filter, , drop = FALSE]
+# max_int <- apply(mixedmat, 1, max)
+# mixedmat <- mixedmat / apply(mixedmat, 1, max)
+ms_mixed <- mixedmat
+ms_mixed <- reshape2::melt(ms_mixed)
+colnames(ms_mixed) <- c('mz_value', 'rt', 'intensity')
+
+ggplot(ms_mixed, aes(rt, intensity, color = as.factor(mz_value) )) +
+  geom_line() +
+  geom_point() +
+  theme_bw() +
+  guides(color = "none") +
+  scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
+
+#-----------------------------------------------------------------------------
+
 ngmcas_res <- nGMCAs(
   X.m = mixedmat,
   rank = rank,
-  maximumIteration = 5,
-  maxFBIteration = 20,
+  maximumIteration = 200,
+  maxFBIteration = 100,
   toleranceFB = 1e-05,
   initialization_method = "nndsvd",
   errors_print = FALSE,
@@ -306,7 +358,10 @@ ngmcas_res <- nGMCAs(
 {
   pure_rt <- melt(ngmcas_res$A) %>% as.data.table()
   setnames(pure_rt, c("rank", "scan_norm", "value"))
-  pure_mz <- melt(ngmcas_res$S) %>% as.data.table()
+  
+  S <- ngmcas_res$S
+  # S_new <- unname(max_int) * S
+  pure_mz <- melt(S) %>% as.data.table()
   setnames(pure_mz, c("xic_label", "rank", "value"))
   pure_mz <- merge(ms_infos, pure_mz, by = "xic_label")
   
@@ -343,6 +398,7 @@ ngmcas_res <- nGMCAs(
 # prepare MS1 pure sources and match them
 {
   W <- ngmcas_res$S
+  # W <-   S_new <- unname(max_int) * W
   rownames(W) <- pure_mz[rank == 1]$mz
   H <- ngmcas_res$A
   colnames(H) <- pure_rt[ rank == 1, ]$scan_norm
@@ -360,6 +416,7 @@ ngmcas_res <- nGMCAs(
   
   res <- future.apply::future_lapply(unique(pure_mz$rank), function(s){
     # # s = 1
+    print(s)
     # ms1_spectrum <- pure_mz[rank == s & msLevel == 1]
     # colnames(ms1_spectrum) <- c("xic_label", "msLevel", "isolationWindowTargetMz", "mz_value", "rank", "intensity")
     # ms1_spectrum <- ms1_spectrum[ms1_spectrum$intensity > 0, ]
@@ -437,7 +494,6 @@ ngmcas_res <- nGMCAs(
                                dp = r$dot_prod, idp = r$rev_prod, fp = r$presence, name = r$name)
         plots_list[[i]] <- p1
       }
-      
       p_all <- patchwork::wrap_plots(plots_list, nrow = 3)
       
       eics_mat <- ms1_pure_sources[[s]]$source_eic
@@ -493,7 +549,7 @@ ngmcas_res <- nGMCAs(
 
 # contribution
 {
-  pure_mz_ms1 <- pure_mz[ msLevel == 1, ]
+  pure_mz_ms1 <- pure_mz[ msLevel == 2, ]
   pure_mz_ms1 <- pure_mz_ms1 %>%
     group_by(rank) %>%
     mutate(total_value = sum(value, na.rm = TRUE),
@@ -544,20 +600,20 @@ ms2_scopol_spectrum$mz_value <- gsub("\\.\\d$", "",  ms2_scopol_spectrum$mz_valu
 ms2_scopol_spectrum$mz_value <- as.numeric( ms2_scopol_spectrum$mz_value)
 ms2_scopol_spectrum <- as.data.frame(ms2_scopol_spectrum)
 
-ms2_scpres <- match_pure_scores2(polarity = "POS", mz_prec = target_mz, data_base = NewDB, measured_spectra = ms2_scopol_spectrum) 
+ms2_scores <- match_pure_scores2(polarity = "POS", mz_prec = target_mz, data_base = NewDB,
+                                 measured_spectra = ms2_scopol_spectrum, mz_tol = 0.01) 
+ms2_scores
 lib_spectrum <- NewDB$spectra[[3925]]@spectrum
 colnames(lib_spectrum) <- c("mz_value", "intensity") 
 lib_spectrum <- as.data.frame(lib_spectrum)
 lib_spectrum$intensity <- lib_spectrum$intensity / max(lib_spectrum$intensity)
 
-ggplot2::ggplot() +
+p <- ggplot2::ggplot() +
   geom_linerange(data = ms2_scopol_spectrum, 
                aes(x = mz_value, ymin = 0, ymax = intensity), color = 'blue') +
   geom_linerange(data = lib_spectrum, aes(x = mz_value, ymin = -intensity, ymax = 0), color = 'red')
-
-
-
-
+p <- plotly::ggplotly(p)
+p
 
 #---------------------------------------------------------------------------------
 

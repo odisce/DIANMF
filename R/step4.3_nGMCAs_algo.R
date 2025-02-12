@@ -58,6 +58,31 @@ updateA.f <- function(Y, A_init, S, maxFBIteration, toleranceFB, method = c("bas
   return(A)
 }
 
+updateA.f_sparse <- function(Y, A_init, S, lambda, maxFBIteration, toleranceFB, method = c("base", "fast")) {
+  
+  L <- get_svd_first((t(S) %*% S), method = method)
+  t <- 1
+  R <- A_init
+  A <- A_init
+  
+  for (i in 1:maxFBIteration) {
+    
+    Anext <- pmax( soft_threshold.f(R - (1/L) * (R %*% S - Y) %*% t(S),  lambda/L), 0 )
+    
+    tnext <- ( 1+sqrt(1 + 4*(t^2)) ) /2
+    R <- Anext + ((t-1)/tnext) * (Anext - A)
+    if ( norm( Anext - A, 'F') / norm(A, 'F') < toleranceFB) {
+      A <- Anext
+      break
+    }
+    A <- Anext
+    # print( error_function(Y, Anext, S) )
+  }
+  
+  return(A)
+}
+
+
 
 #' Apply soft-thresholding on a matrix.
 #'
@@ -181,13 +206,8 @@ nGMCAs <- function(
   
   lambda <- 0.8 * max(X.m)
   for (i in 1:maximumIteration) {
-    # i <- 1
-    # data$A <- apply(data$A, 2, function(col) {
-    #   norm <- sqrt(sum(col^2))
-    #   col / norm
-    # });
-    
-    # data$S <- t(apply( data$S, 1, function(x) x / max(x)))
+
+    error_k <- error_function(Y = X.m, A = data$A, S = data$S)
     
     data$S <- updateS.f(
       Y = X.m,
@@ -200,14 +220,29 @@ nGMCAs <- function(
     ) 
     if( is.null(data$S) ) { return(NULL) }
     
-    data$A <- updateA.f(
-      Y = X.m,
-      A_init = data$A,
-      S = data$S,
-      maxFBIteration = maxFBIteration,
-      toleranceFB = toleranceFB,
-      method = method
-    )
+    # data$A <- updateA.f(
+    #   Y = X.m,
+    #   A_init = data$A,
+    #   S = data$S,
+    #   maxFBIteration = maxFBIteration,
+    #   toleranceFB = toleranceFB,
+    #   method = method
+    # )
+    data$A <- updateA.f_sparse(
+        Y = X.m,
+        A_init = data$A,
+        S = data$S,
+        lambda = lambda,
+        maxFBIteration = maxFBIteration,
+        toleranceFB = toleranceFB,
+        method = method
+      )
+    
+    error_k_new <- error_function(Y = X.m, A = data$A, S = data$S)
+    if( abs(error_k_new - error_k) <= toleranceFB ) {
+      print( paste("reach convergence at iteration:", i) )
+      break
+    }
     
     if(errors_print) {print( error_function(X.m, data$A, data$S )) }
   }
