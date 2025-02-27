@@ -95,7 +95,7 @@ min_rt <- min(ms1_peaks[sample == sample_idx, ]$rtmin)
 max_rt <- max(ms1_peaks[sample == sample_idx, ]$rtmax)
 
 features.l <- list()
-feature_idx <- 586
+feature_idx <- 1
 k <- 1
 
 while( feature_idx <= nrow(ms1_features) ) {
@@ -216,7 +216,7 @@ while( feature_idx <= nrow(ms1_features) ) {
     xic_dt_ms2 <- MS2_peaklist[, {
       mzrange <- PpmRange(mz, 7)
       raw_dt[msLevel == 2 & mz %between% mzrange, .(mz, rtime, intensity, msLevel, isolationWindowTargetMz, isolationWindowLowerMz, isolationWindowUpperMz,
-                                                    lowMZ, highMZ, collisionEnergy)]
+                                                    collisionEnergy)]
     }, by = .(xic_label)]
     xic_dt_ms2 <- xic_dt_ms2[xic_label %in% xic_dt_ms2[, .N, by = xic_label][N >= 4, xic_label]]
     xic_dt_ms2 <- merge(
@@ -239,14 +239,12 @@ while( feature_idx <= nrow(ms1_features) ) {
     ms1_infos <- xic_dt_ms1[msLevel == 1, ][, .(mz = median(mz)), by = .(xic_label, msLevel, isolationWindowTargetMz)]
     ms1_infos$isolationWindowLowerMz <- NA
     ms1_infos$isolationWindowUpperMz <- NA
-    ms1_infos$lowMZ <- NA
-    ms1_infos$highMZ <- NA
     
     ms2_mixeddt <- dcast(xic_dt_ms2, xic_label ~ scan_norm, value.var = "intensity", fun.aggregate = max, fill = 0)
     ms2_mixedmat <- as.matrix(ms2_mixeddt, rownames = TRUE)
     row_filter_ms2 <- apply(ms2_mixedmat, 1, has_four_consecutive_non_zero)
     ms2_mixedmat <- ms2_mixedmat[row_filter_ms2, , drop = FALSE]
-    ms2_infos <- xic_dt_ms2[, .(mz = median(mz)), by = .(xic_label, msLevel, isolationWindowTargetMz, isolationWindowLowerMz, isolationWindowUpperMz, lowMZ, highMZ)] # remove duplicated values!
+    ms2_infos <- xic_dt_ms2[, .(mz = median(mz)), by = .(xic_label, msLevel, isolationWindowTargetMz, isolationWindowLowerMz, isolationWindowUpperMz)]
     
     if(MS1MS2_L) {
       mixedmat <- rbind(
@@ -335,7 +333,7 @@ while( feature_idx <= nrow(ms1_features) ) {
       
     }
     
-    ## Plot extracted sources
+    # # Plot extracted sources
     # {
     #   plot_xics_ms1 <- ggplot(xic_dt_ms1, aes(rtime, intensity, group = peakid)) +
     #     geom_line(aes(color = peakfull)) +
@@ -388,7 +386,7 @@ while( feature_idx <= nrow(ms1_features) ) {
     #     heights = c(1, 2)
     #   )
     #   # p1
-    #   ggplot2::ggsave(paste0('~/DIA_NMF_R_package/Results3/', k, '_sources.png'), p1, w=15, h = 15, dpi = 300)
+    #   ggplot2::ggsave(paste0('~/DIA_NMF_R_package/Results3/', k, '_sources.png'), p1, w=10, h = 10, dpi = 300)
     # }
     
     ## quantifying every xcms peak by its pure spectra and delete noisy sources
@@ -430,7 +428,7 @@ while( feature_idx <= nrow(ms1_features) ) {
       # facet_grid(source ~ .) +
       theme_bw()
     # peaks_p <- plotly::ggplotly(peaks_p)
-    # ggsave(paste0('~/DIA_NMF_R_package/Results3/', k, '_peaks.png'), peaks_p, w=15, h = 15, dpi = 300)
+    # ggsave(paste0('~/DIA_NMF_R_package/Results3/', k, '_peaks.png'), peaks_p, w=10, h = 10, dpi = 300)
     
     # get the real rt 
     peak_counts <- xic_dt_ms1[, .N, by = peakid]
@@ -458,7 +456,7 @@ while( feature_idx <= nrow(ms1_features) ) {
     peaks <- chromPeaks(detected_peaks)
     peaks <- as.data.frame(peaks)
     peaks <- setDT(peaks)
-    peaks <- peaks[ abs(rt - rtmin) > 2 & abs(rt - rtmax) > 2, ]  ## change this !!!!!!!!!!!!!!!!!!!!!
+    peaks <- peaks[ abs(rt - rt_range[1]) >= 3 & abs(rt - rt_range[2]) >= 3, ]
     
     # filter peaks 
     if( nrow(peaks) > 0 ){
@@ -539,7 +537,7 @@ while( feature_idx <= nrow(ms1_features) ) {
         #     heights = c(1, 2)
         #   )
         #   # p2
-        #   # ggsave(paste0('~/DIA_NMF_R_package/Results3/', k, '_selected_sources.png'), p2, w=10, h = 10, dpi = 300)
+        #   ggsave(paste0('~/DIA_NMF_R_package/Results3/', k, '_selected_sources.png'), p2, w=10, h = 10, dpi = 300)
         # }
 
         feature_sub.l <- list(
@@ -588,8 +586,9 @@ while( feature_idx <= nrow(ms1_features) ) {
     
     # iterate over the next non-processed feature, but update it first
     peaks_removed <- idx
-    ms1_features[sapply(peakidx, function(p) any(unlist(p) %in% peaks_removed, na.rm = TRUE)), 
-                 iteration := ifelse(is.na(iteration), k, paste0(iteration, ",", k))]
+    ms1_features[, iteration := as.character(iteration)]
+    ms1_features[sapply(peakidx, function(p) any(unlist(p) %in% peaks_removed)), 
+                 iteration := ifelse(is.na(iteration), as.character(k), paste0(iteration, ",", k))]
     
     
     k <- k + 1
