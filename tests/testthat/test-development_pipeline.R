@@ -1,5 +1,7 @@
 skip("development script")
 
+test_that("test the pipeline", {
+
 library(MSnbase)
 library(data.table)
 library(BiocParallel)
@@ -617,3 +619,5 @@ while( feature_idx <= nrow(ms1_features) ) {
 #   geom_pointrange(aes(x = rt, xmin = rtmin, xmax = rtmax, color = iteration)) +
 #   theme_bw()+
 #   guides(color = "none")
+
+})

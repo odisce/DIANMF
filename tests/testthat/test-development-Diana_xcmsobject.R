@@ -1,5 +1,7 @@
 testthat::skip("development script to implement xcms sequence objects")
 
+test_that("first test of the pipeline", {
+  
 ## Improve XCMS parameters
 ## Run on Barbier data
 
@@ -840,3 +842,5 @@ image(ngmcas_res$S, col = scales::viridis_pal(option = "A")(30))
 # }) %>%
 #   rbindlist()
 # plot(res_bench$n, res_bench$time / 1e9)
+
+})

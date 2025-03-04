@@ -46,8 +46,8 @@ create_seq <- function(mzML_path) {
 #' @param sequence_table A data.frame with at least [mzml_path, class, InjectionOrder].
 #' @param params A list to set the parameters from xcms pipeline steps.
 #'               List names should be xcms parameters methods (ex: `list("CentWaveParam" = CentWaveParam()`)
-#' @return MsExperiment objects
 #' @param rt_range (Optional) rt range to subset before running peak detection
+#' @return MsExperiment objects
 #' 
 #' @export
 #' 
@@ -113,7 +113,7 @@ extract_xcms_peaks <- function(msexp) {
 #' Detect LC features
 #'
 #' @param temp_saveL `character` directory path to save the features.
-#' @param params_ls 
+#' @param params_ls `list` of xcms parameters
 #'
 #' @return "XcmsExperiment" xcms".
 #' @export
@@ -140,6 +140,8 @@ detect_LCfeatures <- function(temp_saveL = T, params_ls){
 #' Extract MS1 features
 #'
 #' @inheritParams extract_xcms_peaks
+#' @param orderL `logical`
+#' @param orderL_sample `character` sample name
 #'
 #' @return `data.table` `data.frame`.
 #' @export

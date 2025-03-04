@@ -1,7 +1,10 @@
 utils::globalVariables(c(
-  "comp_nb", "spectra_index", "index", "start", "end", "meanmz", "head",
-  "retentionTime", "spectrum", "Polarity", "rt", "mz_value", "mat1", 
-  "ms1_mat", "into", "intensity", "mz", "msLevel", "ppm.n", "fragments"
+   "iteration", "rtmin", "rtmax", "peakfull", "xic_label", "value",
+   "contribution", "peakid", "sn", "peakidx", "mzml_dt", "ms1_peaks",
+   "ms1_features", "mzmin", "mzmax", "raw_dt", "scan_norm", "N",
+   "rt_range", "IsoWin", "sample_idx", "median", "mz_value", 
+   "InjectionOrder", "creation_date", "rt", "head", "rowMax"
+  
 ))
 
 utils::globalVariables(c("."))

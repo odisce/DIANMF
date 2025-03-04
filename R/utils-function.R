@@ -26,7 +26,7 @@ fun_get_rawdata <- function(x) {
 
 #' Get unique msLevel from MsExperiment object
 #'
-#' @param x MsExperiment object
+#' @param msexp MsExperiment object
 #' @return an integer vector with available MSLevels
 #' 
 #' @export
@@ -39,7 +39,7 @@ get_mslevels <- function(msexp) {
 
 #' Get spectra value in MsExperiment
 #'
-#' @param x MsExperiment object
+#' @param msexp MsExperiment object
 #' @return a data.table containing spectra infos
 #' 
 #' @export
@@ -53,7 +53,7 @@ get_spectra_values <- function(msexp) {
 
 #' Get spectra index in MsExperiment
 #'
-#' @param x MsExperiment object
+#' @param msexp MsExperiment object
 #' @return a data.table with scan infos
 #' 
 #' @export

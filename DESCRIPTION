@@ -21,11 +21,8 @@ biocViews:
 Imports: 
     data.table (>= 1.16.4),
     dplyr (>= 1.1.4),
-    ggplot2 (>= 3.5.1),
-    patchwork (>= 1.2.0),
     magrittr (>= 2.0.3),
     MSnbase (>= 2.32.0),
-    purrr (>= 1.0.2),
     reshape2 (>= 1.4.4),
     stats (>= 4.3.0),
     xcms (>= 4.4.0), 

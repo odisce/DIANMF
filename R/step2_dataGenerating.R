@@ -25,7 +25,7 @@ has_four_consecutive_non_zero <- function(row) {
 #' Extract MS1 raw data
 #'
 #' @inheritParams extract_xcms_peaks
-#' @param rt_range 
+#' @param rt_range retention time range.
 #'
 #' @return `data.table` `data.frame`.
 #' @export
@@ -85,6 +85,7 @@ build_ms1XICS <- function(peaks_i){
 #'
 #' @inheritParams extract_xcms_peaks
 #' @param MS2_ISOEACHL `logical` is TRUE to build the MS2 xics from raw data, else from xcms peaks. 
+#' @param time_dic `data.frame`
 #'
 #' @return `data.table` `data.frame`.
 #' @export

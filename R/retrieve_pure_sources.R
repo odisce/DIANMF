@@ -1,3 +1,24 @@
+#' Prepare mixed MS1 and MS2 data.
+#'
+#' @param ms_mixed mixed `matrix` of a peak. Every row is an extracted ion chromatogram (EIC) along the peak rt scans.
+#' @param mz_values Fragments mz values of the eics in ms_mixed. The row TRUE names.
+#' @param rts EICs retention time values in ms_mixed. The columns TRUE names.
+#'
+#' @return `data.frame` for every EIC with the mz and rt information.
+#' 
+#' @export
+#' 
+#' @importFrom reshape2 melt
+prepare_mixed_data <- function(ms_mixed = mat1, mz_values = as.numeric(rownames(ms1_mat)), rts = as.numeric(colnames(ms1_mat)) ){
+  
+  rownames(ms_mixed) <- make.unique(as.character(mz_values))
+  colnames(ms_mixed) <- rts
+  ms_mixed <- reshape2::melt(ms_mixed)
+  colnames(ms_mixed) <- c('mz_value', 'rt', 'intensity')
+  
+  return(ms_mixed)
+}
+
 #' Retrieve pure sources: elution profiles and there spectra
 #'
 #' @param W `matrix` basis.

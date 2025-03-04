@@ -59,7 +59,7 @@ subsample_init <- function(Y, rank, H_sub){  # This method is just for NMF of MS
                        maxFBIteration = 10, toleranceFB = 1e-5 ) 
  
    if( is.null(S) ){
-    retun(NULL)
+    return(NULL)
   } else {
     return(list(
       'A' = t(H_sub),

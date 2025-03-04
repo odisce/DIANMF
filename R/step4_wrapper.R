@@ -47,7 +47,7 @@ params_ls <- list(
 #' @param min_distance `numeric`
 #' @param plots `logical`
 #' @inheritParams detect_LCfeatures
-#'
+#' 
 #' @return `list`
 #' @export
 #'
@@ -367,10 +367,10 @@ DIANMF_f <- function(input_dir, d.out,
   # save results
   if (!is.null(d.out)) {
     if (!dir.exists(d.out)) {dir.create(d.out)} }
-  saveRDS(mzml_dt, paste0(d.out, '/', mzml_dt.rds))
-  saveRDS(ms1_peaks, paste0(d.out, '/', ms1_peaks.rds))
-  saveRDS(ms1_features, paste0(d.out, '/', ms1_features.rds))
-  saveRDS(features.l, paste0(d.out, '/', features_list.rds))
+  saveRDS(mzml_dt, paste0(d.out, '/mzml_dt.rds'))
+  saveRDS(ms1_peaks, paste0(d.out, '/ms1_peaks.rds'))
+  saveRDS(ms1_features, paste0(d.out, '/ms1_features.rds'))
+  saveRDS(features.l, paste0(d.out, '/features_list.rds'))
                           
   return(features.l)
 }
