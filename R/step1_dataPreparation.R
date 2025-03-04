@@ -113,10 +113,11 @@ extract_xcms_peaks <- function(msexp) {
 #' Detect LC features
 #'
 #' @param temp_saveL `character` directory path to save the features.
+#' @param params_ls 
 #'
 #' @return "XcmsExperiment" xcms".
 #' @export
-detect_LCfeatures <- function(temp_saveL = T){
+detect_LCfeatures <- function(temp_saveL = T, params_ls){
   
   if (temp_saveL) {
     save_path <- "./temp2/data/"

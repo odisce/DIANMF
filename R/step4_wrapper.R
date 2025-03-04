@@ -1,46 +1,70 @@
 # wrapper function
+## xcms parameters
+params_ls <- list(  
+  "CentWaveParam" = CentWaveParam(
+    ppm = 6,
+    peakwidth = c(6, 30),
+    snthresh = 0,
+    prefilter = c(5, 4000),
+    mzCenterFun = "wMeanApex3",
+    integrate = 2,
+    mzdiff = -0.001,
+    noise = 2000,
+    firstBaselineCheck = FALSE
+  ),
+  "MergeNeighboringPeaksParam" = MergeNeighboringPeaksParam(
+    expandRt = 2,
+    expandMz = 0.001,
+    ppm = 5,
+    minProp = 0.75
+  ),
+  "ObiwarpParam" = ObiwarpParam(
+    binSize = 0.05
+  ),
+  "PeakDensityParam" = PeakDensityParam(
+    sampleGroups = NA,
+    bw = 15,
+    minFraction = 0.1,
+    minSamples = 2,
+    binSize = 0.008,
+    ppm = 7,
+    maxFeatures = 500
+  ),
+  "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
+)
 
+
+
+#' DIANMF wrapper function
+#'
+#' @param input_dir `character` mzML files directory path.
+#' @param d.out  `character` output directory path.
+#' @param sample_idx `numeric` index of the sample.
+#' @param temp_saveL `logical`
+#' @param MS2_ISOEACHL `logical`
+#' @param MS1MS2_L `logical`
+#' @param scan_rt_ext `numeric`
+#' @param min_distance `numeric`
+#' @param plots `logical`
+#' @inheritParams detect_LCfeatures
+#'
+#' @return `list`
+#' @export
+#'
+#' @import xcms
+#' @import MSnbase
+#' @import data.table
+#' @import magrittr
+#' @import dplyr
 DIANMF_f <- function(input_dir, d.out, 
                      sample_idx = 1, 
                      temp_saveL = T, MS2_ISOEACHL = T, MS1MS2_L = F,
-                     scan_rt_ext = 10, min_distance = 5 ){
+                     scan_rt_ext = 10, min_distance = 5,
+                     params_ls, plots = F ){
   
   mzml_dt <- prepare_mzMLfiles(input_dir)
-  # xcms parameters should be here
-  params_ls <- list(  
-    "CentWaveParam" = CentWaveParam(
-      ppm = 6,
-      peakwidth = c(6, 30),
-      snthresh = 0,
-      prefilter = c(5, 4000),
-      mzCenterFun = "wMeanApex3",
-      integrate = 2,
-      mzdiff = -0.001,
-      noise = 2000,
-      firstBaselineCheck = FALSE
-    ),
-    "MergeNeighboringPeaksParam" = MergeNeighboringPeaksParam(
-      expandRt = 2,
-      expandMz = 0.001,
-      ppm = 5,
-      minProp = 0.75
-    ),
-    "ObiwarpParam" = ObiwarpParam(
-      binSize = 0.05
-    ),
-    "PeakDensityParam" = PeakDensityParam(
-      sampleGroups = NA,
-      bw = 15,
-      minFraction = 0.1,
-      minSamples = 2,
-      binSize = 0.008,
-      ppm = 7,
-      maxFeatures = 500
-    ),
-    "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
-  )
   
-  xcms_obj <- detect_LCfeatures(temp_saveL)
+  xcms_obj <- detect_LCfeatures(temp_saveL, params_ls)
   ms1_peaks <- extract_xcms_peaks(xcms_obj)
   ms1_features <- extract_xcms_features(xcms_obj)
   ms1_features[, iteration := as.integer(NA) ]
