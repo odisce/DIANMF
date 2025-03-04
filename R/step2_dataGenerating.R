@@ -3,7 +3,7 @@
 #' Create a mz range.
 #'
 #' @param ref `numeric` mz of the peak.
-#' @inheritParams extract_ms_matrix.f
+#' @param ppm.n `numeric` defining the m/z tolerated deviation in parts per million (ppm).
 #'
 #' @return `numeric` mz range of a specific mz value.
 PpmRange <-  function(ref, ppm.n) {
@@ -176,8 +176,8 @@ ms1Info <- function(xic_dt_ms1){
 #'
 #' @param xic_dt_ms2  `data.table` `data.frame` object obtained from xcms or with `DIANMF::build_ms2XICs()`.
 #'
-#' @return
-#' @export `list`
+#' @return `list`
+#' @export 
 ms2Info <- function(xic_dt_ms2){
   ms2_mixeddt <- dcast(xic_dt_ms2, xic_label ~ scan_norm, value.var = "intensity", fun.aggregate = max, fill = 0)
   ms2_mixedmat <- as.matrix(ms2_mixeddt, rownames = TRUE)

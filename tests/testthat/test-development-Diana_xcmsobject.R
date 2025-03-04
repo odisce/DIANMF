@@ -814,31 +814,29 @@ image(ngmcas_res$S, col = scales::viridis_pal(option = "A")(30))
 
 # }
 
-### Extract raw spectra ----------------------------
-### Assemble EIC ----------------------------
-### NMF ----------------------------
-### Export results ----------------------------
-res_bench <- lapply(c(10, 100, 200, 300, 500, 600, 700, 800, 1000, 1500, 2000, 5000), function(x) {
-  in_mat <- mixedmat[sample(seq_len(nrow(mixedmat)), size = x, replace = T),]
-  print(x)
-  meantime <- microbenchmark::microbenchmark(
-    "svds" = {
-      nGMCAs(
-        X.m = in_mat,
-        rank = rank,
-        maximumIteration = 5,
-        maxFBIteration = 20,
-        toleranceFB = 1e-05,
-        initialization_method = "nndsvd",
-        errors_print = FALSE,
-        method = "svsd"
-      )
-    },
-    times = 3
-  )$time[3]
-  data.table("n" = x, "time" = meantime)
-}) %>%
-  rbindlist()
-plot(res_bench$n, res_bench$time / 1e9)
-
--
+# ### Extract raw spectra ----------------------------
+# ### Assemble EIC ----------------------------
+# ### NMF ----------------------------
+# ### Export results ----------------------------
+# res_bench <- lapply(c(10, 100, 200, 300, 500, 600, 700, 800, 1000, 1500, 2000, 5000), function(x) {
+#   in_mat <- mixedmat[sample(seq_len(nrow(mixedmat)), size = x, replace = T),]
+#   print(x)
+#   meantime <- microbenchmark::microbenchmark(
+#     "svds" = {
+#       nGMCAs(
+#         X.m = in_mat,
+#         rank = rank,
+#         maximumIteration = 5,
+#         maxFBIteration = 20,
+#         toleranceFB = 1e-05,
+#         initialization_method = "nndsvd",
+#         errors_print = FALSE,
+#         method = "svsd"
+#       )
+#     },
+#     times = 3
+#   )$time[3]
+#   data.table("n" = x, "time" = meantime)
+# }) %>%
+#   rbindlist()
+# plot(res_bench$n, res_bench$time / 1e9)

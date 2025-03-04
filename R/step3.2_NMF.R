@@ -161,12 +161,6 @@ updateS.f <- function(Y, A, S_init, lambda, maxFBIteration, toleranceFB, method 
 #' @return `list` of 2 matrices A and S.
 #' 
 #' @export
-#' 
-#' @examples
-#'  m <- matrix(c(1,0,0,0,1,1,1,1,1), nrow = 3, ncol = 3)
-#'  
-#' nGMCAs(X.m = m, rank = 2, maximumIteration = 10, maxFBIteration = 5, toleranceFB = 1e-5,
-#'  initialization_method = 'nndsvd')
 nGMCAs <- function(
   X.m,
   rank,

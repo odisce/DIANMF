@@ -1,3 +1,5 @@
+skip("development script")
+
 library(MSnbase)
 library(data.table)
 library(BiocParallel)

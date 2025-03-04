@@ -2,7 +2,7 @@ Type: Package
 Package: DIANMF
 Title: Non-Negative Matrix Factorization To Identify SWATH DIA Metabolomic
     Data
-Version: 0.1.6
+Version: 0.3.1
 Authors@R: c(
     person(given = "Diana", family = "Karaki", email = "diana.karaki@cea.fr", role = c("aut", "cre")),
     person(given = "Sylvain", family = "Dechaumet", email = "sylvain.dechaumet@cea.fr", role = "aut"),
@@ -29,12 +29,17 @@ Imports:
     reshape2 (>= 1.4.4),
     stats (>= 4.3.0),
     xcms (>= 4.4.0), 
-    MsExperiment (>= 1.8.0)
+    MsExperiment (>= 1.8.0),
+    MsFeatures (>= 1.14.0),
+    RSpectra (>= 0.16),
+    Spectra (>= 1.16.0),
+    SummarizedExperiment (>= 1.36.0),
+    corpcor (>= 1.6.10)
 Suggests: 
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
-    BiocStyle (>= 2.28.1)
+    BiocStyle (>= 2.34.0)
 Config/testthat/edition: 3
 Encoding: UTF-8
 LazyData: true
