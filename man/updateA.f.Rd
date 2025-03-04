@@ -4,7 +4,14 @@
 \alias{updateA.f}
 \title{Update A.}
 \usage{
-updateA.f(Y, A_init, S, maxFBIteration, toleranceFB)
+updateA.f(
+  Y,
+  A_init,
+  S,
+  maxFBIteration,
+  toleranceFB,
+  method = c("base", "fast")
+)
 }
 \arguments{
 \item{Y}{\code{matrix}}
@@ -16,6 +23,8 @@ updateA.f(Y, A_init, S, maxFBIteration, toleranceFB)
 \item{maxFBIteration}{\code{numeric(1)} maximum number of iterations in the FB algorithm.}
 
 \item{toleranceFB}{\code{numeric(1)} tolerance or stopping value of the FB algorithm.}
+
+\item{method}{Method to compute svd: "base", "fast" or "svds"}
 }
 \value{
 \code{matrix} A of updated elution profiles.

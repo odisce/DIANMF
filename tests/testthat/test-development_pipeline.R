@@ -95,7 +95,7 @@ min_rt <- min(ms1_peaks[sample == sample_idx, ]$rtmin)
 max_rt <- max(ms1_peaks[sample == sample_idx, ]$rtmax)
 
 features.l <- list()
-feature_idx <- 1
+feature_idx <- 27
 k <- 1
 
 while( feature_idx <= nrow(ms1_features) ) {
@@ -129,23 +129,19 @@ while( feature_idx <= nrow(ms1_features) ) {
       (rtmin >= rt_range[1] & rtmax <= rt_range[2]), "full",
       ifelse(rt %between% rt_range, "apex", "partial")
     )]
-    # { ## plot peaks in range
-    #   ggplot(peaks_i, aes(rt, mz, group = peakid)) +
-    #     geom_pointrange(aes(x = rt, xmin = rtmin, xmax = rtmax, color = peakfull)) +
-    #     geom_vline(xintercept = rt_range, linetype = 2, color = "red") +
-    #     theme_bw() +
-    #     labs(
-    #       title = "MS1 peak in range",
-    #       caption = sprintf(
-    #         "
-    #         Total MS1 peaks: %i\n
-    #         Peak include in range: %i
-    #       ",
-    #         peaks_i[, .N],
-    #         peaks_i[peakfull == TRUE, .N]  )
-    #     )
-    # }
-    
+    { ## plot peaks in range
+      ggplot(peaks_i, aes(rt, mz, group = peakid)) +
+        geom_pointrange(aes(x = rt, xmin = rtmin, xmax = rtmax, color = peakfull)) +
+        geom_vline(xintercept = rt_range, linetype = 2, color = "red") +
+        theme_bw() +
+        labs(
+          title = paste0("MS1 peaks in rt range: [", round(rt_range[1],4), ',', round(rt_range[2], 4), ']'),
+          caption = sprintf(
+            "Total MS1 peaks: %i",
+            peaks_i[, .N] )
+        )
+    }
+
     # extract data
     raw_dt <- xcms::filterRt(xcms_obj, rt_range) %>%
       xcms::filterFile(., sample_idx) %>%
@@ -228,7 +224,7 @@ while( feature_idx <= nrow(ms1_features) ) {
     xic_dt_ms2[, xic_label := paste0(xic_label, "-", isolationWindowTargetMz)]
     
     ## build matrix
-    MS1MS2_L <- T #---------------------------------------------------------------param
+    MS1MS2_L <- F #---------------------------------------------------------------param
     # ms1 matrix from xcms eics
     ms1_mixeddt <- dcast(xic_dt_ms1[msLevel == 1, ], xic_label ~ scan_norm, value.var = "intensity", fun.aggregate = max, fill = 0)
     ms1_mixedmat <- ms1_mixeddt <- as.matrix(ms1_mixeddt, rownames = TRUE)
@@ -333,14 +329,14 @@ while( feature_idx <= nrow(ms1_features) ) {
       
     }
     
-    # # Plot extracted sources
+    # Plot extracted sources
     # {
-    #   plot_xics_ms1 <- ggplot(xic_dt_ms1, aes(rtime, intensity, group = peakid)) +
-    #     geom_line(aes(color = peakfull)) +
-    #     geom_point(aes(color = peakfull)) +
-    #     theme_bw() +
-    #     guides(color = "none") +
-    #     scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
+    # plot_xics_ms1 <- ggplot(xic_dt_ms1, aes(rtime, intensity, group = peakid)) +
+    #   geom_line(aes(color = peakfull)) +
+    #   geom_point(aes(color = peakfull)) +
+    #   theme_bw() +
+    #   guides(color = "none") +
+    #   scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
     # 
     #   plot_xics_ms2 <- ggplot(xic_dt_ms2, aes(rtime, intensity, group = xic_label)) +
     #     geom_line(aes(color = xic_label)) +
@@ -349,21 +345,31 @@ while( feature_idx <= nrow(ms1_features) ) {
     #     guides(color = "none") +
     #     scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
     # 
-    #   plot_spectrum <- ggplot(peaks_i, aes(mz, into, group = peakid)) +
+    #   plot_spectrum_raw <- ggplot(peaks_i, aes(mz, into, group = peakid)) +
     #     geom_linerange(aes(color = peakfull, ymin = 0, ymax = into)) +
     #     geom_linerange(data = peak_i, color = "black", aes(color = peakfull, ymin = 0, ymax = into)) +
-    #     facet_grid("1" ~ .) +
     #     theme_bw() +
     #     guides(color = "none") +
     #     scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
+    #   # plot mixed MS1 (after filtering)
+    #   ms1_mixed_spectra <- ms1_mixedmat
+    #   rownames(ms1_mixed_spectra) <- sub("-.*", "",  rownames(ms1_mixed_spectra))
+    #   rownames(ms1_mixed_spectra) <- ms1_peaks[peakid %in%  rownames(ms1_mixed_spectra), ]$mz
+    #   ms1_mixed_spectra <- reshape2::melt(ms1_mixed_spectra)
+    #   colnames(ms1_mixed_spectra) <- c('mz', 'rt', 'into')
+    #   ms1_mixed_spectra <- ms1_mixed_spectra[ms1_mixed_spectra$into > 0, ]
+    #   plot_spectrum <- ggplot() +
+    #     geom_linerange(data = ms1_mixed_spectra, aes(x = mz, ymin = 0, ymax = into)) +
+    #     theme_bw(base_size = 14)
     # 
     #   p1 <- ggpubr::ggarrange(
     #     ggpubr::ggarrange(
     #       plot_xics_ms1,
     #       plot_xics_ms2,
+    #       plot_spectrum_raw,
     #       plot_spectrum,
     #       align = "hv",
-    #       ncol = 3
+    #       ncol = 4
     #     ),
     #     ggpubr::ggarrange(
     #       ggplot(pure_rt_ms1, aes(scan_norm, value, group = as.factor(rank))) +
@@ -386,9 +392,9 @@ while( feature_idx <= nrow(ms1_features) ) {
     #     heights = c(1, 2)
     #   )
     #   # p1
-    #   ggplot2::ggsave(paste0('~/DIA_NMF_R_package/Results3/', k, '_sources.png'), p1, w=10, h = 10, dpi = 300)
+    #   # ggplot2::ggsave(paste0('~/DIA_NMF_R_package/Results3/', k, '_sources.png'), p1, w=10, h = 10, dpi = 300)
     # }
-    
+
     ## quantifying every xcms peak by its pure spectra and delete noisy sources
     peaks_xcms <- peaks_i  
     peaks_xcms$peakid <- paste0(peaks_xcms$peakid, "-1")
@@ -414,6 +420,9 @@ while( feature_idx <= nrow(ms1_features) ) {
     )
     contribution_matrix <- as.matrix(contribution_matrix, rownames = TRUE)
     contribution_matrix <- t(contribution_matrix)
+    
+    # find sources who have max contribution higher than 0.6
+    good_sources <- which( unname(apply(contribution_matrix, 2, max)) >=0.6 )
     
     ### find where every peak contribute the most
     peaks_sources_df <- data.frame(
@@ -455,8 +464,15 @@ while( feature_idx <= nrow(ms1_features) ) {
                                      msLevel = 1L)
     peaks <- chromPeaks(detected_peaks)
     peaks <- as.data.frame(peaks)
+    peaks <- peaks %>%  # filter sources of more than 2 peaks, and of negative sn
+      group_by(row) %>%  
+      filter(n() <= 2 & all(sn >= 0)) %>%
+      ungroup()
     peaks <- setDT(peaks)
-    peaks <- peaks[ abs(rt - rt_range[1]) >= 3 & abs(rt - rt_range[2]) >= 3, ]
+    peaks <- peaks[ abs(rt - rt_range[1]) >= 3 & abs(rt - rt_range[2]) >= 3, ] # filter peaks of rt very close to one edge of rt_range
+    
+    # filter peaks, which doesn't contains peaks of high contribution (lower 0.6)
+    peaks <- peaks[ row %in% good_sources, ]
     
     # filter peaks 
     if( nrow(peaks) > 0 ){
@@ -486,28 +502,6 @@ while( feature_idx <= nrow(ms1_features) ) {
         pure_rt_ms2 <- pure_rt_ms2[ pure_rt_ms2$rank %in% good_sources, ]
         
         # {
-        #   plot_xics_ms1 <- ggplot(xic_dt_ms1, aes(rtime, intensity, group = peakid)) +
-        #     geom_line(aes(color = peakfull)) +
-        #     geom_point(aes(color = peakfull)) +
-        #     theme_bw() +
-        #     guides(color = "none") +
-        #     scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
-        # 
-        #   plot_xics_ms2 <- ggplot(xic_dt_ms2, aes(rtime, intensity, group = xic_label)) +
-        #     geom_line(aes(color = xic_label)) +
-        #     geom_point(aes(color = xic_label)) +
-        #     theme_bw() +
-        #     guides(color = "none") +
-        #     scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
-        # 
-        #   plot_spectrum <- ggplot(peaks_i, aes(mz, into, group = peakid)) +
-        #     geom_linerange(aes(color = peakfull, ymin = 0, ymax = into)) +
-        #     geom_linerange(data = peak_i, color = "black", aes(color = peakfull, ymin = 0, ymax = into)) +
-        #     facet_grid("1" ~ .) +
-        #     theme_bw() +
-        #     guides(color = "none") +
-        #     scale_y_continuous(labels = function(x) format(x, scientific = TRUE))
-        # 
         #   p2 <- ggpubr::ggarrange(
         #     ggpubr::ggarrange(
         #       plot_xics_ms1,
@@ -537,7 +531,7 @@ while( feature_idx <= nrow(ms1_features) ) {
         #     heights = c(1, 2)
         #   )
         #   # p2
-        #   ggsave(paste0('~/DIA_NMF_R_package/Results3/', k, '_selected_sources.png'), p2, w=10, h = 10, dpi = 300)
+        #   # ggsave(paste0('~/DIA_NMF_R_package/Results3/', k, '_selected_sources.png'), p2, w=10, h = 10, dpi = 300)
         # }
 
         feature_sub.l <- list(
@@ -550,7 +544,10 @@ while( feature_idx <= nrow(ms1_features) ) {
           'ms2_pure_spectra' = pure_mz_ms2,
           'MS1_pure_elution_profiles' = pure_rt_ms1,   
           'MS2_pure_elution_profiles' = pure_rt_ms1,
-          'xcms_assigned_sources' = info_new )
+          'xcms_assigned_sources' = info_new,
+          'ms1_info' = list('ms1_infos' = ms1_infos, 'xic_dt_ms1' = xic_dt_ms1),
+          'ms2_info' = list('ms2_infos' = ms2_infos, 'xic_dt_ms2' = xic_dt_ms2)  
+          )
         
         features.l[[k]] <- feature_sub.l
         
@@ -590,8 +587,9 @@ while( feature_idx <= nrow(ms1_features) ) {
     ms1_features[sapply(peakidx, function(p) any(unlist(p) %in% peaks_removed)), 
                  iteration := ifelse(is.na(iteration), as.character(k), paste0(iteration, ",", k))]
     
-    
-    k <- k + 1
+    if( nrow(peaks) > 0 & exists("info_new") & nrow(info_new) > 0 ){
+      k <- k + 1
+    }
     
   } else {
     ms1_features[feature_idx, iteration := 0] 
@@ -607,6 +605,9 @@ while( feature_idx <= nrow(ms1_features) ) {
 # saveRDS(ms1_features, "~/DIA_NMF_R_package/Results3/ms1_features.rds")
 # saveRDS(features.l, "~/DIA_NMF_R_package/Results3/features_list.rds")
 
+# saveRDS(pure_mz_ms1, "~/DIA_NMF_R_package/pure_mz_ms1.rds")
+
+
 # library(dplyr)
 # ms1_peaks <- ms1_peaks %>%
 #   mutate(iteration = sub(",.*", "", iteration))  # Keep only the first value before the comma
@@ -614,4 +615,3 @@ while( feature_idx <= nrow(ms1_features) ) {
 #   geom_pointrange(aes(x = rt, xmin = rtmin, xmax = rtmax, color = iteration)) +
 #   theme_bw()+
 #   guides(color = "none")
-

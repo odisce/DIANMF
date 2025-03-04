@@ -12,7 +12,9 @@ nGMCAs(
   toleranceFB = 1e-05,
   initialization_method = c("nndsvd", "random", "subSample"),
   H_sub = NULL,
-  errors_print = FALSE
+  errors_print = FALSE,
+  scaleL = FALSE,
+  method
 )
 }
 \arguments{
@@ -31,6 +33,10 @@ nGMCAs(
 \item{H_sub}{\code{matrix} of elution profiles used with subSample initialization method.}
 
 \item{errors_print}{\code{Logical} \code{TRUE} to print the error difference, \code{FALSE} otherwise.}
+
+\item{scaleL}{Logical to scale the data (row-wise) before applying NMF.}
+
+\item{method}{Method to compute svd: "base", "fast" or "svds"}
 }
 \value{
 \code{list} of 2 matrices A and S.

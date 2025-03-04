@@ -4,7 +4,15 @@
 \alias{updateS.f}
 \title{Update S.}
 \usage{
-updateS.f(Y, A, S_init, lambda, maxFBIteration, toleranceFB)
+updateS.f(
+  Y,
+  A,
+  S_init,
+  lambda,
+  maxFBIteration,
+  toleranceFB,
+  method = c("base", "fast")[2]
+)
 }
 \arguments{
 \item{Y}{\code{matrix}}
@@ -18,6 +26,8 @@ updateS.f(Y, A, S_init, lambda, maxFBIteration, toleranceFB)
 \item{maxFBIteration}{\code{numeric(1)} maximum number of iterations in the FB algorithm.}
 
 \item{toleranceFB}{\code{numeric(1)} tolerance or stopping value of the FB algorithm.}
+
+\item{method}{Method to compute svd: "base", "fast" or "svds"}
 }
 \value{
 \code{matrix} S of updated spectra.
