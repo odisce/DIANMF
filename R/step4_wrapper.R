@@ -1,15 +1,44 @@
 # wrapper function
 
-DIANMF_f <- function(input_files, d.out, 
-                     sample_idx, 
-                     temp_saveL = T, MS2_ISOEACHL = T, MS1MS2_L = T,
-                     min_distance = 5 ){
+DIANMF_f <- function(input_dir, d.out, 
+                     sample_idx = 1, 
+                     temp_saveL = T, MS2_ISOEACHL = T, MS1MS2_L = F,
+                     scan_rt_ext = 10, min_distance = 5 ){
   
-  mzml_dt <- prepare_mzMLfiles(input_dir = input_files)
+  mzml_dt <- prepare_mzMLfiles(input_dir)
   # xcms parameters should be here
-  
-  
-  
+  params_ls <- list(  
+    "CentWaveParam" = CentWaveParam(
+      ppm = 6,
+      peakwidth = c(6, 30),
+      snthresh = 0,
+      prefilter = c(5, 4000),
+      mzCenterFun = "wMeanApex3",
+      integrate = 2,
+      mzdiff = -0.001,
+      noise = 2000,
+      firstBaselineCheck = FALSE
+    ),
+    "MergeNeighboringPeaksParam" = MergeNeighboringPeaksParam(
+      expandRt = 2,
+      expandMz = 0.001,
+      ppm = 5,
+      minProp = 0.75
+    ),
+    "ObiwarpParam" = ObiwarpParam(
+      binSize = 0.05
+    ),
+    "PeakDensityParam" = PeakDensityParam(
+      sampleGroups = NA,
+      bw = 15,
+      minFraction = 0.1,
+      minSamples = 2,
+      binSize = 0.008,
+      ppm = 7,
+      maxFeatures = 500
+    ),
+    "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
+  )
   
   xcms_obj <- detect_LCfeatures(temp_saveL)
   ms1_peaks <- extract_xcms_peaks(xcms_obj)
@@ -46,9 +75,11 @@ DIANMF_f <- function(input_files, d.out,
         ifelse(rt %between% rt_range, "apex", "partial")
       )]
       
-      raw_dt <- extract_rawData(msexp = xcms_obj, rt_range)
+      res_general <- get_rawD_ntime(msexp = xcms_obj, rt_range)
+      raw_dt <- res_general$raw_dt
+      time_dic <- res_general$time_dic
       xic_dt_ms1 <- build_ms1XICS(peaks_i)
-      xic_dt_ms2 <- build_ms2XICs(MS2_ISOEACHL = T, msexp = xcms_obj)
+      xic_dt_ms2 <- build_ms2XICs(MS2_ISOEACHL = T, msexp = xcms_obj, time_dic)
       
       ## Generate data and matrices
       ### ms1
@@ -88,10 +119,10 @@ DIANMF_f <- function(input_files, d.out,
           method = "svsd"
         )
         
-        pure_rt_ms1 <- melt(ngmcas_res_ms1$A) %>% as.data.table()
+        pure_rt_ms1 <- reshape2::melt(ngmcas_res_ms1$A) %>% as.data.table()
         setnames(pure_rt_ms1, c("rank", "scan_norm", "value"))
         S <- ngmcas_res_ms1$S
-        pure_mz_ms1 <- melt(S) %>% as.data.table()
+        pure_mz_ms1 <- reshape2::melt(S) %>% as.data.table()
         setnames(pure_mz_ms1, c("xic_label", "rank", "value"))
         pure_mz_ms1 <- merge(ms1_infos, pure_mz_ms1, by = "xic_label")
         
@@ -111,9 +142,9 @@ DIANMF_f <- function(input_files, d.out,
         )
         
         S_ms2 <- ngmcas_res_ms2$S
-        pure_rt_ms2 <- melt(ngmcas_res_ms2$A) %>% as.data.table()
+        pure_rt_ms2 <- reshape2::melt(ngmcas_res_ms2$A) %>% as.data.table()
         setnames(pure_rt_ms2, c("rank", "scan_norm", "value"))
-        pure_mz_ms2 <- melt(S_ms2) %>% as.data.table()
+        pure_mz_ms2 <- reshape2::melt(S_ms2) %>% as.data.table()
         setnames(pure_mz_ms2, c("xic_label", "rank", "value"))
         pure_mz_ms2 <- merge(ms2_infos, pure_mz_ms2, by = "xic_label", allow.cartesian=TRUE)
         
@@ -134,17 +165,17 @@ DIANMF_f <- function(input_files, d.out,
         
         #### extract the MS1 data
         S_ms1 <- ngmcas_res$S[1:dim(ms1_mixedmat)[1], ]
-        pure_rt_ms1 <- melt(ngmcas_res$A) %>% as.data.table()
+        pure_rt_ms1 <- reshape2::melt(ngmcas_res$A) %>% as.data.table()
         setnames(pure_rt_ms1, c("rank", "scan_norm", "value"))
-        pure_mz_ms1 <- melt(S_ms1) %>% as.data.table()
+        pure_mz_ms1 <- reshape2::melt(S_ms1) %>% as.data.table()
         setnames(pure_mz_ms1, c("xic_label", "rank", "value"))
         pure_mz_ms1 <- merge(ms1_infos, pure_mz_ms1, by = "xic_label")
         
         #### extract the MS2 data
         S_ms2 <- ngmcas_res$S[(dim(ms1_mixedmat)[1]+1):( (dim(ms1_mixedmat)[1]) + dim(ms2_mixedmat)[1]), ]
-        pure_rt_ms2 <- melt(ngmcas_res$A) %>% as.data.table()
+        pure_rt_ms2 <- reshape2::melt(ngmcas_res$A) %>% as.data.table()
         setnames(pure_rt_ms2, c("rank", "scan_norm", "value"))
-        pure_mz_ms2 <- melt(S_ms2) %>% as.data.table()
+        pure_mz_ms2 <- reshape2::melt(S_ms2) %>% as.data.table()
         setnames(pure_mz_ms2, c("xic_label", "rank", "value"))
         pure_mz_ms2 <- merge(ms2_infos, pure_mz_ms2, by = "xic_label", allow.cartesian=TRUE)
         
@@ -164,7 +195,7 @@ DIANMF_f <- function(input_files, d.out,
         group_by(xic_label) %>%
         mutate(contribution = value / sum(value)) %>%
         mutate(contribution = replace(contribution, is.nan(contribution), 0)) %>%
-        ungroup()
+        dplyr::ungroup()
       
       setDT(merge_data)
       contribution_matrix <- dcast(
@@ -196,10 +227,10 @@ DIANMF_f <- function(input_files, d.out,
       chroms <- lapply(1:rank, function(eic){
         ints <- pure_rt_ms1[rank == eic, ]$value
         rt <- real_rt
-        ch <- Chromatogram(rtime = rt, ints)
+        ch <- MSnbase::Chromatogram(rtime = rt, ints)
       })
       
-      chrs <- MChromatograms(chroms, nrow = rank)
+      chrs <- MSnbase::MChromatograms(chroms, nrow = rank)
       detected_peaks <- xcms::findChromPeaks(object = chrs,
                                              param =  CentWaveParam(
                                                ppm = 0,

@@ -1,3 +1,5 @@
+# Step1: load mzML files, detect and align features and peaks by xcms
+
 #' Prepare mzML files
 #'
 #' @param input_dir `character` mzML files directory path.
@@ -6,7 +8,7 @@
 #' @export
 #' 
 #' @import data.table 
-#' @import importFrom file_path_sans_ext
+#' @importFrom tools file_path_sans_ext
 prepare_mzMLfiles <- function(input_dir){
   input_files <- list.files(input_dir, pattern = ".mzml", full.names = TRUE, ignore.case = TRUE)
   mzml_dt <- data.table(
@@ -39,7 +41,7 @@ create_seq <- function(mzML_path) {
   )
 }
 
-#' Detect MS1 peaks using XCMS.
+#' Detect MS1 peaks using XCMS
 #'
 #' @param sequence_table A data.frame with at least [mzml_path, class, InjectionOrder].
 #' @param params A list to set the parameters from xcms pipeline steps.
@@ -89,7 +91,7 @@ detect_xcms_peaks <- function(
   return(output)
 }
 
-#' Extract MS1 peaks using XCMS.
+#' Extract MS1 peaks
 #'
 #' @param msexp `MsExperiment` object obtained from xcms or with `DIANMF::detect_xcms_peaks()`.
 #' @param sample_nb Index of the sample to extract peaks from.

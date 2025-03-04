@@ -1,4 +1,26 @@
-# Step2: extract MS1 and MS2 info
+# Step2: extract MS1 and MS2 info and matrices
+
+#' Create a mz range.
+#'
+#' @param ref `numeric` mz of the peak.
+#' @inheritParams extract_ms_matrix.f
+#'
+#' @return `numeric` mz range of a specific mz value.
+PpmRange <-  function(ref, ppm.n) {
+  dev <- ppm.n * 1e-6
+  ref + (c(-1, 1) * ref * dev)
+}
+
+#' Check if the vector has at least 4 consecutive non-zero values.
+#'
+#' @param row vector of `numeric` to evaluate.
+#'
+#' @return `Logical` `TRUE` if the vector contains at least 4  consecutive non-zero values, `FALSE` otherwise.
+has_four_consecutive_non_zero <- function(row) {
+  # Find consecutive non-zero values
+  non_zero_streaks <- rle(row != 0)
+  any(non_zero_streaks$lengths[non_zero_streaks$values] >= 4)
+}
 
 #' Extract MS1 raw data
 #'
@@ -10,11 +32,12 @@
 #' 
 #' @importFrom xcms filterRt filterFile
 #' @import magrittr data.table
-extract_rawData <- function(msexp , rt_range){
+get_rawD_ntime <- function(msexp, rt_range){
   
   raw_dt <- xcms::filterRt(msexp, rt_range) %>%
     xcms::filterFile(., sample_idx) %>%
     get_spectra_values()
+  
   ## Normalize time
   time_dic <- raw_dt[, .(rtime, msLevel, isolationWindowTargetMz)] %>% unique()
   time_dic_ms1 <- time_dic[order(rtime), ][msLevel == 1, ]
@@ -25,14 +48,17 @@ extract_rawData <- function(msexp , rt_range){
   }, by = .(scan_norm)]
   time_dic <- ms2_rtime[scan_norm %between% (range(scan_norm) + c(+1, -1)), ]
   time_dic[order(rtime), scan_norm := seq_len(.N), by = .(msLevel, isolationWindowTargetMz)]
+  
   raw_dt <- merge(
     raw_dt,
     time_dic,
     by = c("rtime", "msLevel", "isolationWindowTargetMz"),
-    allow.cartesian = T
-  )
+    allow.cartesian = T  
+    )
   
-  return(raw_dt)
+  return(list(
+    'raw_dt' = raw_dt,
+    'time_dic' = time_dic  ))
 }
 
 #' Build MS1 xics from peak list
@@ -66,7 +92,7 @@ build_ms1XICS <- function(peaks_i){
 #' @importFrom xcms filterFile filterRt filterMsLevel spectra isolationWindowTargetMz  
 #' @importFrom Spectra filterIsolationWindow combineSpectra asDataFrame
 #' @importFrom data.table as.data.table rbindlist
-build_ms2XICs <- function(MS2_ISOEACHL = T, msexp){
+build_ms2XICs <- function(MS2_ISOEACHL = T, msexp, time_dic){
   
   # build MS2 xics from raw data
   if (MS2_ISOEACHL) {
