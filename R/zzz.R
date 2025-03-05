@@ -3,7 +3,8 @@ utils::globalVariables(c(
    "contribution", "peakid", "sn", "peakidx", "mzml_dt", "ms1_peaks",
    "ms1_features", "mzmin", "mzmax", "raw_dt", "scan_norm", "N",
    "rt_range", "IsoWin", "sample_idx", "median", "mz_value", 
-   "InjectionOrder", "creation_date", "rt", "head", "rowMax"
+   "InjectionOrder", "creation_date", "rt", "head", "rowMax",
+   "into"
   
 ))
 

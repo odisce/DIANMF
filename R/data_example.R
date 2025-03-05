@@ -2,7 +2,7 @@
 #'
 #' @name data_example
 #' @docType data
-#' @author Diana Karaki \email{zkaraki.diana@gmail.com}
+#' @author Diana Karaki \email{diana.karaki@cea.fr}
 #' @keywords data
 NULL
 

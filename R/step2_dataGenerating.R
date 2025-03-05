@@ -1,17 +1,18 @@
 # Step2: extract MS1 and MS2 info and matrices
 
-#' Create a mz range.
+#' Create a mz range
 #'
 #' @param ref `numeric` mz of the peak.
 #' @param ppm.n `numeric` defining the m/z tolerated deviation in parts per million (ppm).
 #'
-#' @return `numeric` mz range of a specific mz value.
+#' @return `numeric` mz range.
 PpmRange <-  function(ref, ppm.n) {
   dev <- ppm.n * 1e-6
   ref + (c(-1, 1) * ref * dev)
 }
 
-#' Check if the vector has at least 4 consecutive non-zero values.
+
+#' Check if the vector has at least 4 consecutive non-zero values
 #'
 #' @param row vector of `numeric` to evaluate.
 #'
@@ -22,17 +23,19 @@ has_four_consecutive_non_zero <- function(row) {
   any(non_zero_streaks$lengths[non_zero_streaks$values] >= 4)
 }
 
+
 #' Extract MS1 raw data
 #'
 #' @inheritParams extract_xcms_peaks
 #' @param rt_range retention time range.
+#' @param sample_idx `numeric` sample index.
 #'
-#' @return `data.table` `data.frame`.
+#' @return `list` of `data.table` `data.frame` objects: raw_dt and time_dic.
 #' @export
 #' 
 #' @importFrom xcms filterRt filterFile
 #' @import magrittr data.table
-get_rawD_ntime <- function(msexp, rt_range){
+get_rawD_ntime <- function(msexp, rt_range, sample_idx){
   
   raw_dt <- xcms::filterRt(msexp, rt_range) %>%
     xcms::filterFile(., sample_idx) %>%
@@ -61,15 +64,17 @@ get_rawD_ntime <- function(msexp, rt_range){
     'time_dic' = time_dic  ))
 }
 
+
 #' Build MS1 xics from peak list
 #'
 #' @param peaks_i `data.table` `data.frame` targeted peaks in one rt_range.
+#' @param raw_dt `data.frame` from `DIANMF::get_rawD_ntime`.
 #'
-#' @return `data.table` `data.frame`.
+#' @return `data.table` `data.frame` MS1 EICs.
 #' @export
 #' 
 #' @import data.table 
-build_ms1XICS <- function(peaks_i){
+build_ms1XICS <- function(peaks_i, raw_dt){
   
   xic_dt_ms1 <- peaks_i[, {
     mzrange <- c(mzmin, mzmax)
@@ -84,16 +89,18 @@ build_ms1XICS <- function(peaks_i){
 #' Build MS2 xics
 #'
 #' @inheritParams extract_xcms_peaks
+#' @inheritParams build_ms1XICS
+#' @param time_dic `data.frame` from `DIANMF::get_rawD_ntime`.
+#' @inheritParams get_rawD_ntime
 #' @param MS2_ISOEACHL `logical` is TRUE to build the MS2 xics from raw data, else from xcms peaks. 
-#' @param time_dic `data.frame`
 #'
-#' @return `data.table` `data.frame`.
+#' @return `data.table` `data.frame` MS2 EICs.
 #' @export
 #'
 #' @importFrom xcms filterFile filterRt filterMsLevel spectra isolationWindowTargetMz  
 #' @importFrom Spectra filterIsolationWindow combineSpectra asDataFrame
 #' @importFrom data.table as.data.table rbindlist
-build_ms2XICs <- function(MS2_ISOEACHL = T, msexp, time_dic){
+build_ms2XICs <- function(msexp, raw_dt, time_dic, rt_range, MS2_ISOEACHL = T){
   
   # build MS2 xics from raw data
   if (MS2_ISOEACHL) {
@@ -149,15 +156,18 @@ build_ms2XICs <- function(MS2_ISOEACHL = T, msexp, time_dic){
   return(xic_dt_ms2)
 }
 
+
 #' Generate MS1 data and info
 #' 
 #' @param xic_dt_ms1 `data.table` `data.frame` object obtained from xcms or with `DIANMF::build_ms1XICs()`.
 #'
-#' @return `list`
+#' @return `list` of extracted MS1 data (MS1 matrix, deleted matrix, MS1 info).
 #' @export
 ms1Info <- function(xic_dt_ms1){
   ms1_mixeddt <- dcast(xic_dt_ms1[msLevel == 1, ], xic_label ~ scan_norm, value.var = "intensity", fun.aggregate = max, fill = 0)
-  ms1_mixedmat <- ms1_mixeddt <- as.matrix(ms1_mixeddt, rownames = TRUE)
+  row_names <- ms1_mixeddt[, 1]
+  ms1_mixedmat <- ms1_mixeddt <- as.matrix(ms1_mixeddt[, -1])
+  rownames(ms1_mixedmat) <- rownames(ms1_mixeddt) <- row_names
   row_filter_ms1 <- apply(ms1_mixedmat, 1, has_four_consecutive_non_zero)
   ms1_mixedmat <- ms1_mixedmat[row_filter_ms1, , drop = FALSE]
   
@@ -173,15 +183,19 @@ ms1Info <- function(xic_dt_ms1){
     'ms1_infos' = ms1_infos))
 }
 
+
 #' Generate MS2 data and info
 #'
 #' @param xic_dt_ms2  `data.table` `data.frame` object obtained from xcms or with `DIANMF::build_ms2XICs()`.
 #'
-#' @return `list`
+#' @return `list` of extracted MS2 data (MS2 matrix, MS2 info).
 #' @export 
 ms2Info <- function(xic_dt_ms2){
   ms2_mixeddt <- dcast(xic_dt_ms2, xic_label ~ scan_norm, value.var = "intensity", fun.aggregate = max, fill = 0)
-  ms2_mixedmat <- as.matrix(ms2_mixeddt, rownames = TRUE)
+  row_names <- ms2_mixeddt[, 1]
+  ms2_mixedmat <- as.matrix(ms2_mixeddt[, -1])
+  rownames(ms2_mixedmat) <- row_names
+  # ms2_mixedmat <- as.matrix(ms2_mixeddt, rownames = TRUE)
   row_filter_ms2 <- apply(ms2_mixedmat, 1, has_four_consecutive_non_zero)
   ms2_mixedmat <- ms2_mixedmat[row_filter_ms2, , drop = FALSE]
   ms2_infos <- xic_dt_ms2[, .(mz = median(mz)), by = .(xic_label, msLevel, isolationWindowTargetMz, isolationWindowLowerMz, isolationWindowUpperMz)]

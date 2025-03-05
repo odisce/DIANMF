@@ -1,10 +1,10 @@
 # Step1: load mzML files, detect and align features and peaks by xcms
 
-#' Prepare mzML files
+#' Load and prepare mzML files
 #'
 #' @param input_dir `character` mzML files directory path.
 #'
-#' @return `data.table` `data.frame`.
+#' @return `data.table` `data.frame` contains mzML files information.
 #' @export
 #' 
 #' @import data.table 
@@ -41,13 +41,15 @@ create_seq <- function(mzML_path) {
   )
 }
 
+
 #' Detect MS1 peaks using XCMS
 #'
-#' @param sequence_table A data.frame with at least [mzml_path, class, InjectionOrder].
+#' @param sequence_table A data.frame with at least (mzml_path, class, InjectionOrder).
 #' @param params A list to set the parameters from xcms pipeline steps.
-#'               List names should be xcms parameters methods (ex: `list("CentWaveParam" = CentWaveParam()`)
-#' @param rt_range (Optional) rt range to subset before running peak detection
-#' @return MsExperiment objects
+#'               List names should be xcms parameters methods (ex: `list("CentWaveParam" = CentWaveParam()`).
+#' @param rt_range (Optional) retention time range to subset before running peak detection.
+#'
+#' @return `MsExperiment` objects.
 #' 
 #' @export
 #' 
@@ -91,11 +93,10 @@ detect_xcms_peaks <- function(
   return(output)
 }
 
+
 #' Extract MS1 peaks
 #'
 #' @param msexp `MsExperiment` object obtained from xcms or with `DIANMF::detect_xcms_peaks()`.
-#' @param sample_nb Index of the sample to extract peaks from.
-#' @param orderL Logical to order the peaks by decreasing intensities (into).
 #'
 #' @return MS1 peaks `matrix`.
 #' 
@@ -112,12 +113,12 @@ extract_xcms_peaks <- function(msexp) {
 
 #' Detect LC features
 #'
-#' @param temp_saveL `character` directory path to save the features.
-#' @param params_ls `list` of xcms parameters
+#' @inheritParams detect_xcms_peaks
+#' @param temp_saveL `character` directory path to save the `MsExperiment` object.
 #'
-#' @return "XcmsExperiment" xcms".
+#' @return `XcmsExperiment` `xcms` object.
 #' @export
-detect_LCfeatures <- function(temp_saveL = T, params_ls){
+detect_LCfeatures <- function(params, temp_saveL = T){
   
   if (temp_saveL) {
     save_path <- "./temp2/data/"
@@ -128,7 +129,7 @@ detect_LCfeatures <- function(temp_saveL = T, params_ls){
     } else {
       xcms_obj <- detect_xcms_peaks(
         sequence_table = mzml_dt,
-        params = params_ls
+        params
       )
       saveRDS(xcms_obj, file = xcms_obj_path)
     }
@@ -137,13 +138,14 @@ detect_LCfeatures <- function(temp_saveL = T, params_ls){
   return(xcms_obj)
 }
 
+
 #' Extract MS1 features
 #'
 #' @inheritParams extract_xcms_peaks
-#' @param orderL `logical`
-#' @param orderL_sample `character` sample name
+#' @param orderL `logical` TRUE to order the features by intensity order of orderL_sample.
+#' @param orderL_sample `character` sample name.
 #'
-#' @return `data.table` `data.frame`.
+#' @return `data.table` `data.frame` object.
 #' @export
 #'
 #' @importFrom xcms featureDefinitions quantify
@@ -170,3 +172,4 @@ extract_xcms_features <- function(msexp, orderL = F, orderL_sample = NULL) {
   
   return(res)
 }
+

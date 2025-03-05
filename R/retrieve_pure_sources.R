@@ -9,7 +9,7 @@
 #' @export
 #' 
 #' @importFrom reshape2 melt
-prepare_mixed_data <- function(ms_mixed = mat1, mz_values = as.numeric(rownames(ms1_mat)), rts = as.numeric(colnames(ms1_mat)) ){
+prepare_mixed_data <- function(ms_mixed, mz_values, rts ){
   
   rownames(ms_mixed) <- make.unique(as.character(mz_values))
   colnames(ms_mixed) <- rts
