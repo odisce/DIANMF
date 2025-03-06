@@ -19,7 +19,7 @@ get_test_mzml <- function() {
 
 #' Load test data
 #'
-#' @return MsExperiment objects
+#' @return `MsExperiment` objects
 #' @import MsExperiment
 #'
 #' @export
@@ -29,7 +29,7 @@ get_test_data <- function() {
 
 #' Load test sequence
 #'
-#' @return MsExperiment objects
+#' @return `MsExperiment` objects
 #' @import data.table
 #'
 #' @export
@@ -41,9 +41,9 @@ get_test_sequence <- function() {
   )
 }
 
-#' Perform peakpicking on test data
+#' Perform peak picking on test data
 #'
-#' @return MsExperiment objects
+#' @return `MsExperiment` objects
 #' @import data.table xcms
 #'
 #' @export
