@@ -60,3 +60,37 @@ get_test_peaks <- function() {
       )
   )
 }
+
+
+# params_ls <- list(
+#   "CentWaveParam" = CentWaveParam(
+#     ppm = 6,
+#     peakwidth = c(6, 30),
+#     snthresh = 0,
+#     prefilter = c(5, 4000),
+#     mzCenterFun = "wMeanApex3",
+#     integrate = 2,
+#     mzdiff = -0.0003,
+#     noise = 2000,
+#     firstBaselineCheck = FALSE
+#   ),
+#   "MergeNeighboringPeaksParam" = MergeNeighboringPeaksParam(
+#     expandRt = 2,
+#     expandMz = 0,
+#     ppm = 1,
+#     minProp = 0.75
+#   ),
+#   "ObiwarpParam" = ObiwarpParam(
+#     binSize = 0.05
+#   ),
+#   "PeakDensityParam" = PeakDensityParam(
+#     sampleGroups = NA,
+#     bw = 15,
+#     minFraction = 0,
+#     minSamples = 1,
+#     binSize = 0.005,
+#     ppm = 5,
+#     maxFeatures = 500
+#   ),
+#   "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
+# )
