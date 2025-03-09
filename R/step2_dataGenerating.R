@@ -35,6 +35,7 @@ has_four_consecutive_non_zero <- function(row) {
 #' 
 #' @importFrom xcms filterRt filterFile
 #' @import magrittr data.table
+#' @import dplyr
 get_rawD_ntime <- function(msexp, rt_range, sample_idx){
   
   raw_dt <- xcms::filterRt(msexp, rt_range) %>%
@@ -74,6 +75,7 @@ get_rawD_ntime <- function(msexp, rt_range, sample_idx){
 #' @export
 #' 
 #' @import data.table 
+#' @importFrom dplyr between
 build_ms1XICS <- function(peaks_i, raw_dt){
   
   xic_dt_ms1 <- peaks_i[, {
@@ -167,7 +169,7 @@ ms1Info <- function(xic_dt_ms1){
   ms1_mixeddt <- dcast(xic_dt_ms1[msLevel == 1, ], xic_label ~ scan_norm, value.var = "intensity", fun.aggregate = max, fill = 0)
   row_names <- ms1_mixeddt[, 1]
   ms1_mixedmat <- ms1_mixeddt <- as.matrix(ms1_mixeddt[, -1])
-  rownames(ms1_mixedmat) <- rownames(ms1_mixeddt) <- row_names
+  rownames(ms1_mixedmat) <- rownames(ms1_mixeddt) <- t(row_names)
   row_filter_ms1 <- apply(ms1_mixedmat, 1, has_four_consecutive_non_zero)
   ms1_mixedmat <- ms1_mixedmat[row_filter_ms1, , drop = FALSE]
   
@@ -194,7 +196,7 @@ ms2Info <- function(xic_dt_ms2){
   ms2_mixeddt <- dcast(xic_dt_ms2, xic_label ~ scan_norm, value.var = "intensity", fun.aggregate = max, fill = 0)
   row_names <- ms2_mixeddt[, 1]
   ms2_mixedmat <- as.matrix(ms2_mixeddt[, -1])
-  rownames(ms2_mixedmat) <- row_names
+  rownames(ms2_mixedmat) <- t(row_names)
   # ms2_mixedmat <- as.matrix(ms2_mixeddt, rownames = TRUE)
   row_filter_ms2 <- apply(ms2_mixedmat, 1, has_four_consecutive_non_zero)
   ms2_mixedmat <- ms2_mixedmat[row_filter_ms2, , drop = FALSE]

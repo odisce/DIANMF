@@ -111,36 +111,6 @@ extract_xcms_peaks <- function(msexp) {
 }
 
 
-#' Detect LC features
-#'
-#' @param mzml_dt `data.table` created in` DIANMF::prepare_mzMLfiles`
-#' @param temp_saveL `logical`
-#' @inheritParams detect_xcms_peaks
-#'
-#' @return `XcmsExperiment` `xcms` object.
-#' @export
-detect_LCfeatures <- function(mzml_dt, params, temp_saveL = T, rt_range){
-  
-  if (temp_saveL) {
-    save_path <- "./temp/data/"
-    dir.create(save_path, recursive = TRUE)
-    xcms_obj_path <- file.path(save_path, "xcms_obj.rds")
-    if (file.exists(xcms_obj_path)) {
-      xcms_obj <- readRDS(xcms_obj_path)
-    } else {
-      xcms_obj <- detect_xcms_peaks(
-        sequence_table = mzml_dt,
-        params,
-        rt_range
-      )
-      saveRDS(xcms_obj, file = xcms_obj_path)
-    }
-  }
-  
-  return(xcms_obj)
-}
-
-
 #' Extract MS1 features
 #'
 #' @inheritParams extract_xcms_peaks

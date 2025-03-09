@@ -1,26 +1,27 @@
 #' Process xcms object
 #'
 #' @inheritParams extract_xcms_peaks
-#' @param d.out `character` outputs directory path
+#' @param d.out `logical` TRUE to save results, else FALSE
 #' @param sample_idx NULL to process all files else, `numeric` index of the sample.
 #' @param MS2_ISOEACHL `logical`
 #' @param MS1MS2_L `logical`
 #' @inheritParams nGMCAs
 #' @param scan_rt_ext `numeric`
 #' @param min_distance `numeric`
-#' @inheritParams detect_LCfeatures
 #'
 #' @return `list`
 #' @export
 #' 
-#' @import xcms
-#' @import MSnbase
-#' @import reshape2
-#' @import data.table
+#' @importFrom xcms findChromPeaks chromPeaks
+#' @importFrom MSnbase MChromatograms Chromatogram
+#' @importFrom reshape2 melt
+#' @importFrom data.table setnames setDT
 #' @import magrittr
 #' @import dplyr
+#' @importFrom MsExperiment sampleData
+#' @importFrom tools file_path_sans_ext
 DIANM.f <- function(msexp,
-                    d.out,
+                    d.out = FALSE,
                     sample_idx = 1, 
                     MS2_ISOEACHL = T, MS1MS2_L = F,
                     rank = 10,
@@ -30,16 +31,19 @@ DIANM.f <- function(msexp,
                     initialization_method = "nndsvd",
                     errors_print = FALSE,
                     method = "svsd",
-                    scan_rt_ext = 10, min_distance = 5,
-                    params){
+                    scan_rt_ext = 10, min_distance = 5 ){
   
+  ms1_peaks <- extract_xcms_peaks(msexp)
+  ms1_features <- extract_xcms_features(msexp)
+  
+  file_info <- MsExperiment::sampleData(msexp)
   
   if( is.null(sample_idx) ){
-    sample_idx <- mzml_dt$InjectionOrder
+    sample_idx <- file_info$InjectionOrder
   } else{
-    sample_idx <- sample_idx
+    sample_idx <- file_info$InjectionOrder[sample_idx]
   }
-  
+
   res <- lapply(sample_idx, function(s_idx){
     
     print(paste("start processing sample:", s_idx))
@@ -62,6 +66,7 @@ DIANM.f <- function(msexp,
       ms1_peak <- ms1_peak[which.max(ms1_peak$into), ]
       
       if( nrow(ms1_peak) != 0 ){
+
         target_mz <- ms1_peak$mz
         peak_i <- ms1_peak
         rt_range <- peak_i[, (rt + c(-scan_rt_ext-1, +scan_rt_ext+1))]
@@ -198,7 +203,7 @@ DIANM.f <- function(msexp,
           dplyr::ungroup()
         
         setDT(merge_data)
-        contribution_matrix <- dcast(
+        contribution_matrix <- data.table::dcast(
           merge_data, 
           rank ~ xic_label, 
           value.var = "contribution", 
@@ -220,10 +225,7 @@ DIANM.f <- function(msexp,
         
         ## Extract the good sources
         ### get the real rt 
-        peak_counts <- xic_dt_ms1[, .N, by = peakid]
-        peak_id <- which(peak_counts$N == ncol(ms1_mixedmat))[1]
-        peak_id <- peak_counts[peak_id, ]$peakid
-        real_rt <-  xic_dt_ms1[ peakid == peak_id, ]$rtime 
+        real_rt <-  time_dic[msLevel == 1, ]$rtime
         chroms <- lapply(1:rank, function(eic){
           ints <- pure_rt_ms1[rank == eic, ]$value
           rt <- real_rt
@@ -285,8 +287,8 @@ DIANM.f <- function(msexp,
             
             features.l[[k]] <- feature_sub.l
             
+            ## update the peaks df
             idx_deleted <- paste0(ms1_peaks$peakid, "-1") %in% rownames(ms1_mixedmat_deleted)  # eics, which doesn't have at least 4 consecutive non-zero values
-            
             ## all peaks fully included in the rt range and mostly included with their apex in the rt range should be not processed again
             ## since, these peaks are well detected peaks (so well extracted in the pure sources) or, noises (not included in the pure sources, so we should not return for this rt range for them)
             filtered_peaks <- peaks_xcms %>%
@@ -297,50 +299,82 @@ DIANM.f <- function(msexp,
             
             combined_idx <- c(which(idx_deleted), which(idx_sub))
             idx <- unique(combined_idx)
-            ms1_peaks$iteration[idx] <- ifelse(
-              is.na(ms1_peaks$iteration[idx]), 
-              k, 
-              paste0(ms1_peaks$iteration[idx], ",", k)  )
+            updated_data <- update_df(ms1_peaks, ms1_features, idx, iteration_number = k)
+            ms1_peaks <- updated_data$ms1_peaks
+            ms1_features <- updated_data$ms1_features
+            
+            k <- k + 1
+            }else{
+              
+              idx <- paste0(ms1_peaks$peakid, "-1") %in% peaks_xcms$xic_label  # all detected peaks
+              idx <- which(idx)
+              updated_data <- update_df(ms1_peaks, ms1_features, idx, iteration_number = 0)
+              ms1_peaks <- updated_data$ms1_peaks
+              ms1_features <- updated_data$ms1_features
+              
+              }
+          }else {
+            
+            idx <- paste0(ms1_peaks$peakid, "-1") %in% peaks_xcms$xic_label  # all detected peaks
+            idx <- which(idx)
+            updated_data <- update_df(ms1_peaks, ms1_features, idx, iteration_number = 0)
+            ms1_peaks <- updated_data$ms1_peaks
+            ms1_features <- updated_data$ms1_features
+            
           }
+        } else {
+          ms1_features[feature_idx, iteration := 0] 
         }
-        
-        if( nrow(peaks) == 0 | (exists("info_new") & nrow(info_new) == 0) ) {
-          ## update the peaks df
-          idx <- paste0(ms1_peaks$peakid, "-1") %in% peaks_xcms$xic_label  # all detected peaks
-          idx <- which(idx)
-          ms1_peaks$iteration[idx] <- ifelse(
-            is.na(ms1_peaks$iteration[idx]),
-            0,
-            paste0(ms1_peaks$iteration[idx], ",", 0)  ) 
-        }
-        
-        # iterate over the next non-processed feature, but update it first
-        peaks_removed <- idx
-        ms1_features[, iteration := as.character(iteration)]
-        ms1_features[sapply(peakidx, function(p) any(unlist(p) %in% peaks_removed)), 
-                     iteration := ifelse(is.na(iteration), as.character(k), paste0(iteration, ",", k))]
-        
-        if( nrow(peaks) > 0 & exists("info_new") & nrow(info_new) > 0 ){
-          k <- k + 1
-        }
-        
-      } else {
-        ms1_features[feature_idx, iteration := 0] 
-      }
       
       feature_idx <- which(is.na(ms1_features$iteration))[1]
+      
       if( is.na(feature_idx) ){
         break  }
-      
     }
     
     # save results
-    saveRDS(ms1_peaks, paste0(d.out, '/ms1_peaks.rds'))
-    saveRDS(ms1_features, paste0(d.out, '/ms1_features.rds'))
-    saveRDS(features.l, paste0(d.out, '/features_list.rds'))
-    
+    if( isTRUE(d.out) ){
+      dir.create("./Results/")
+      
+      file_name <- tools::file_path_sans_ext(basename(file_info$mzml_path[sample_idx]))  
+      dir.create(paste0("./Results/", file_name))
+      saveRDS(ms1_peaks, paste0("./Results/", file_name, '/ms1_peaks.rds'))
+      saveRDS(ms1_features, paste0("./Results/", file_name, '/ms1_features.rds'))
+      saveRDS(features.l, paste0("./Results/", file_name, '/features_list.rds'))
+    }
+     
     return(features.l)
   })
   
+  names(res) <- tools::file_path_sans_ext(basename(file_info$mzml_path[sample_idx]))
   return(res)
+}
+
+
+
+#' Update df iteration columns
+#'
+#' @param ms1_peaks `data.frame` obtains from `DIANMF::extract_xcms_peaks()`
+#' @param ms1_features `data.frame` obtains from `DIANMF::extract_xcms_features()`
+#' @param idx `c(numerics)` row indexes
+#' @param iteration_number `numeric(1)`
+#'
+#' @return `list(ms1_peaks, ms1_features)`
+#' @export
+update_df <- function(ms1_peaks, ms1_features, idx, iteration_number){
+
+  # update ms1_peaks
+  ms1_peaks$iteration[idx] <- ifelse(
+    is.na(ms1_peaks$iteration[idx]),
+    iteration_number,
+    paste0(ms1_peaks$iteration[idx], ",", iteration_number)
+  )
+  
+  # update ms1_feature
+  ms1_features[, iteration := as.character(iteration)]
+  ms1_features[sapply(peakidx, function(p) any(unlist(p) %in% idx)), 
+               iteration := ifelse(is.na(iteration), as.character(iteration_number), 
+                                   paste0(iteration, ",", iteration_number))]
+  
+  return(list(ms1_peaks = ms1_peaks, ms1_features = ms1_features))
 }

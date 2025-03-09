@@ -214,23 +214,23 @@ nGMCAs <- function(
     ) 
     if( is.null(data$S) ) { return(NULL) }
     
-    # data$A <- updateA.f(
-    #   Y = X.m,
-    #   A_init = data$A,
-    #   S = data$S,
-    #   maxFBIteration = maxFBIteration,
-    #   toleranceFB = toleranceFB,
-    #   method = method
-    # )
-    data$A <- updateA.f_sparse(
-        Y = X.m,
-        A_init = data$A,
-        S = data$S,
-        lambda = lambda,
-        maxFBIteration = maxFBIteration,
-        toleranceFB = toleranceFB,
-        method = method
-      )
+    data$A <- updateA.f(
+      Y = X.m,
+      A_init = data$A,
+      S = data$S,
+      maxFBIteration = maxFBIteration,
+      toleranceFB = toleranceFB,
+      method = method
+    )
+    # data$A <- updateA.f_sparse(
+    #     Y = X.m,
+    #     A_init = data$A,
+    #     S = data$S,
+    #     lambda = lambda,
+    #     maxFBIteration = maxFBIteration,
+    #     toleranceFB = toleranceFB,
+    #     method = method
+    #   )
     
     error_k_new <- error_function(Y = X.m, A = data$A, S = data$S)
     if( abs(error_k_new - error_k) <= toleranceFB ) {

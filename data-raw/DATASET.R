@@ -3,28 +3,30 @@ library(dplyr)
 require(data.table)
 library(MSnbase)
 
-file <- "//fouet/spi/scidospi/06_Data/BarbierSaintHilaire_ComparativeEvaluationData_2020/DIA/mzML/20170803_FS-DIA-E2-10ng-rep3_pos_51.mzML"
-rawData.onDiskMSnExp <- MSnbase::readMSData(file, mode = "onDisk")
+input_dir <- "~/DIA_NMF_R_package/mzML"
+input_files <- list.files(input_dir, pattern = ".mzml", full.names = TRUE, ignore.case = TRUE)
 
-temp_dt <- rawData.onDiskMSnExp %>%
-  MSnbase::filterRt(., c(537, 560)) %>%
-  MSnbase::filterEmptySpectra()
+for(i in 1:2){
+  file <- input_files[i]
+  rawData.onDiskMSnExp <- MSnbase::readMSData(file, mode = "onDisk")
+  temp_dt <- rawData.onDiskMSnExp %>%
+    MSnbase::filterRt(., c(535, 560)) %>%
+    MSnbase::filterEmptySpectra()
 
-fdt_sub <- fData(temp_dt) %>% as.data.table()
-event_index <- fdt_sub[, which(
-  (msLevel == 1) |
-    (msLevel == 2 )
-)]
+  fdt_sub <- fData(temp_dt) %>% as.data.table()
+  event_index <- fdt_sub[, which(
+    (msLevel == 1) |
+      (msLevel == 2 )
+  )]
 
-data_example <- temp_dt[event_index]
-x <- fData(data_example)
+  data_example <- temp_dt[event_index]
+  data_example %>%
+    MSnbase::writeMSData(., paste0("./inst/extdata/test_data",i,".mzml"))
+}
 
-data_example %>%
-  MSnbase::writeMSData(., "./inst/extdata/test_data.mzml")
-
-
-# file <- "./inst/extdata/test_data.mzML"
-# file <- get_test_data()
+# create the msexp object on both mzml files
+# rt_range = c(537, 560)
 data_example <- get_test_peaks()
 
 usethis::use_data(data_example, overwrite = TRUE)
+ 

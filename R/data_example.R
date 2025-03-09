@@ -8,89 +8,50 @@ NULL
 
 # @references \url{data_blah.com}
 
-#' Get mzml test path
+#' Get mzml test paths
 #'
-#' @return mzml path
+#' @return Vector of mzml paths
 #'
 #' @export
 get_test_mzml <- function() {
-  mzml_path <- system.file("/inst/extdata/test_data.mzml", package = "DIANMF")
-}
-
-#' Load test data
-#'
-#' @return `MsExperiment` objects
-#' @import MsExperiment
-#'
-#' @export
-get_test_data <- function() {
-  MsExperiment::readMsExperiment(get_test_mzml())
+  mzml_dir <- system.file("/inst/extdata", package = "DIANMF")
+  mzml_files <- list.files(mzml_dir, pattern = "\\.mzml$", full.names = TRUE)
+  return(mzml_files)
 }
 
 #' Load test sequence
 #'
-#' @return `MsExperiment` objects
+#' @return `data.table` with mzML paths
 #' @import data.table
 #'
 #' @export
 get_test_sequence <- function() {
   data.table(
     "mzml_path" = get_test_mzml(),
-    "class" = "A",
-    "InjectionOrder" = 1
+    "class" = c("A", "B"),
+    "InjectionOrder" = c(1, 2)
   )
 }
 
 #' Perform peak picking on test data
 #'
-#' @return `MsExperiment` objects
-#' @import data.table xcms
+#' @return `XCMSnExp` object containing detected peaks from both mzML files
+#' @import xcms data.table MsExperiment
 #'
 #' @export
-get_test_peaks <- function() {
-  get_test_sequence() %>%
+get_test_peaks <- function(){
+  sequence_table <- get_test_sequence()
+  
+  sequence_table %>%
     detect_xcms_peaks(
       .,
       params = list(
-        "CentWaveParam" = xcms::CentWaveParam(ppm = 10, peakwidth = c(3,10), snthresh = 2, firstBaselineCheck = FALSE),
+        "CentWaveParam" = xcms::CentWaveParam(ppm = 10, peakwidth = c(3, 10), snthresh = 2, firstBaselineCheck = FALSE),
         "MergeNeighboringPeaksParam" = xcms::MergeNeighboringPeaksParam(),
         "ObiwarpParam" = xcms::ObiwarpParam(),
-        "PeakDensityParam" = xcms::PeakDensityParam(sampleGroups = NA),
+        "PeakDensityParam" = xcms::PeakDensityParam(sampleGroups = sequence_table$class),
         "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
       )
-  )
+    )
 }
 
-
-# params_ls <- list(
-#   "CentWaveParam" = CentWaveParam(
-#     ppm = 6,
-#     peakwidth = c(6, 30),
-#     snthresh = 0,
-#     prefilter = c(5, 4000),
-#     mzCenterFun = "wMeanApex3",
-#     integrate = 2,
-#     mzdiff = -0.0003,
-#     noise = 2000,
-#     firstBaselineCheck = FALSE
-#   ),
-#   "MergeNeighboringPeaksParam" = MergeNeighboringPeaksParam(
-#     expandRt = 2,
-#     expandMz = 0,
-#     ppm = 1,
-#     minProp = 0.75
-#   ),
-#   "ObiwarpParam" = ObiwarpParam(
-#     binSize = 0.05
-#   ),
-#   "PeakDensityParam" = PeakDensityParam(
-#     sampleGroups = NA,
-#     bw = 15,
-#     minFraction = 0,
-#     minSamples = 1,
-#     binSize = 0.005,
-#     ppm = 5,
-#     maxFeatures = 500
-#   ),
-#   "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
-# )

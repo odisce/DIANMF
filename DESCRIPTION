@@ -32,7 +32,6 @@ Imports:
     Spectra (>= 1.16.0),
     SummarizedExperiment (>= 1.36.0),
     corpcor (>= 1.6.10),
-    ggplot2 (>= 3.5.1),
     BiocGenerics (>= 0.52.0),
     S4Vectors (>= 0.44.0) 
 Suggests:

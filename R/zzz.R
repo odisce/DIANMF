@@ -4,7 +4,7 @@ utils::globalVariables(c(
    "ms1_features", "mzmin", "mzmax", "raw_dt", "scan_norm", "N",
    "rt_range", "IsoWin", "sample_idx", "median", "mz_value", 
    "InjectionOrder", "creation_date", "rt", "head", "rowMax",
-   "into", "featureid"
+   "into", "featureid", "sequence_table"
   
 ))
 
