@@ -20,7 +20,7 @@
 #' @import dplyr
 #' @importFrom MsExperiment sampleData
 #' @importFrom tools file_path_sans_ext
-DIANM.f <- function(msexp,
+DIANMF.f <- function(msexp,
                     d.out = FALSE,
                     sample_idx = 1, 
                     MS2_ISOEACHL = T, MS1MS2_L = F,

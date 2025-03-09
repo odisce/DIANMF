@@ -2,7 +2,7 @@ Type: Package
 Package: DIANMF
 Title: Non-Negative Matrix Factorization To Identify SWATH DIA Metabolomic
     Data
-Version: 0.3.1
+Version: 0.3.1.0
 Authors@R: c(
     person(given = "Diana", family = "Karaki", email = "diana.karaki@cea.fr", role = c("aut", "cre")),
     person(given = "Sylvain", family = "Dechaumet", email = "sylvain.dechaumet@cea.fr", role = "aut"),

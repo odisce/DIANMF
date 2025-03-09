@@ -1,6 +1,6 @@
 test_that("step 4 test", {
   
-  features.l <- DIANM.f(msexp = data_example,
+  features.l <- DIANMF.f(msexp = data_example,
                         d.out = TRUE,
                         sample_idx = 1, 
                         MS2_ISOEACHL = T, MS1MS2_L = F,
