@@ -25,31 +25,13 @@ prepare_mzMLfiles <- function(input_dir){
 }
 
 
-#' Create simple sequence from a list of mzML paths
+#' Detect MS1 peaks using XCMS.
 #'
-#' @param mzML_path A character vector with mzML paths.
-#' @return a data.table corresponding to a sequence.
-#' 
-#' @export
-#' 
-#' @import data.table
-create_seq <- function(mzML_path) {
-  data.table(
-    "mzml_path" = mzML_path,
-    "class" = "A",
-    "InjectionOrder" = seq_len(length(mzML_path))
-  )
-}
-
-
-#' Detect MS1 peaks using XCMS
-#'
-#' @param sequence_table A data.frame with at least (mzml_path, class, InjectionOrder).
+#' @param sequence_table A data.frame with at least [mzml_path, class, InjectionOrder].
 #' @param params A list to set the parameters from xcms pipeline steps.
-#'               List names should be xcms parameters methods (ex: `list("CentWaveParam" = CentWaveParam()`).
-#' @param rt_range (Optional) retention time range to subset before running peak detection.
-#'
-#' @return `MsExperiment` objects.
+#'               List names should be xcms parameters methods (ex: `list("CentWaveParam" = CentWaveParam()`)
+#' @return MsExperiment objects
+#' @param rt_range (Optional) rt range to subset before running peak detection
 #' 
 #' @export
 #' 

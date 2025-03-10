@@ -287,6 +287,7 @@ DIANMF.f <- function(msexp,
             
             features.l[[k]] <- feature_sub.l
             
+            print("------------------------------------------ this iteration is done")
             ## update the peaks df
             idx_deleted <- paste0(ms1_peaks$peakid, "-1") %in% rownames(ms1_mixedmat_deleted)  # eics, which doesn't have at least 4 consecutive non-zero values
             ## all peaks fully included in the rt range and mostly included with their apex in the rt range should be not processed again

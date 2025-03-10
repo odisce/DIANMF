@@ -2,7 +2,7 @@
 % Please edit documentation in R/step1_dataPreparation.R
 \name{detect_xcms_peaks}
 \alias{detect_xcms_peaks}
-\title{Detect MS1 peaks using XCMS}
+\title{Detect MS1 peaks using XCMS.}
 \usage{
 detect_xcms_peaks(
   sequence_table,
@@ -14,16 +14,16 @@ detect_xcms_peaks(
 )
 }
 \arguments{
-\item{sequence_table}{A data.frame with at least (mzml_path, class, InjectionOrder).}
+\item{sequence_table}{A data.frame with at least \link{mzml_path, class, InjectionOrder}.}
 
 \item{params}{A list to set the parameters from xcms pipeline steps.
-List names should be xcms parameters methods (ex: \verb{list("CentWaveParam" = CentWaveParam()}).}
+List names should be xcms parameters methods (ex: \verb{list("CentWaveParam" = CentWaveParam()})}
 
-\item{rt_range}{(Optional) retention time range to subset before running peak detection.}
+\item{rt_range}{(Optional) rt range to subset before running peak detection}
 }
 \value{
-\code{MsExperiment} objects.
+MsExperiment objects
 }
 \description{
-Detect MS1 peaks using XCMS
+Detect MS1 peaks using XCMS.
 }
