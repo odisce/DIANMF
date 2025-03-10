@@ -3,7 +3,7 @@ library(dplyr)
 require(data.table)
 library(MSnbase)
 
-input_dir <- "~/DIA_NMF_R_package/mzML"
+input_dir <- "../mzml/"
 input_files <- list.files(input_dir, pattern = ".mzml", full.names = TRUE, ignore.case = TRUE)
 
 for(i in 1:2){

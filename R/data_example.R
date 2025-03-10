@@ -14,7 +14,7 @@ NULL
 #'
 #' @export
 get_test_mzml <- function() {
-  mzml_dir <- system.file("/inst/extdata", package = "DIANMF")
+  mzml_dir <- system.file("./inst/extdata", package = "DIANMF")
   mzml_files <- list.files(mzml_dir, pattern = "\\.mzml$", full.names = TRUE)
   return(mzml_files)
 }
