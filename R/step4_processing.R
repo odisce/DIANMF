@@ -351,15 +351,14 @@ DIANMF.f <- function(msexp,
 }
 
 
-
 #' Update df iteration columns
 #'
 #' @param ms1_peaks `data.frame` obtains from `DIANMF::extract_xcms_peaks()`
 #' @param ms1_features `data.frame` obtains from `DIANMF::extract_xcms_features()`
-#' @param idx `c(numerics)` row indexes
+#' @param idx `c(numeric)` row indexes
 #' @param iteration_number `numeric(1)`
 #'
-#' @return `list(ms1_peaks, ms1_features)`
+#' @return A `list` containing updated `ms1_peaks` and `ms1_features` data.tables.
 #' @export
 update_df <- function(ms1_peaks, ms1_features, idx, iteration_number){
 
