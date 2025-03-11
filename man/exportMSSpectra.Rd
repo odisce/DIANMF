@@ -2,7 +2,7 @@
 % Please edit documentation in R/exporting_fcts.R
 \name{exportMSSpectra}
 \alias{exportMSSpectra}
-\title{Export MS pure spectra}
+\title{Export MS pure spectra objects}
 \usage{
 exportMSSpectra(features.l)
 }
@@ -13,5 +13,5 @@ exportMSSpectra(features.l)
 \code{Spectra} object of MS1 pure spectra.
 }
 \description{
-Export MS pure spectra
+Export MS pure spectra objects
 }

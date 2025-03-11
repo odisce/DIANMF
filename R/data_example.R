@@ -28,7 +28,7 @@ get_test_mzml <- function() {
 get_test_sequence <- function() {
   data.table(
     "mzml_path" = get_test_mzml(),
-    "class" = c("A", "B"),
+    "class" = "A",
     "InjectionOrder" = c(1, 2)
   )
 }
@@ -42,16 +42,14 @@ get_test_sequence <- function() {
 get_test_peaks <- function(){
   sequence_table <- get_test_sequence()
   
-  sequence_table %>%
-    detect_xcms_peaks(
-      .,
-      params = list(
-        "CentWaveParam" = xcms::CentWaveParam(ppm = 10, peakwidth = c(3, 10), snthresh = 2, firstBaselineCheck = FALSE),
-        "MergeNeighboringPeaksParam" = xcms::MergeNeighboringPeaksParam(),
-        "ObiwarpParam" = xcms::ObiwarpParam(),
-        "PeakDensityParam" = xcms::PeakDensityParam(sampleGroups = sequence_table$class),
-        "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
-      )
-    )
+  detect_xcms_peaks(
+    sequence_table,
+    params = list(
+      "CentWaveParam" = xcms::CentWaveParam(ppm = 10, peakwidth = c(3, 10), snthresh = 2, firstBaselineCheck = FALSE),
+      "MergeNeighboringPeaksParam" = xcms::MergeNeighboringPeaksParam(),
+      "ObiwarpParam" = xcms::ObiwarpParam(),
+      "PeakDensityParam" = xcms::PeakDensityParam(sampleGroups = sequence_table$class),
+      "ChromPeakAreaParam" = xcms::ChromPeakAreaParam() )
+  )
 }
 

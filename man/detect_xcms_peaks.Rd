@@ -14,7 +14,7 @@ detect_xcms_peaks(
 )
 }
 \arguments{
-\item{sequence_table}{A data.frame with at least \link{mzml_path, class, InjectionOrder}.}
+\item{sequence_table}{A data.frame with at least (mzml_path, class, InjectionOrder).}
 
 \item{params}{A list to set the parameters from xcms pipeline steps.
 List names should be xcms parameters methods (ex: \verb{list("CentWaveParam" = CentWaveParam()})}

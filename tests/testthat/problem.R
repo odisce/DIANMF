@@ -1,6 +1,7 @@
 dir_input <- "//fouet/spi/scidospi/06_Data/BarbierSaintHilaire_ComparativeEvaluationData_2020/DIA/mzml/"
 mzml_dt <- prepare_mzMLfiles(input_dir = dir_input)
-sequence_table <- mzml_dt[1:2, ]
+mzml_dt <- mzml_dt[1:2, ]
+sequence_table <- create_seq(mzml_dt)
 params_ls <- list(  
   "CentWaveParam" = CentWaveParam(
     ppm = 6,
@@ -23,7 +24,7 @@ params_ls <- list(
     binSize = 0.05
   ),
   "PeakDensityParam" = PeakDensityParam(
-    sampleGroups = sequence_table$class,
+    sampleGroups = NA,
     bw = 15,
     minFraction = 0.1,
     minSamples = 2,
@@ -38,23 +39,23 @@ params_ls <- list(
 xcms_object <- detect_xcms_peaks(sequence_table = sequence_table, 
                                         params = params_ls )
 
-x <- MsExperiment::sampleData(xcms_object)
+# x <- MsExperiment::sampleData(xcms_object )
 peaks <- DIANMF::extract_xcms_peaks(msexp = xcms_object)
 features <- DIANMF::extract_xcms_features(msexp = xcms_object)
 
-# features <- DIANMF::DIANMF.f(msexp = xcms_object,
-#                              d.out = FALSE,
-#                              sample_idx = 1,
-#                              MS2_ISOEACHL = T,
-#                              MS1MS2_L = F,
-#                              rank = 10,
-#                              maximumIteration = 200,
-#                              maxFBIteration = 100,
-#                              toleranceFB = 1e-05,
-#                              initialization_method = "nndsvd",
-#                              errors_print = FALSE,
-#                              method = "svsd",
-#                              scan_rt_ext = 10,
-#                              min_distance = 5 )
+features <- DIANMF::DIANMF.f(msexp = xcms_object,
+                             d.out = TRUE,
+                             sample_idx = 1,
+                             MS2_ISOEACHL = T,
+                             MS1MS2_L = F,
+                             rank = 10,
+                             maximumIteration = 200,
+                             maxFBIteration = 100,
+                             toleranceFB = 1e-05,
+                             initialization_method = "nndsvd",
+                             errors_print = FALSE,
+                             method = "svsd",
+                             scan_rt_ext = 10,
+                             min_distance = 5 )
 
 

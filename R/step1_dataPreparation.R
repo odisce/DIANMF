@@ -25,9 +25,26 @@ prepare_mzMLfiles <- function(input_dir){
 }
 
 
+#' Create simple sequence from a list of mzML paths
+#'
+#' @param mzml_dt `data.table` from `DIANMF::prepare_mzMLfiles()`
+#' @return a data.table corresponding to a sequence.
+#' 
+#' @export
+#' 
+#' @import data.table
+create_seq <- function(mzml_dt) {
+  data.table(
+    "mzml_path" = mzml_dt$mzml_path,
+    "class" = "A",
+    "InjectionOrder" = mzml_dt$InjectionOrder
+  )
+}
+
+
 #' Detect MS1 peaks using XCMS.
 #'
-#' @param sequence_table A data.frame with at least [mzml_path, class, InjectionOrder].
+#' @param sequence_table A data.frame with at least (mzml_path, class, InjectionOrder).
 #' @param params A list to set the parameters from xcms pipeline steps.
 #'               List names should be xcms parameters methods (ex: `list("CentWaveParam" = CentWaveParam()`)
 #' @return MsExperiment objects
