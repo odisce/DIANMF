@@ -3,8 +3,10 @@ testthat::skip("development script; test the wrapper function")
 devtools::document()
 devtools::load_all()
 input_dir <- "//fouet/spi/scidospi/06_Data/BarbierSaintHilaire_ComparativeEvaluationData_2020/DIA/mzml/"
+mzml_dt <- prepare_mzMLfiles(input_dir = dir.input)
+mzml_dt <- mzml_dt[1:2, ]
 params_ls <- list(  
-  "CentWaveParam" = CentWaveParam(
+  "CentWaveParam" = xcms::CentWaveParam(
     ppm = 6,
     peakwidth = c(6, 30),
     snthresh = 0,
@@ -15,16 +17,16 @@ params_ls <- list(
     noise = 2000,
     firstBaselineCheck = FALSE
   ),
-  "MergeNeighboringPeaksParam" = MergeNeighboringPeaksParam(
+  "MergeNeighboringPeaksParam" = xcms::MergeNeighboringPeaksParam(
     expandRt = 2,
     expandMz = 0.001,
     ppm = 5,
     minProp = 0.75
   ),
-  "ObiwarpParam" = ObiwarpParam(
+  "ObiwarpParam" = xcms::ObiwarpParam(
     binSize = 0.05
   ),
-  "PeakDensityParam" = PeakDensityParam(
+  "PeakDensityParam" = xcms::PeakDensityParam(
     sampleGroups = NA,
     bw = 15,
     minFraction = 0.1,
@@ -36,9 +38,18 @@ params_ls <- list(
   "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
 )
 
-features_mist <- DIANMF_f(input_dir, d.out = '~/DIA_NMF_R_package/Results4', 
-                          sample_idx = 1, 
-                          temp_saveL = T, MS2_ISOEACHL = T, MS1MS2_L = F,
-                          scan_rt_ext = 10, min_distance = 5,
-                          params = params_ls, plots = T )
+xcms_obj <- DIANMF::detect_xcms_peaks(sequence_table = mzml_dt, params = params_ls)
 
+features <- DIANMF::DIANMF.f(msexp = xcms_experiment, d.out = FALSE,
+                             sample_idx = 1,
+                             MS2_ISOEACHL = T,
+                             MS1MS2_L = F,
+                             rank = 10,
+                             maximumIteration = 200,
+                             maxFBIteration = 100,
+                             toleranceFB = 1e-05,
+                             initialization_method = "nndsvd",
+                             errors_print = FALSE,
+                             method = "svsd",
+                             scan_rt_ext = 10,
+                             min_distance = 5 )

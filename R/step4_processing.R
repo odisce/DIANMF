@@ -233,7 +233,7 @@ DIANMF.f <- function(msexp,
         
         chrs <- MSnbase::MChromatograms(chroms, nrow = rank)
         detected_peaks <- xcms::findChromPeaks(object = chrs,
-                                               param =  xcms::CentWaveParam(
+                                               param =  CentWaveParam(
                                                  ppm = 0,
                                                  peakwidth = c(4, 10),
                                                  snthresh = 0,
