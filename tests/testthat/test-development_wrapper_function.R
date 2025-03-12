@@ -3,8 +3,8 @@ testthat::skip("development script; test the wrapper function")
 devtools::document()
 devtools::load_all()
 input_dir <- "//fouet/spi/scidospi/06_Data/BarbierSaintHilaire_ComparativeEvaluationData_2020/DIA/mzml/"
-mzml_dt <- prepare_mzMLfiles(input_dir = dir.input)
-mzml_dt <- mzml_dt[1:2, ]
+mzml_dt <- prepare_mzMLfiles(input_dir = input_dir)
+mzml_dt <- mzml_dt[1:3, ]
 params_ls <- list(  
   "CentWaveParam" = xcms::CentWaveParam(
     ppm = 6,
@@ -40,7 +40,7 @@ params_ls <- list(
 
 xcms_obj <- DIANMF::detect_xcms_peaks(sequence_table = mzml_dt, params = params_ls)
 
-features <- DIANMF::DIANMF.f(msexp = xcms_experiment, d.out = FALSE,
+features <- DIANMF::DIANMF.f(msexp = xcms_obj, d.out = FALSE,
                              sample_idx = 1,
                              MS2_ISOEACHL = T,
                              MS1MS2_L = F,
