@@ -30,7 +30,7 @@ DIANMF.f <- function(msexp,
                     toleranceFB = 1e-05,
                     initialization_method = "nndsvd",
                     errors_print = FALSE,
-                    method = "svsd",
+                    method = "svds",
                     scan_rt_ext = 10, min_distance = 5 ){
   
   ms1_peaks <- extract_xcms_peaks(msexp)
@@ -46,7 +46,12 @@ DIANMF.f <- function(msexp,
 
   res <- lapply(sample_idx, function(s_idx){
     # s_idx = 1
-    print(paste("start processing sample:", s_idx))
+    print(paste("start processing sample", s_idx,':', tools::file_path_sans_ext(basename(file_info$mzml_path[sample_idx]))  ))
+    
+    # filter the xcms object 
+    msexp_sample <- msexp %>%
+      MSnbase::filterFile(., s_idx)
+    
     ms1_peaks <- ms1_peaks[, iteration := as.integer(NA) ]
     ms1_features[, iteration := as.integer(NA) ]
     
@@ -80,11 +85,11 @@ DIANMF.f <- function(msexp,
           ifelse(rt %between% rt_range, "apex", "partial")
         )]
         
-        res_general <- get_rawD_ntime(msexp, rt_range, s_idx)
+        res_general <- get_rawD_ntime(msexp_sample, rt_range, s_idx)
         raw_dt <- res_general$raw_dt
         time_dic <- res_general$time_dic
         xic_dt_ms1 <- build_ms1XICS(peaks_i, raw_dt)
-        xic_dt_ms2 <- build_ms2XICs(msexp, raw_dt, time_dic, rt_range, MS2_ISOEACHL = MS2_ISOEACHL)
+        xic_dt_ms2 <- build_ms2XICs(msexp_sample, raw_dt, time_dic, rt_range, MS2_ISOEACHL = MS2_ISOEACHL)
         
         ## Generate data and matrices
         ### ms1

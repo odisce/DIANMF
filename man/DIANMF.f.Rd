@@ -16,7 +16,7 @@ DIANMF.f(
   toleranceFB = 1e-05,
   initialization_method = "nndsvd",
   errors_print = FALSE,
-  method = "svsd",
+  method = "svds",
   scan_rt_ext = 10,
   min_distance = 5
 )
