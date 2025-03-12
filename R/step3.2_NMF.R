@@ -21,7 +21,7 @@ get_svd_first <- function(x, method = c("base", "fast", "svds")) {
     method,
     "base" = svd(x)$d[1],
     "fast" = corpcor::fast.svd(x)$d[1],
-    "svsd" = RSpectra::svds(x, 1)$d[1],
+    "svds" = RSpectra::svds(x, 1)$d[1],
     stop("method not available, choose one of: 'base', 'fast' or 'svds'")
   )
 }

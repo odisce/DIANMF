@@ -1,5 +1,18 @@
-test_that("step 2 tests", {
-
+test_that("Step 1 and 2 tests", {
+ 
+  # test step 1
+  data_example <- get_test_peaks()
+  expect_true( 'XcmsExperiment' %in% class(data_example) ) # test a data example function
+  
+  ms1_peaks <- extract_xcms_peaks(msexp = data_example)
+  ms1_features <- extract_xcms_features(data_example)
+  
+  
+  expect_true( isTRUE( "data.table" %in% class(ms1_peaks) ) )
+  expect_true( isTRUE( "data.table" %in% class(ms1_features) )   )
+  expect_true( nrow(ms1_features) > 0 & nrow(ms1_peaks) > 0 )
+  
+  # test step 2
   sample_idx <- 1
   rt_range <- c(537, 560)
   ms1_peaks <- extract_xcms_peaks(data_example)
@@ -7,7 +20,7 @@ test_that("step 2 tests", {
   res_general <- get_rawD_ntime(msexp = data_example, rt_range, sample_idx)
   raw_dt <- res_general$raw_dt
   time_dic <- res_general$time_dic
-
+  
   peaks_i <- ms1_peaks[sample == sample_idx & rtmin <= rt_range[2] & rtmax >= rt_range[1], ]
   peaks_i[, peakfull := ifelse(
     (rtmin >= rt_range[1] & rtmax <= rt_range[2]), "full",

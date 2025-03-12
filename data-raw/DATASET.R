@@ -11,6 +11,7 @@ for(i in 1:2){
   rawData.onDiskMSnExp <- MSnbase::readMSData(file, mode = "onDisk")
   temp_dt <- rawData.onDiskMSnExp %>%
     MSnbase::filterRt(., c(535, 560)) %>%
+    MSnbase::filterMz(., c(250, 500)) %>%
     MSnbase::filterEmptySpectra()
 
   fdt_sub <- fData(temp_dt) %>% as.data.table()
@@ -26,7 +27,7 @@ for(i in 1:2){
 
 # create the msexp object on both mzml files
 # rt_range = c(537, 560)
-data_example <- get_test_peaks()
-
-usethis::use_data(data_example, overwrite = TRUE)
+# data_example <- get_test_peaks()
+# 
+# usethis::use_data(data_example, overwrite = TRUE)
  

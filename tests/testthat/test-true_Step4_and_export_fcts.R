@@ -1,5 +1,7 @@
 test_that("step 4 and export functions test", {
   
+  data_example <- get_test_peaks()
+  
   features.l <- DIANMF.f(msexp = data_example,
                         d.out = FALSE,
                         sample_idx = 1, 
@@ -10,7 +12,7 @@ test_that("step 4 and export functions test", {
                         toleranceFB = 1e-05,
                         initialization_method = "nndsvd",
                         errors_print = FALSE,
-                        method = "svsd",
+                        method = "svds",
                         scan_rt_ext = 10, min_distance = 5  )
   
   

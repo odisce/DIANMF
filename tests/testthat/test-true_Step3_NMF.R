@@ -39,4 +39,25 @@ test_that("initializing methods test", {
   expect_equal( nrow(S_subSample), r)
   expect_equal( ncol(A_subSample), r)
   
+  # test nGMCAs
+  
+  l1 <- get_svd_first(x = m, method = "base") 
+  l2 <- get_svd_first(x = m, method = "fast") 
+  l3 <- get_svd_first(x = m, method = "svds")
+  expect_true( round(l1, 3) == round(l2, 3), round(l2, 3) == round(l3, 3))
+  
+  ngmcas_res <- nGMCAs(X.m = m, rank = 2,
+                       maximumIteration = 10, maxFBIteration = 5, toleranceFB = 1e-5,
+                       initialization_method = 'nndsvd',
+                       errors_print = FALSE, method = "fast")
+
+  W <- ngmcas_res$S
+  H <- ngmcas_res$A
+  error <- error_function(Y = m, A = t(H), S = t(W))
+  
+  expect_true(all(W >= 0))
+  expect_true(all(H >= 0))
+  expect_equal(dim(W %*% H), dim(m))
+  expect_true( error > 0 )
+  
 })
