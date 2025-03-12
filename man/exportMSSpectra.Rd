@@ -2,16 +2,16 @@
 % Please edit documentation in R/exporting_fcts.R
 \name{exportMSSpectra}
 \alias{exportMSSpectra}
-\title{Export MS pure spectra objects}
+\title{Title}
 \usage{
 exportMSSpectra(features.l)
 }
 \arguments{
-\item{features.l}{\code{list} created by \code{DIANMF::DIANM.f}}
+\item{features.l}{\code{list}}
 }
 \value{
-\code{Spectra} object of MS1 pure spectra.
+\code{list} of \code{Spectra} objects
 }
 \description{
-Export MS pure spectra objects
+Title
 }
