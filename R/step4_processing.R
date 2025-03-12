@@ -45,7 +45,7 @@ DIANMF.f <- function(msexp,
   }
 
   res <- lapply(sample_idx, function(s_idx){
-    
+    # s_idx = 1
     print(paste("start processing sample:", s_idx))
     ms1_peaks <- ms1_peaks[, iteration := as.integer(NA) ]
     ms1_features[, iteration := as.integer(NA) ]
@@ -233,7 +233,7 @@ DIANMF.f <- function(msexp,
         
         chrs <- MSnbase::MChromatograms(chroms, nrow = rank)
         detected_peaks <- xcms::findChromPeaks(object = chrs,
-                                               param =  CentWaveParam(
+                                               param =  xcms::CentWaveParam(
                                                  ppm = 0,
                                                  peakwidth = c(4, 10),
                                                  snthresh = 0,
