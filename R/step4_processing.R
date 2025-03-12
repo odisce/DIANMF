@@ -84,7 +84,7 @@ DIANMF.f <- function(msexp,
         raw_dt <- res_general$raw_dt
         time_dic <- res_general$time_dic
         xic_dt_ms1 <- build_ms1XICS(peaks_i, raw_dt)
-        xic_dt_ms2 <- build_ms2XICs(msexp, raw_dt, time_dic, rt_range, MS2_ISOEACHL = T)
+        xic_dt_ms2 <- build_ms2XICs(msexp, raw_dt, time_dic, rt_range, MS2_ISOEACHL = MS2_ISOEACHL)
         
         ## Generate data and matrices
         ### ms1
@@ -112,16 +112,16 @@ DIANMF.f <- function(msexp,
         if(MS1MS2_L == F){ # MS1 then MS2 separately
           
           ### NMF on MS1
-          rank <- min(15, ncol(ms1_mixedmat))  
+          rank <- min(rank, ncol(ms1_mixedmat))  
           ngmcas_res_ms1 <- nGMCAs(
             X.m = ms1_mixedmat,
             rank = rank,
-            maximumIteration = 200,
-            maxFBIteration = 100,
-            toleranceFB = 1e-05,
-            initialization_method = "nndsvd",
-            errors_print = FALSE,
-            method = "svsd"
+            maximumIteration = maximumIteration,
+            maxFBIteration = maxFBIteration,
+            toleranceFB = toleranceFB,
+            initialization_method = initialization_method,
+            errors_print = errors_print,
+            method = method
           )
           
           pure_rt_ms1 <- reshape2::melt(ngmcas_res_ms1$A) %>% as.data.table()
@@ -137,13 +137,13 @@ DIANMF.f <- function(msexp,
           ngmcas_res_ms2 <- nGMCAs(
             X.m = ms2_mixedmat,
             rank = rank,
-            maximumIteration = 200,
-            maxFBIteration = 100,
-            toleranceFB = 1e-05,
-            initialization_method = "subSample",
+            maximumIteration = maximumIteration,
+            maxFBIteration = maxFBIteration,
+            toleranceFB = toleranceFB,
+            initialization_method = initialization_method,
             H_sub = H_ms1,
-            errors_print = FALSE,
-            method = "svsd"
+            errors_print = errors_print,
+            method = method
           )
           
           S_ms2 <- ngmcas_res_ms2$S
@@ -156,16 +156,16 @@ DIANMF.f <- function(msexp,
         } else { # MS1 and MS2 combined
           
           ### NMF
-          rank <- min(20, ncol(ms1_mixedmat)) # to be changed
+          rank <- min(rank, ncol(ms1_mixedmat)) # to be changed
           ngmcas_res <- nGMCAs(
             X.m = mixedmat,
             rank = rank,
-            maximumIteration = 200,
-            maxFBIteration = 100,
-            toleranceFB = 1e-05,
-            initialization_method = "nndsvd",
-            errors_print = FALSE,
-            method = "svsd"
+            maximumIteration = maximumIteration,
+            maxFBIteration = maxFBIteration,
+            toleranceFB = toleranceFB,
+            initialization_method = initialization_method,
+            errors_print = errors_print,
+            method = method
           )
           
           #### extract the MS1 data
@@ -214,19 +214,18 @@ DIANMF.f <- function(msexp,
         
         ### find sources who have max contribution higher than 0.6
         good_sources <- which( unname(apply(contribution_matrix, 2, max)) >=0.6 )
-        
+
         ### find where every peak contribute the most
         peaks_sources_df <- data.frame(
           xic_label = rownames(contribution_matrix),
-          source = colnames(contribution_matrix)[apply(contribution_matrix, 1, which.max)]
-        )
+          source = colnames(contribution_matrix)[apply(contribution_matrix, 1, which.max)] )
         
         info <- merge(peaks_sources_df, peaks_xcms, by = "xic_label")
         
         ## Extract the good sources
         ### get the real rt 
         real_rt <-  time_dic[msLevel == 1, ]$rtime
-        chroms <- lapply(1:rank, function(eic){
+        chroms <- lapply(rank, function(eic){
           ints <- pure_rt_ms1[rank == eic, ]$value
           rt <- real_rt
           ch <- MSnbase::Chromatogram(rtime = rt, ints)
@@ -254,7 +253,7 @@ DIANMF.f <- function(msexp,
         peaks <- peaks[ abs(rt - rt_range[1]) >= 3 & abs(rt - rt_range[2]) >= 3, ] # filter peaks of rt very close to one edge of rt_range
         
         ### filter peaks, which doesn't contains peaks of high contribution (lower 0.6)
-        peaks <- peaks[ row %in% good_sources, ]
+        peaks <- peaks[ row %in% good_sources, ] 
         
         ### filter peaks 
         if( nrow(peaks) > 0 ){
@@ -282,7 +281,8 @@ DIANMF.f <- function(msexp,
               'ms2_pure_spectra' = pure_mz_ms2,
               'MS1_pure_elution_profiles' = pure_rt_ms1,   
               'MS2_pure_elution_profiles' = pure_rt_ms1,
-              'xcms_assigned_sources' = info_new
+              'xcms_assigned_sources' = info_new,
+              'ms2_info' = ms2_infos
             )
             
             features.l[[k]] <- feature_sub.l

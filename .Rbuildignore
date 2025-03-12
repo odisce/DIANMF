@@ -1,7 +1,2 @@
-^renv$
-^renv\.lock$
 ^.*\.Rproj$
 ^\.Rproj\.user$
-images/*
-^data-raw$
-^Meta$

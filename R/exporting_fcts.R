@@ -1,9 +1,7 @@
 # the following function, extract for every identified pure source in all iterations one Spectra object;
 # this object contains 1 MS1 pure spectra and the 10 MS2 pure spectra from different isolation windows.
 
-
-
-#' Title
+#' Export MS Spectra
 #'
 #' @param features.l `list`
 #'
@@ -11,6 +9,7 @@
 #' @export
 #' 
 #' @importFrom Spectra Spectra
+#' @import dplyr
 exportMSSpectra <- function(features.l) {
   
   MSSpectra <- lapply(seq_along(features.l), function(iteration) {
