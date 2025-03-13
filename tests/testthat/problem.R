@@ -44,7 +44,7 @@ peaks <- DIANMF::extract_xcms_peaks(msexp = xcms_object)
 features <- DIANMF::extract_xcms_features(msexp = xcms_object)
 
 features <- DIANMF::DIANMF.f(msexp = xcms_object,
-                             d.out = TRUE,
+                             dir_out = TRUE,
                              sample_idx = 1,
                              MS2_ISOEACHL = T,
                              MS1MS2_L = F,

@@ -4,14 +4,14 @@
 \alias{extract_xcms_features}
 \title{Extract MS1 features}
 \usage{
-extract_xcms_features(msexp, orderL = F, orderL_sample = NULL)
+extract_xcms_features(msexp, orderL_sample = NULL, quantifyL = FALSE)
 }
 \arguments{
 \item{msexp}{\code{MsExperiment} object obtained from xcms or with \code{DIANMF::detect_xcms_peaks()}.}
 
-\item{orderL}{\code{logical} TRUE to order the features by intensity order of orderL_sample.}
-
 \item{orderL_sample}{\code{character} sample name.}
+
+\item{quantifyL}{Logical to perform quantification with \code{xcms::quantify()}}
 }
 \value{
 \code{data.table} \code{data.frame} object.

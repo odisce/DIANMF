@@ -39,8 +39,9 @@ params_ls <- list(
 )
 
 cache_path <- "/spi/scidospi/06_Data/deconv_nmf/temp.rds"
+profile_path <- "/spi/scidospi/06_Data/deconv_nmf"
 if (file.exists(cache_path)) {
-  xcms_obj <- readRDS(cache_path)  
+  xcms_obj <- readRDS(cache_path)
 } else {
   xcms_obj <- DIANMF::detect_xcms_peaks(sequence_table = mzml_dt, params = params_ls)
   saveRDS(xcms_obj, cache_path)
@@ -48,11 +49,11 @@ if (file.exists(cache_path)) {
 
 require(profvis)
 devtools::load_all()
-profvis::profvis(
+profile_save_path <- file.path(profile_path, format(Sys.time(), "%y%m%d-%H%M-profvis.html"))
+proffres <- profvis::profvis(
   expr = {
     features <- DIANMF::DIANMF.f(
-      msexp = xcms_obj,
-      dir_out = FALSE,
+      msexp = xcms_obj, dir_out = FALSE,
       sample_idx = 1,
       MS2_ISOEACHL = T,
       MS1MS2_L = F,
@@ -65,9 +66,53 @@ profvis::profvis(
       method = "svds",
       scan_rt_ext = 10,
       min_distance = 5,
-      featuresn = 2
+      featuresn = 10
     )
   }
 )
+htmlwidgets::saveWidget(proffres, profile_save_path)
 
-profvis::profvis(expr = {Sys.sleep(1) ; mean(1:100)})
+
+if (F) {
+      msexp = xcms_obj
+      dir_out = FALSE
+      sample_idx = 1
+      MS2_ISOEACHL = T
+      MS1MS2_L = F
+      rank = 10
+      maximumIteration = 200
+      maxFBIteration = 100
+      toleranceFB = 1e-05
+      initialization_method = "nndsvd"
+      errors_print = FALSE
+      method = "svds"
+      scan_rt_ext = 10
+      min_distance = 5
+      featuresn = 10
+      verbose = TRUE
+}
+
+
+A <- Sys.time()
+
+    features <- DIANMF::DIANMF.f(
+      msexp = xcms_obj, dir_out = FALSE,
+      sample_idx = 1,
+      MS2_ISOEACHL = T,
+      MS1MS2_L = F,
+      rank = 10,
+      maximumIteration = 200,
+      maxFBIteration = 100,
+      toleranceFB = 1e-05,
+      initialization_method = "nndsvd",
+      errors_print = FALSE,
+      method = "svds",
+      scan_rt_ext = 10,
+      min_distance = 5,
+      featuresn = 5,
+      verbose = TRUE
+    )
+
+B <- Sys.time()
+
+difftime(B, A)

@@ -104,7 +104,7 @@ detect_xcms_peaks <- function(
 #' @importFrom xcms findChromPeaks CentWaveParam chromPeaks
 #' @import magrittr MsExperiment data.table
 extract_xcms_peaks <- function(msexp) {
-  output <- xcms::chromPeaks(msexp) %>%
+  output <- xcms::chromPeaks(msexp, isFilledColumn = TRUE) %>%
     data.table::as.data.table(keep.rownames = "peakid")
   return(output)
 }
@@ -113,8 +113,8 @@ extract_xcms_peaks <- function(msexp) {
 #' Extract MS1 features
 #'
 #' @inheritParams extract_xcms_peaks
-#' @param orderL `logical` TRUE to order the features by intensity order of orderL_sample.
 #' @param orderL_sample `character` sample name.
+#' @param quantifyL Logical to perform quantification with `xcms::quantify()`
 #'
 #' @return `data.table` `data.frame` object.
 #' @export
@@ -123,24 +123,23 @@ extract_xcms_peaks <- function(msexp) {
 #' @importFrom data.table as.data.table
 #' @importFrom SummarizedExperiment assay
 #' @import magrittr
-extract_xcms_features <- function(msexp, orderL = F, orderL_sample = NULL) {
-  
+extract_xcms_features <- function(msexp, orderL_sample = NULL, quantifyL = FALSE) {
   output <- msexp %>%
     xcms::featureDefinitions(.) %>%
     data.table::as.data.table(keep.rownames = "featureid")
-  
-  intensities <- msexp %>% 
-    xcms::quantify(., method = "max") %>%
-    SummarizedExperiment::assay() %>%
-    as.data.table(., keep.rownames="rn")
-  colnames(intensities)[1] <- "featureid"
-  
-  res <- merge(output, intensities, by = "featureid")
-  
-  if (orderL & !is.null(orderL_sample)) {
-    res <- res[order(-get(orderL_sample)), ]
+  if (quantifyL) {
+    intensities <- msexp %>%
+      xcms::quantify(., method = "max") %>%
+      SummarizedExperiment::assay() %>%
+      as.data.table(., keep.rownames = "rn")
+    colnames(intensities)[1] <- "featureid"
+    output <- merge(output, intensities, by = "featureid")
+    if (!is.null(orderL_sample)) {
+      if (!orderL_sample %in% names(res)) {
+        stop(sprintf("sample not found: %s", orderL_sample))
+      }
+      output <- output[order(-get(orderL_sample)), ]
+    }
   }
-  
-  return(res)
+  return(output)
 }
-

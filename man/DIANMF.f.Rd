@@ -6,10 +6,10 @@
 \usage{
 DIANMF.f(
   msexp,
-  d.out = FALSE,
+  dir_out = FALSE,
   sample_idx = 1,
-  MS2_ISOEACHL = T,
-  MS1MS2_L = F,
+  MS2_ISOEACHL = TRUE,
+  MS1MS2_L = FALSE,
   rank = 10,
   maximumIteration = 200,
   maxFBIteration = 100,
@@ -18,13 +18,15 @@ DIANMF.f(
   errors_print = FALSE,
   method = "svds",
   scan_rt_ext = 10,
-  min_distance = 5
+  min_distance = 5,
+  featuresn = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
 \item{msexp}{\code{MsExperiment} object obtained from xcms or with \code{DIANMF::detect_xcms_peaks()}.}
 
-\item{d.out}{\code{logical} TRUE to save results, else FALSE}
+\item{dir_out}{\code{logical} TRUE to save results, else FALSE}
 
 \item{sample_idx}{NULL to process all files else, \code{numeric} index of the sample.}
 
@@ -49,6 +51,8 @@ DIANMF.f(
 \item{scan_rt_ext}{\code{numeric}}
 
 \item{min_distance}{\code{numeric}}
+
+\item{verbose}{\code{logical} to show execution messages}
 }
 \value{
 \code{list}

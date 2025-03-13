@@ -4,10 +4,21 @@
 \alias{get_spectra_values}
 \title{Get spectra value in MsExperiment}
 \usage{
-get_spectra_values(msexp)
+get_spectra_values(
+  msexp,
+  mslevel = NULL,
+  isowin = NULL,
+  combineSpectra_arg = NULL
+)
 }
 \arguments{
 \item{msexp}{MsExperiment object}
+
+\item{mslevel}{(optional) MSLevel to subset}
+
+\item{isowin}{(optional) isolation window to subset}
+
+\item{combineSpectra_arg}{(optional) combineSpectra argument as a list}
 }
 \value{
 a data.table containing spectra infos
