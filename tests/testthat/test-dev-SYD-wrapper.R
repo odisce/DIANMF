@@ -52,11 +52,11 @@ devtools::load_all()
 profile_save_path <- file.path(profile_path, format(Sys.time(), "%y%m%d-%H%M-profvis.html"))
 proffres <- profvis::profvis(
   expr = {
-    features <- DIANMF::DIANMF.f(
+    features <- DIANMF.f(
       msexp = xcms_obj, dir_out = FALSE,
       sample_idx = 1,
-      MS2_ISOEACHL = T,
-      MS1MS2_L = F,
+      MS2_ISOEACHL = TRUE,
+      MS1MS2_L = FALSE,
       rank = 10,
       maximumIteration = 200,
       maxFBIteration = 100,
@@ -66,12 +66,11 @@ proffres <- profvis::profvis(
       method = "svds",
       scan_rt_ext = 10,
       min_distance = 5,
-      featuresn = 10
+      featuresn = 3
     )
   }
 )
 htmlwidgets::saveWidget(proffres, profile_save_path)
-
 
 if (F) {
       msexp = xcms_obj
@@ -79,7 +78,7 @@ if (F) {
       sample_idx = 1
       MS2_ISOEACHL = T
       MS1MS2_L = F
-      rank = 10
+      rank_nb = 10
       maximumIteration = 200
       maxFBIteration = 100
       toleranceFB = 1e-05
@@ -87,6 +86,7 @@ if (F) {
       errors_print = FALSE
       method = "svds"
       scan_rt_ext = 10
+      nscans = 4
       min_distance = 5
       featuresn = 10
       verbose = TRUE
@@ -95,7 +95,7 @@ if (F) {
 
 A <- Sys.time()
 
-    features <- DIANMF::DIANMF.f(
+    features <- DIANMF.f(
       msexp = xcms_obj, dir_out = FALSE,
       sample_idx = 1,
       MS2_ISOEACHL = T,
@@ -109,10 +109,20 @@ A <- Sys.time()
       method = "svds",
       scan_rt_ext = 10,
       min_distance = 5,
-      featuresn = 5,
+      featuresn = NULL,
+      combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp = 0.05),
       verbose = TRUE
     )
 
 B <- Sys.time()
 
 difftime(B, A)
+
+{
+  require(ggplot2)
+  ggplot(ms1_peaks[sample == 1 & is_filled == 0,]) +
+    geom_linerange(aes(y = mz, x = rt, xmin = rtmin, xmax = rtmax)) +
+    geom_linerange(data = ms1_peaks_i[sample == 1 & is_filled == 0,], aes(y = mz, x = rt, xmin = rtmin, xmax = rtmax, color = peakfull)) + 
+    theme_bw()
+  
+}

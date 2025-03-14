@@ -46,28 +46,20 @@ if (file.exists(cache_path)) {
   saveRDS(xcms_obj, cache_path)
 }
 
-require(profvis)
-devtools::load_all()
-profvis::profvis(
-  expr = {
-    features <- DIANMF::DIANMF.f(
-      msexp = xcms_obj,
-      dir_out = FALSE,
-      sample_idx = 1,
-      MS2_ISOEACHL = T,
-      MS1MS2_L = F,
-      rank = 10,
-      maximumIteration = 200,
-      maxFBIteration = 100,
-      toleranceFB = 1e-05,
-      initialization_method = "nndsvd",
-      errors_print = FALSE,
-      method = "svds",
-      scan_rt_ext = 10,
-      min_distance = 5,
-      featuresn = 2
-    )
-  }
+features <- DIANMF.f(
+  msexp = xcms_obj, dir_out = FALSE,
+  sample_idx = 1,
+  MS2_ISOEACHL = T,
+  MS1MS2_L = F,
+  rank = 10,
+  maximumIteration = 200,
+  maxFBIteration = 100,
+  toleranceFB = 1e-05,
+  initialization_method = "nndsvd",
+  errors_print = FALSE,
+  method = "svds",
+  scan_rt_ext = 10,
+  min_distance = 5,
+  featuresn = 3,
+  verbose = TRUE
 )
-
-profvis::profvis(expr = {Sys.sleep(1) ; mean(1:100)})

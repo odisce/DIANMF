@@ -61,6 +61,10 @@ align_scans <- function(msexp, rt_range, sample_idx) {
   ]
   time_dic <- ms2_rtime[scan_norm %between% (range(scan_norm) + c(+1, -1)), ]
   time_dic[order(rtime), scan_norm := seq_len(.N), by = .(msLevel, isolationWindowTargetMz)]
+  ## remove trailing scans
+  scan_sel <- time_dic[, (range(scan_norm) + c(+1, -1)),]
+  time_dic <- time_dic[scan_norm %between% scan_sel, ]
+  time_dic[, scan_norm := scan_norm - 1]
   time_dic[]
 }
 
@@ -126,39 +130,35 @@ build_XICs <- function(
   rawdt
 ) {
   grpcol <- intersect(c("peakid", "peakfull", "xic_label"), names(peaks_dt))
-  if ("IsoWin" %in% names(peaks_dt)) {
-    isowinL <- TRUE
-    setkey(rawdt, msLevel, mz, isolationWindowTargetMz)
-  } else {
-    isowinL <- FALSE
-    setkey(rawdt, msLevel, mz)
-  }
+
   
-  xic_dt <- peaks_dt[
-    ,
-    {
-      mzrange <- c(mzmin, mzmax)
-      mslevel_sel <- msLevel
-      if (isowinL) {
-        isowin_sel <- IsoWin
-        tempi <- rawdt[isolationWindowTargetMz == isowin_sel,]
-      } else {
-        tempi <- rawdt
-      }
-      tempi[msLevel == mslevel_sel, ][
-        mz %between% mzrange,
-        .(mz, rtime, intensity, msLevel, isolationWindowTargetMz, collisionEnergy)
-      ]
-    },
-    by = grpcol
-  ]
-  return(xic_dt)
+  if ("IsoWin" %in% names(peaks_dt)) {
+    grid_dt <- peaks_dt[, .(msLevel, isolationWindowTargetMz = IsoWin)] %>% unique()
+    key_join <- c("msLevel", "isolationWindowTargetMz")
+  } else {
+    grid_dt <- peaks_dt[, .(msLevel)] %>% unique()
+    key_join <- c("msLevel")
+  }
+
+  output <- lapply(seq_len(grid_dt[, .N]), function(rowi) {
+    tempi <- grid_dt[rowi,]
+    x <- rawdt[tempi, on = key_join][,  .(start = mz, end = mz, mz, rtime, intensity, msLevel, isolationWindowTargetMz, collisionEnergy)]
+    y <- peaks_dt[tempi, on = key_join][, .(start = mzmin, end = mzmax, xic_label)]
+    setkey(x, start, end)
+    setkey(y, start, end)
+    res <- foverlaps(x, y, type = "any", nomatch = NULL)
+    return(
+      res[, .(mz, rtime, intensity, msLevel, isolationWindowTargetMz, collisionEnergy, xic_label)]
+    )
+  }) %>%
+    rbindlist()
+  return(output)
 }
 
 #' Build MS2 xics
 #'
 #' @inheritParams extract_xcms_peaks
-#' @inheritParams build_ms1XICS
+#' @inheritParams build_XICs
 #' @inheritParams get_spectra_values
 #' @param ms2isowinL `logical` is TRUE to build the MS2 xics from raw data, else from xcms peaks. 
 #' @param ppm ppm to use for returning mzmin and mzmax values
@@ -248,6 +248,32 @@ generate_peaklist <- function(
 #   return(xic_dt_ms2)
 # }
 
+#' Create the mixed matrix
+#' 
+#' @param xicdt `data.table` of the xics build with `DIANMF::build_XICs()`
+#' @inheritParams has_n_consecutive_non_zero
+#'
+#' @return `list` of the mixed matrices (ions x scans) with two levels:by
+#'            - [1] mixed matrix with more than nscans consectuvies scans
+#'            - [2] mixed matrix with less than nscans consectuvies scans
+#' @export
+build_mixed_matrix <- function(xicdt, nscans = 4) {
+  mixeddt <- dcast(
+    xicdt[order(scan_norm),],
+    xic_label ~ scan_norm,
+    value.var = "intensity",
+    fun.aggregate = max,
+    fill = 0
+  )
+  mixedmat <- as.matrix(mixeddt, rownames = 1)
+  row_filter_ms1 <- apply(mixedmat, 1, has_n_consecutive_non_zero, n = nscans)
+  return(
+    list(
+      'mixedmat' = mixedmat[row_filter_ms1,],
+      'mixedmat_deleted' = mixedmat[!row_filter_ms1,]
+    )
+  )
+}
 
 #' Generate MS1 data and info
 #' 
@@ -269,10 +295,12 @@ ms1Info <- function(xic_dt_ms1){
   ms1_infos$isolationWindowLowerMz <- NA
   ms1_infos$isolationWindowUpperMz <- NA
   
-  return(list(
-    'ms1_mixedmat' = ms1_mixedmat,
-    'ms1_mixedmat_deleted' = ms1_mixedmat_deleted,
-    'ms1_infos' = ms1_infos))
+  return(
+    list(
+      'ms1_mixedmat' = ms1_mixedmat,
+      'ms1_mixedmat_deleted' = ms1_mixedmat_deleted,
+      'ms1_infos' = ms1_infos)
+    )
 }
 
 

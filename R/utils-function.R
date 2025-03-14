@@ -50,6 +50,7 @@ get_mslevels <- function(msexp) {
 #' @export
 get_spectra_values <- function(msexp, mslevel = NULL, isowin = NULL, combineSpectra_arg = NULL) {
   spec_obj <- MsExperiment::spectra(msexp)
+  spec_obj <- setBackend(spec_obj, MsBackendMemory())
   if (!is.null(mslevel)) {
     spec_obj <- Spectra::filterMsLevel(spec_obj, mslevel)
   }

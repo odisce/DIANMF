@@ -10,7 +10,7 @@ DIANMF.f(
   sample_idx = 1,
   MS2_ISOEACHL = TRUE,
   MS1MS2_L = FALSE,
-  rank = 10,
+  rank_nb = 10,
   maximumIteration = 200,
   maxFBIteration = 100,
   toleranceFB = 1e-05,
@@ -19,7 +19,10 @@ DIANMF.f(
   method = "svds",
   scan_rt_ext = 10,
   min_distance = 5,
+  nscans = 4,
   featuresn = NULL,
+  combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp =
+    0.05),
   verbose = FALSE
 )
 }
@@ -33,8 +36,6 @@ DIANMF.f(
 \item{MS2_ISOEACHL}{\code{logical}}
 
 \item{MS1MS2_L}{\code{logical}}
-
-\item{rank}{\code{numeric(1)} number of pure compounds in the mixed matrix; rank of factorization.}
 
 \item{maximumIteration}{\code{numeric(1)} maximum number of iterations.}
 
@@ -51,6 +52,8 @@ DIANMF.f(
 \item{scan_rt_ext}{\code{numeric}}
 
 \item{min_distance}{\code{numeric}}
+
+\item{combineSpectra_arg}{(optional) combineSpectra argument as a list}
 
 \item{verbose}{\code{logical} to show execution messages}
 }

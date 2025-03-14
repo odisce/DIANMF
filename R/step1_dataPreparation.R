@@ -106,7 +106,8 @@ detect_xcms_peaks <- function(
 extract_xcms_peaks <- function(msexp) {
   output <- xcms::chromPeaks(msexp, isFilledColumn = TRUE) %>%
     data.table::as.data.table(keep.rownames = "peakid")
-  return(output)
+  output[, peakindex := seq_len(.N)]
+  return(output[])
 }
 
 
