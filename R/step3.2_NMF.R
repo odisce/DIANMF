@@ -234,7 +234,7 @@ nGMCAs <- function(
     
     error_k_new <- error_function(Y = X.m, A = data$A, S = data$S)
     if( abs(error_k_new - error_k) <= toleranceFB ) {
-      print( paste("reach convergence at iteration:", i) )
+      # print( paste("reach convergence at iteration:", i) )
       break
     }
     

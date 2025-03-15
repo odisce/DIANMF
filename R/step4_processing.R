@@ -36,6 +36,7 @@ DIANMF.f <- function(
   initialization_method = "nndsvd",
   errors_print = FALSE,
   method = "svds",
+  rt_method = c("peak", "constant"),
   scan_rt_ext = 10,
   min_distance = 5,
   nscans = 4,
@@ -46,9 +47,8 @@ DIANMF.f <- function(
   options(datatable.verbose = FALSE)
   ms1_peaks <- extract_xcms_peaks(msexp)
   ms1_peaks[, iteration := as.character(NA)]
-  ms1_features <- extract_xcms_features(msexp, quantifyL = TRUE)
-  ms1_features[, iteration := as.character(NA) ]
-  ms1_features_peaks <- ms1_features[, .(peakindex = unlist(peakidx)), by = featureid]
+  ms1_features_all <- extract_xcms_features(msexp, quantifyL = TRUE)
+  ms1_features_peaks <- ms1_features_all[, .(peakindex = unlist(peakidx)), by = featureid]
   ms1_features_peaks[, iteration := as.character(NA) ]
   file_info <- MsExperiment::sampleData(msexp) %>% as.data.table()
 
@@ -64,6 +64,8 @@ DIANMF.f <- function(
   ## Iterate over files ----
   res <- lapply(seq_len(file_info[, .N]), function(s_idx) {
     # s_idx = 1
+    ms1_features <- copy(ms1_features_all)
+    ms1_features[, iteration := as.character(NA) ]
     msexp_idx <- xcms::filterFile(msexp, s_idx)
     nev <- get_ms1_rtdiff(msexp_idx) * 1.5
     s_idx_name <- file_info[s_idx, basename(mzml_path)]
@@ -86,7 +88,7 @@ DIANMF.f <- function(
 
     while (feature_idx <= nrow(ms1_features)) {
       # Option to limit the number of features to extrac
-      k <- k+1
+      k <- k + 1
       if (!is.null(featuresn)) {
         if (k > featuresn) {
           break
@@ -94,6 +96,9 @@ DIANMF.f <- function(
       }
       # Set current feature to process
       feature_idx <- ms1_features[, which(is.na(iteration)),][1]
+      if (is.na(feature_idx)) {
+        break
+      }
       if (verbose) {
         message(sprintf("feature index: %i ------ k: %i", feature_idx, k))
       }
@@ -108,6 +113,9 @@ DIANMF.f <- function(
         next
       } else {
         rt_range <- peak_i[which.max(into), range(c(rtmin, rtmax)) + c(-scan_rt_ext - nev, +scan_rt_ext + nev)]
+        if (rt_method == "constant") {
+          rt_range <- (mean(rt_range) + c(-scan_rt_ext - nev, +scan_rt_ext + nev))
+        }
         rt_range[1] <- max(min_rt, rt_range[1])  # to avoid rt < 0
         rt_range[2] <- min(max_rt, rt_range[2])  # to avoid rt out of range
         ## Subset msexp object
@@ -131,7 +139,7 @@ DIANMF.f <- function(
         time_dic <- align_scans(
           msexp = msexp_idx_rt,
           rt_range = rt_range,
-          sample_idx = s_idx
+          sample_idx = 1
         )
         ## Get MS2 peaklist
         if (verbose) {
@@ -172,6 +180,7 @@ DIANMF.f <- function(
           "pure_elution_profiles" = NULL,
           "pure_spectra" = NULL
         )
+        NextIter <- FALSE
         for (i in seq_len(length(peaks_ls))) {
           if (verbose) {
             message(sprintf("    Generating %s XICs", peaks_ls[[i]][, .N]))
@@ -185,14 +194,21 @@ DIANMF.f <- function(
             message("    Build mixed matrix")
           }
           ms_mixed_i <- build_mixed_matrix(ms_xics_i, nscans = nscans)
+          if (nrow(ms_mixed_i$mixedmat) <= 0) {
+            if (verbose) {
+              message("    Empty mixed matrix: skipping")
+            }
+            NextIter <- TRUE
+            break
+          }
           if (verbose) {
             message(sprintf("    Unmixing %s", names(peaks_ls)[i]), appendLF = FALSE)
             timeA <- Sys.time()
           }
-          rank <- min(rank_nb, ncol(ms_mixed_i$mixedmat))
+          rank <- min(rank_nb, (ncol(ms_mixed_i$mixedmat) - 1))
           nmf_i <- nGMCAs(
             X.m = ms_mixed_i$mixedmat,
-            rank = rank_nb,
+            rank = rank,
             maximumIteration = maximumIteration,
             maxFBIteration = maxFBIteration,
             toleranceFB = toleranceFB,
@@ -201,6 +217,11 @@ DIANMF.f <- function(
             errors_print = errors_print,
             method = method
           )
+          if (verbose) {
+            timeB <- Sys.time()
+            message(sprintf(": Done (%0.2fs)", difftime(timeB, timeA, units = "secs")), appendLF = TRUE)
+            message("    Extracting pure sources", appendLF = FALSE)
+          }
           # Format output
           pure_rt <- reshape2::melt(nmf_i$A) %>% as.data.table()
           setnames(pure_rt, c("rank", "scan_norm", "value"))
@@ -224,8 +245,8 @@ DIANMF.f <- function(
             by = "xic_label"
           )
           if (verbose) {
-            timeB <- Sys.time()
-            message(sprintf("(%0.2fs)", difftime(timeB, timeA, units = "secs")), appendLF = TRUE)
+            timeC <- Sys.time()
+            message(sprintf(": Done (%0.2fs)", difftime(timeC, timeB, units = "secs")), appendLF = TRUE)
           }
           nmf_result_ls <- list(
             "ms_info" = rbind(
@@ -257,6 +278,10 @@ DIANMF.f <- function(
           }
           rm(ms_mixed_i, pure_rt, pure_mz, ms_xics_i, nmf_i)
         }
+        if (NextIter) {
+          ms1_features[feature_idx, iteration := ifelse(is.na(iteration), 0, iteration)]
+          next
+        }
         ## Filter sources based on MS1 contribution threshold
         tempdt <- nmf_result_ls$pure_spectra[xic_label %in% nmf_result_ls$ms_info[msLevel == 1, unique(xic_label)],]
         good_sources <- tempdt[, .(contL = max(contribution) >= 0.6), by = .(rank, MSid)][contL == TRUE, .(rank, MSid)]
@@ -285,10 +310,10 @@ DIANMF.f <- function(
               param =  CentWaveParam(
                 ppm = 0,
                 prefilter = c(3, 1),
-                peakwidth = c(4, 10),
-                snthresh = 2,
+                peakwidth = c(2, 10),
+                snthresh = 1,
                 mzCenterFun = "wMeanApex3",
-                integrate = 2,
+                integrate = 1,
                 mzdiff = 0,
                 noise = 0,
                 firstBaselineCheck = FALSE)
@@ -389,12 +414,13 @@ DIANMF.f <- function(
         if (verbose) {
           message(
             sprintf(
-              "    Extracted %i (%i not in sources) features in iteration %i (%i/%i cumulated/remaining)",
+              "    Extracted %i (%i not in sources) features in iteration %i (%i/%i/%i cumulated/remaining/total)",
               length(feature_extracted),
               length(feature_nextracted),
               k,
               ms1_features[!is.na(iteration), .N],
-              ms1_features[is.na(iteration), .N]
+              ms1_features[is.na(iteration), .N],
+              ms1_features[, .N]
             )
           )
         }

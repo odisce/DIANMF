@@ -17,6 +17,7 @@ DIANMF.f(
   initialization_method = "nndsvd",
   errors_print = FALSE,
   method = "svds",
+  rt_method = c("peak", "constant"),
   scan_rt_ext = 10,
   min_distance = 5,
   nscans = 4,

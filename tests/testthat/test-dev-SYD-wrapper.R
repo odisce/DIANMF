@@ -85,31 +85,35 @@ if (F) {
       initialization_method = "nndsvd"
       errors_print = FALSE
       method = "svds"
-      scan_rt_ext = 10
-      nscans = 4
-      min_distance = 5
-      featuresn = 10
+      scan_rt_ext = 5
+      nscans = 6
+      min_distance = 3
+      featuresn = NULL
       verbose = TRUE
+      rt_method = "constant"
+      combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp = 0.05)
 }
 
-
+devtools::load_all()
 A <- Sys.time()
 
     features <- DIANMF.f(
-      msexp = xcms_obj, dir_out = FALSE,
-      sample_idx = 1,
-      MS2_ISOEACHL = T,
-      MS1MS2_L = F,
-      rank = 10,
+      msexp = xcms::filterMz(xcms_obj, c(100,200)),
+      dir_out = FALSE,
+      sample_idx = NULL,
+      MS2_ISOEACHL = TRUE,
+      MS1MS2_L = FALSE,
+      rank = 20,
       maximumIteration = 200,
       maxFBIteration = 100,
       toleranceFB = 1e-05,
       initialization_method = "nndsvd",
       errors_print = FALSE,
       method = "svds",
-      scan_rt_ext = 10,
-      min_distance = 5,
+      scan_rt_ext = 30,
+      min_distance = 4,
       featuresn = NULL,
+      rt_method = "constant",
       combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp = 0.05),
       verbose = TRUE
     )
@@ -117,12 +121,22 @@ A <- Sys.time()
 B <- Sys.time()
 
 difftime(B, A)
-
+# Check feature 3008, 7797
+    # Generating MS2 peaks list
+    # Extracting ions signals
+    # Generating 717 XICs
+    # Build mixed matrix
+    # Unmixing MS1Error in U[, i] : subscript out of bounds
 {
   require(ggplot2)
   ggplot(ms1_peaks[sample == 1 & is_filled == 0,]) +
     geom_linerange(aes(y = mz, x = rt, xmin = rtmin, xmax = rtmax)) +
     geom_linerange(data = ms1_peaks_i[sample == 1 & is_filled == 0,], aes(y = mz, x = rt, xmin = rtmin, xmax = rtmax, color = peakfull)) + 
     theme_bw()
+
+    ggplot(pure_rt_good, aes(rtime, value, color = rank, group = rank)) +
+      geom_line() +
+      facet_grid(rank~MSid) +
+      theme_bw()
   
 }
