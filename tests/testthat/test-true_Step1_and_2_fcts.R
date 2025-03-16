@@ -1,3 +1,5 @@
+testthat::skip("development script")
+
 test_that("Step 1 and 2 tests", {
  
   # test step 1

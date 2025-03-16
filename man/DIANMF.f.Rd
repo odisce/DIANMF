@@ -10,7 +10,7 @@ DIANMF.f(
   sample_idx = 1,
   MS2_ISOEACHL = TRUE,
   MS1MS2_L = FALSE,
-  rank_nb = 10,
+  rank = 10,
   maximumIteration = 200,
   maxFBIteration = 100,
   toleranceFB = 1e-05,
@@ -38,6 +38,8 @@ DIANMF.f(
 
 \item{MS1MS2_L}{\code{logical}}
 
+\item{rank}{\code{numeric(1)} number of pure compounds in the mixed matrix; rank of factorization.}
+
 \item{maximumIteration}{\code{numeric(1)} maximum number of iterations.}
 
 \item{maxFBIteration}{\code{numeric(1)} maximum number of iterations in the FB algorithm.}
@@ -50,9 +52,15 @@ DIANMF.f(
 
 \item{method}{Method to compute svd: "base", "fast" or "svds"}
 
+\item{rt_method}{c("peak", "constant")}
+
 \item{scan_rt_ext}{\code{numeric}}
 
 \item{min_distance}{\code{numeric}}
+
+\item{nscans}{number of minimal consecutive value to check}
+
+\item{featuresn}{\code{numeric} to limit the number if iteration (k) on each file for testing purpose, set it to NULL to extract all features.}
 
 \item{combineSpectra_arg}{(optional) combineSpectra argument as a list}
 

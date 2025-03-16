@@ -2,7 +2,7 @@ testthat::skip("development script; test the wrapper function")
 
 devtools::document()
 devtools::load_all()
-input_dir <- "/spi/scidospi/06_Data/BarbierSaintHilaire_ComparativeEvaluationData_2020/DIA/mzml/"
+input_dir <- "//fouet/spi/scidospi/06_Data/BarbierSaintHilaire_ComparativeEvaluationData_2020/DIA/mzml/"
 mzml_dt <- prepare_mzMLfiles(input_dir = input_dir)
 mzml_dt <- mzml_dt[1:3, ]
 params_ls <- list(  
@@ -38,7 +38,7 @@ params_ls <- list(
   "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
 )
 
-cache_path <- "/spi/scidospi/06_Data/deconv_nmf/temp.rds"
+cache_path <- "//fouet/spi/scidospi/06_Data/deconv_nmf_diana/temp.rds"
 if (file.exists(cache_path)) {
   xcms_obj <- readRDS(cache_path)  
 } else {
@@ -58,6 +58,7 @@ features <- DIANMF.f(
   initialization_method = "nndsvd",
   errors_print = FALSE,
   method = "svds",
+  rt_method = "constant",
   scan_rt_ext = 10,
   min_distance = 5,
   featuresn = 3,

@@ -7,9 +7,11 @@
 #' @param MS1MS2_L `logical`
 #' @inheritParams get_spectra_values
 #' @inheritParams nGMCAs
+#' @param rt_method c("peak", "constant")
 #' @inheritParams has_n_consecutive_non_zero
 #' @param scan_rt_ext `numeric`
 #' @param min_distance `numeric`
+#' @param featuresn `numeric` to limit the number if iteration (k) on each file for testing purpose, set it to NULL to extract all features.
 #' @param verbose `logical` to show execution messages
 #'
 #' @return `list`
@@ -29,7 +31,7 @@ DIANMF.f <- function(
   sample_idx = 1,
   MS2_ISOEACHL = TRUE,
   MS1MS2_L = FALSE,
-  rank_nb = 10,
+  rank = 10,
   maximumIteration = 200,
   maxFBIteration = 100,
   toleranceFB = 1e-05,
@@ -205,7 +207,7 @@ DIANMF.f <- function(
             message(sprintf("    Unmixing %s", names(peaks_ls)[i]), appendLF = FALSE)
             timeA <- Sys.time()
           }
-          rank <- min(rank_nb, (ncol(ms_mixed_i$mixedmat) - 1))
+          rank <- min(rank, (ncol(ms_mixed_i$mixedmat) - 1))
           nmf_i <- nGMCAs(
             X.m = ms_mixed_i$mixedmat,
             rank = rank,
@@ -292,7 +294,7 @@ DIANMF.f <- function(
           ms1_features[feature_idx, iteration := ifelse(is.na(iteration), 0, iteration)]
           next
         }
-        ## Detecte pure elution profile peaks
+        ## Detect pure elution profile peaks
         pure_rt_good <- nmf_result_ls$pure_rt[good_sources, on = c("rank", "MSid")]
         chromM <- list()
         for (ranki in pure_rt_good[, seq_len(length(unique(rank)))]) {

@@ -8,6 +8,8 @@ build_mixed_matrix(xicdt, nscans = 4)
 }
 \arguments{
 \item{xicdt}{\code{data.table} of the xics build with \code{DIANMF::build_XICs()}}
+
+\item{nscans}{number of minimal consecutive value to check}
 }
 \value{
 \code{list} of the mixed matrices (ions x scans) with two levels:by

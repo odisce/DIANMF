@@ -4,12 +4,12 @@
 \alias{has_n_consecutive_non_zero}
 \title{Check if the vector has at least 4 consecutive non-zero values}
 \usage{
-has_n_consecutive_non_zero(row, n = 4)
+has_n_consecutive_non_zero(row, nscans = 4)
 }
 \arguments{
 \item{row}{vector of \code{numeric} to evaluate.}
 
-\item{n}{number of minimal consecutive value to check}
+\item{nscans}{number of minimal consecutive value to check}
 }
 \value{
 \code{Logical} \code{TRUE} if the vector contains at least n

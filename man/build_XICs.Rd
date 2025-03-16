@@ -7,9 +7,9 @@
 build_XICs(peaks_dt, rawdt)
 }
 \arguments{
-\item{peaks_i}{\code{data.table} \code{data.frame} targeted peaks in one rt_range.}
+\item{peaks_dt}{\code{data.table} \code{data.frame} targeted peaks in one rt_range.}
 
-\item{raw_dt}{\code{data.frame} from \code{DIANMF::get_rawD_ntime}}
+\item{rawdt}{\code{data.frame} from \code{DIANMF::get_rawD_ntime}}
 }
 \value{
 \code{data.table} \code{data.frame} MS1 EICs.

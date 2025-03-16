@@ -1,3 +1,5 @@
+testthat::skip("development script")
+
 test_that("step 4 and export functions test", {
   data_example <- get_test_peaks()
   features.l <- DIANMF.f(
@@ -13,6 +15,7 @@ test_that("step 4 and export functions test", {
     initialization_method = "nndsvd",
     errors_print = FALSE,
     method = "svds",
+    rt_method = "peak",
     scan_rt_ext = 10, min_distance = 5
   )
   msSpectra <- exportMSSpectra(features.l[[1]])

@@ -15,14 +15,14 @@ PpmRange <-  function(ref, ppm.n) {
 #' Check if the vector has at least 4 consecutive non-zero values
 #'
 #' @param row vector of `numeric` to evaluate.
-#' @param n number of minimal consecutive value to check
+#' @param nscans number of minimal consecutive value to check
 #'
 #' @return `Logical` `TRUE` if the vector contains at least n
 #'         consecutive non-zero values, `FALSE` otherwise.
-has_n_consecutive_non_zero <- function(row, n = 4) {
+has_n_consecutive_non_zero <- function(row, nscans = 4) {
   # Find consecutive non-zero values
   non_zero_streaks <- rle(row != 0)
-  any(non_zero_streaks$lengths[non_zero_streaks$values] >= n)
+  any(non_zero_streaks$lengths[non_zero_streaks$values] >= nscans)
 }
 
 #' Get scan time and align between ms events
@@ -68,18 +68,7 @@ align_scans <- function(msexp, rt_range, sample_idx) {
   time_dic[]
 }
 
-# #' Extract MS1 raw data
-# #'
-# #' @inheritParams extract_xcms_peaks
-# #' @param rt_range retention time range.
-# #' @param sample_idx `numeric` sample index.
-# #'
-# #' @return `list` of `data.table` `data.frame` objects: raw_dt and time_dic.
-# #' @export
-# #'
-# #' @importFrom xcms filterRt filterFile
-# #' @import magrittr data.table
-# #' @import dplyr
+
 # get_rawD_ntime <- function(
 #   msexp,
 #   rt_range,
@@ -118,8 +107,8 @@ align_scans <- function(msexp, rt_range, sample_idx) {
 
 #' Build MS1 xics from peak list
 #'
-#' @param peaks_i `data.table` `data.frame` targeted peaks in one rt_range.
-#' @param raw_dt `data.frame` from `DIANMF::get_rawD_ntime`
+#' @param peaks_dt `data.table` `data.frame` targeted peaks in one rt_range.
+#' @param rawdt `data.frame` from `DIANMF::get_rawD_ntime`
 #'
 #' @return `data.table` `data.frame` MS1 EICs.
 #' @export
