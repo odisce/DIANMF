@@ -5,7 +5,6 @@ utils::globalVariables(c(
    "rt_range", "IsoWin", "sample_idx", "median", "mz_value", 
    "InjectionOrder", "creation_date", "rt", "head", "rowMax",
    "into", "featureid", "sequence_table"
-  
 ))
 
 utils::globalVariables(c("."))

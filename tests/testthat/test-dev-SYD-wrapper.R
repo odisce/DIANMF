@@ -78,7 +78,7 @@ if (F) {
       sample_idx = 1
       MS2_ISOEACHL = T
       MS1MS2_L = F
-      rank_nb = 10
+      rank = 10
       maximumIteration = 200
       maxFBIteration = 100
       toleranceFB = 1e-05
@@ -98,9 +98,9 @@ devtools::load_all()
 A <- Sys.time()
 
     features <- DIANMF.f(
-      msexp = xcms::filterMz(xcms_obj, c(100,200)),
+      msexp = xcms_obj,
       dir_out = FALSE,
-      sample_idx = NULL,
+      sample_idx = 1,
       MS2_ISOEACHL = TRUE,
       MS1MS2_L = FALSE,
       rank = 20,
