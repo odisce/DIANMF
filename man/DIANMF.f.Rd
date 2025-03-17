@@ -14,6 +14,7 @@ DIANMF.f(
   maximumIteration = 200,
   maxFBIteration = 100,
   toleranceFB = 1e-05,
+  min_contrib = 0.6,
   initialization_method = "nndsvd",
   errors_print = FALSE,
   method = "svds",
@@ -45,6 +46,8 @@ DIANMF.f(
 \item{maxFBIteration}{\code{numeric(1)} maximum number of iterations in the FB algorithm.}
 
 \item{toleranceFB}{\code{numeric(1)} tolerance or stopping value of the FB algorithm.}
+
+\item{min_contrib}{\code{numeric} contribution proportion to keep ions (between 0 and 1)}
 
 \item{initialization_method}{\code{character} to specify the initialization method: random, nndsvd or subSample.}
 
