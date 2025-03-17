@@ -48,10 +48,10 @@ DIANMF.f <- function(
 ) {
   options(datatable.verbose = FALSE)
   ms1_peaks <- extract_xcms_peaks(msexp)
-  ms1_peaks[, iteration := as.character(NA)]
+  # ms1_peaks[, iteration := as.character(NA)]
   ms1_features_all <- extract_xcms_features(msexp, quantifyL = TRUE)
   ms1_features_peaks <- ms1_features_all[, .(peakindex = unlist(peakidx)), by = featureid]
-  ms1_features_peaks[, iteration := as.character(NA) ]
+  ms1_features_peaks <- merge(ms1_peaks, ms1_features_peaks, by = "peakindex")
   file_info <- MsExperiment::sampleData(msexp) %>% as.data.table()
 
   # Check and Filter the file_info based on MSExperiment indexes
@@ -66,7 +66,7 @@ DIANMF.f <- function(
   ## Iterate over files ----
   res <- lapply(seq_len(file_info[, .N]), function(s_idx) {
     # s_idx = 1
-    ms1_features <- copy(ms1_features_all)
+    ms1_features <- copy(ms1_features_peaks[sample == s_idx, ])
     ms1_features[, iteration := as.character(NA) ]
     msexp_idx <- xcms::filterFile(msexp, s_idx)
     nev <- get_ms1_rtdiff(msexp_idx) * 1.5
@@ -80,14 +80,13 @@ DIANMF.f <- function(
         )
       )
     }
-    min_rt <- ms1_peaks[sample == s_idx, min(rtmin)]
-    max_rt <- ms1_peaks[sample == s_idx, max(rtmax)]
+    min_rt <- ms1_features[, min(rtmin)]
+    max_rt <- ms1_features[, max(rtmax)]
     features.l <- list()
     feature_idx <- 1
     k <- 0
     ## Sort and Extract features
-    ms1_features <- ms1_features[order(-get(s_idx_name))]
-
+    ms1_features <- ms1_features[order(-into), ]
     while (feature_idx <= nrow(ms1_features)) {
       # Option to limit the number of features to extrac
       k <- k + 1
@@ -97,21 +96,19 @@ DIANMF.f <- function(
         }
       }
       # Set current feature to process
-      feature_idx <- ms1_features[, which(is.na(iteration)),][1]
+      feature_idx <- ms1_features[is_filled == 0 & is.na(iteration), ][1, featureid]
       if (is.na(feature_idx)) {
         break
       }
       if (verbose) {
         message(sprintf("feature index: %i ------ k: %i", feature_idx, k))
       }
-      peaks_idxs <- unlist(ms1_features[feature_idx, ]$peakidx)
-      # Get peak range current sample x feature
-      peak_i <- ms1_peaks[peaks_idxs, ][sample == s_idx & is_filled == 0, ]
+      peak_i <- ms1_features[featureid == feature_idx & is_filled == 0, ][which.max(into), ]
       if (nrow(peak_i) <= 0) {
         if (verbose) {
           message("    No peak found for this feature: skipping")
         }
-        ms1_features[feature_idx, iteration := 0]
+        ms1_features[featureid == feature_idx, iteration := 0]
         next
       } else {
         rt_range <- peak_i[which.max(into), range(c(rtmin, rtmax)) + c(-scan_rt_ext - nev, +scan_rt_ext + nev)]
@@ -126,7 +123,7 @@ DIANMF.f <- function(
         if (verbose) {
           message("    Generating MS1 peaks list")
         }
-        ms1_peaks_i <- ms1_peaks[sample == s_idx & rtmin <= rt_range[2] & rtmax >= rt_range[1], ]
+        ms1_peaks_i <- ms1_features[rtmin <= rt_range[2] & rtmax >= rt_range[1], ]
         ## flag peaks partially, fully or apex inside the window
         ms1_peaks_i[, peakfull := ifelse(
           (rtmin >= rt_range[1] & rtmax <= rt_range[2]), "full",
@@ -281,7 +278,7 @@ DIANMF.f <- function(
           rm(ms_mixed_i, pure_rt, pure_mz, ms_xics_i, nmf_i)
         }
         if (NextIter) {
-          ms1_features[feature_idx, iteration := ifelse(is.na(iteration), 0, iteration)]
+          ms1_features[featureid == feature_idx, iteration := ifelse(is.na(iteration), 0, iteration)]
           next
         }
         ## Filter sources based on MS1 contribution threshold
@@ -291,7 +288,7 @@ DIANMF.f <- function(
           if (verbose) {
             message("    no source passing threshold, skipping")
           }
-          ms1_features[feature_idx, iteration := ifelse(is.na(iteration), 0, iteration)]
+          ms1_features[featureid == feature_idx, iteration := ifelse(is.na(iteration), 0, iteration)]
           next
         }
         ## Detect pure elution profile peaks
@@ -333,7 +330,7 @@ DIANMF.f <- function(
           if (verbose) {
             message("    No peaks detected in any sources: skipping")
           }
-          ms1_features[feature_idx, iteration := ifelse(is.na(iteration), 0, iteration)]
+          ms1_features[featureid == feature_idx, iteration := ifelse(is.na(iteration), 0, iteration)]
           next
         }
         ## Filter detected peaks and select the two most intense
@@ -349,7 +346,7 @@ DIANMF.f <- function(
           if (verbose) {
             message("    No peaks remains in any sources: skipping")
           }
-          ms1_features[feature_idx, iteration := ifelse(is.na(iteration), 0, iteration)]
+          ms1_features[featureid == feature_idx, iteration := ifelse(is.na(iteration), 0, iteration)]
           next
         }
         ## Attribute MS1 peaks to each good sources
@@ -427,7 +424,7 @@ DIANMF.f <- function(
           )
         }
         ## If targeted feature not in one component, return 0
-        ms1_features[feature_idx, iteration := ifelse(is.na(iteration), 0, iteration)]
+        ms1_features[featureid == feature_idx, iteration := ifelse(is.na(iteration), 0, iteration)]
       }
     }
     
