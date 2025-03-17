@@ -78,38 +78,18 @@ testthat::skip("development script; test the wrapper function")
   htmlwidgets::saveWidget(proffres, profile_save_path)
 }
 
-if (F) {
-      msexp = xcms::filterRt(xcms_obj, rt_range)
-      dir_out = FALSE
-      sample_idx = NULL
-      MS2_ISOEACHL = T
-      MS1MS2_L = F
-      rank_nb = 10
-      maximumIteration = 200
-      maxFBIteration = 100
-      toleranceFB = 1e-05
-      initialization_method = "nndsvd"
-      errors_print = FALSE
-      method = "svds"
-      scan_rt_ext = 5
-      nscans = 6
-      min_distance = 3
-      featuresn = 5
-      verbose = TRUE
-      rt_method = "constant"
-      combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp = 0.05)
-}
-
 devtools::load_all()
+data.table::setDTthreads(1)
 A <- Sys.time()
     rt_range <- targ_dt[grepl("Scopolamine", Compound), (rt_sec + c(-60, +60))]
     features <- DIANMF.f(
       msexp = xcms::filterRt(xcms_obj, rt_range),
       dir_out = FALSE,
-      sample_idx = NULL,
+      sample_idx = 1,
       MS2_ISOEACHL = TRUE,
       MS1MS2_L = FALSE,
       rank = 20,
+      min_contrib = 0.6,
       maximumIteration = 200,
       maxFBIteration = 100,
       toleranceFB = 1e-05,
@@ -118,7 +98,7 @@ A <- Sys.time()
       method = "svds",
       scan_rt_ext = 30,
       min_distance = 4,
-      featuresn = 5,
+      featuresn = NULL,
       rt_method = "constant",
       combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp = 0.05),
       verbose = TRUE
@@ -133,21 +113,48 @@ difftime(B, A)
   features[[1]]$ms1_features
   featuresel <- "FT1834"
   lapply(features, function(x) {
-    x$ms1_features_peaks[featureid == featuresel,] %>% na.omit()
+    x$ms1_features[featureid == featuresel,] %>% na.omit()
   })
+
+  feature_dt <- data.table()
+  for (spli in seq_len(length(features))) {
+    for (iteri in seq_len(length(features[[spli]]$PureFeatures))) {
+      # spli <- 1 ; iteri <- 1
+      if (is.null(features[[spli]]$PureFeatures[[iteri]])) {
+        next
+      }
+      # print(sprintf("spl: %i, feat: %i", spli, iteri))
+      # names(features[[spli]]$PureFeatures[[iteri]])
+      out_dt <- features[[spli]]$PureFeatures[[iteri]]$ms_info[!is.na(source), .(featureid, source, sample = spli, iteration = iteri)]
+      # print(nrow(out_dt))
+      feature_dt <- rbind(feature_dt, out_dt)
+      rm(out_dt)
+    }
+  }
+  
+
+  ## Features summary
+
+  ## Plot one sample diagnostic plot for one iteration
+  names(features[[1]])
+  names(features[[1]]$PureFeatures[[1]])
+  features[[1]]$PureFeatures[[3]]$ms2_info[!is.na(source), ]
 
   ## Plot pure MS1/MS2 for a feature in different samples (with MS1 & MS2 matching)
 
   ## Plot xcms peaks ranges
   require(ggplot2)
-  ggplot(ms1_peaks_i[sample == 1 & is_filled == 0,]) +
+  ggplot(ms1_features[is_filled == 0,]) +
     geom_linerange(aes(y = mz, x = rt, xmin = rtmin, xmax = rtmax)) +
-    geom_linerange(data = ms1_peaks_i[sample == 1 & is_filled == 0,], aes(y = mz, x = rt, xmin = rtmin, xmax = rtmax, color = peakfull)) + 
+    geom_linerange(data = ms1_peaks_i[is_filled == 0,], aes(y = mz, x = rt, xmin = rtmin, xmax = rtmax, color = peakfull)) + 
     theme_bw()
 
-  ggplot(pure_rt_good, aes(rtime, value, color = rank, group = rank)) +
-    geom_line() +
-    facet_grid(rank~MSid) +
+  nmf_result_ls$pure_rt[, value_sc := scales::rescale(value, to = c(0,1)), by = .(MSid, rank)]
+  ggplot(nmf_result_ls$pure_rt, aes(rtime, value_sc, color = rank, group = rank)) +
+    geom_hline(yintercept = 0) +
+    geom_line(data = nmf_result_ls$pure_rt[grepl("MS1", MSid), ]) +
+    geom_line(data = nmf_result_ls$pure_rt[grepl("MS2", MSid), ], aes(y = -value_sc)) +
+    facet_grid(rank ~ ., scales = "free_y") +
     theme_bw()
 
   ## Plot full iteration (mixed vs unmixed)
