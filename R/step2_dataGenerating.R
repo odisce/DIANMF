@@ -109,14 +109,17 @@ align_scans <- function(msexp, rt_range, sample_idx) {
 #'
 #' @param peaks_dt `data.table` `data.frame` targeted peaks in one rt_range.
 #' @param rawdt `data.frame` from `DIANMF::get_rawD_ntime`
-#'
+#' @param method `string` to select a method for returning data:
+#'   - `all`: return all points in range.
+#'   - `max`: return max point by retention time.
 #' @return `data.table` `data.frame` MS1 EICs.
 #' @export
 #'
 #' @import data.table
 build_XICs <- function(
   peaks_dt,
-  rawdt
+  rawdt,
+  method = c("all", "max")[2]
 ) {
   grpcol <- intersect(c("peakid", "peakfull", "xic_label"), names(peaks_dt))
 
@@ -136,9 +139,20 @@ build_XICs <- function(
     setkey(x, start, end)
     setkey(y, start, end)
     res <- foverlaps(x, y, type = "any", nomatch = NULL)
-    return(
-      res[, .(mz, rtime, intensity, msLevel, isolationWindowTargetMz, collisionEnergy, xic_label)]
-    )
+    if (method == "all") {
+      out_i <- res[, .(mz, rtime, intensity, msLevel, isolationWindowTargetMz, collisionEnergy, xic_label)]
+    } else if (method == "max") {
+      out_i <- res[,
+        .(
+          mz = median(mz, na.rm = TRUE),
+          intensity = max(intensity, na.rm = TRUE)
+        ),
+        by = .(rtime, msLevel, isolationWindowTargetMz, collisionEnergy, xic_label)
+      ]
+    } else {
+      stop(sprintf("method argument not recognizes: %s", method))
+    }
+    return(out_i)
   }) %>%
     rbindlist()
   return(output)

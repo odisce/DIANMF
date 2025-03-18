@@ -50,7 +50,6 @@ DIANMF.f <- function(
 ) {
   options(datatable.verbose = FALSE)
   ms1_peaks <- extract_xcms_peaks(msexp)
-  # ms1_peaks[, iteration := as.character(NA)]
   ms1_features_all <- extract_xcms_features(msexp, quantifyL = TRUE)
   ms1_features_peaks <- ms1_features_all[, .(peakindex = unlist(peakidx)), by = featureid]
   ms1_features_peaks <- merge(ms1_peaks, ms1_features_peaks, by = "peakindex")
@@ -115,17 +114,21 @@ DIANMF.f <- function(
       } else {
         rt_range <- peak_i[which.max(into), range(c(rtmin, rtmax)) + c(-scan_rt_ext - nev, +scan_rt_ext + nev)]
         if (rt_method == "constant") {
-          rt_range <- (mean(rt_range) + c(-scan_rt_ext - nev, +scan_rt_ext + nev))
+          rt_range <- peak_i[which.max(into), rt + c(-scan_rt_ext - nev, +scan_rt_ext + nev)]
+        } else if (rt_method == "peak") {
+          rt_range <- peak_i[which.max(into), range(c(rtmin, rtmax)) + c(-scan_rt_ext - nev, +scan_rt_ext + nev)]
+        } else {
+          stop(sprintf("rt_method not recognized: %s", rt_method))
         }
         rt_range[1] <- max(min_rt, rt_range[1])  # to avoid rt < 0
         rt_range[2] <- min(max_rt, rt_range[2])  # to avoid rt out of range
         ## Subset msexp object
-        msexp_idx_rt <- xcms::filterRt(msexp_idx, rt_range)
+        msexp_idx_rt <- xcms::filterRt(msexp_idx, rt_range) %>% suppressMessages()
         ## Generate MS1 peaklist
         if (verbose) {
           message("    Generating MS1 peaks list")
         }
-        ms1_peaks_i <- ms1_features[rtmin <= rt_range[2] & rtmax >= rt_range[1], ]
+        ms1_peaks_i <- ms1_features[rtmin <= rt_range[2] & rtmax >= rt_range[1], -c("iteration")]
         ## flag peaks partially, fully, apex inside apex_border from the window
         ms1_peaks_i[, peakfull := ifelse(
           (rtmin >= rt_range[1] & rtmax <= rt_range[2]), "full",
@@ -134,6 +137,7 @@ DIANMF.f <- function(
         )))]
         ms1_peaks_i[, msLevel := 1]
         ms1_peaks_i[, xic_label := paste0(peakid, "-", msLevel), by = .(peakid, msLevel)]
+        ms1_peaks_i[, intensity := into]
         features_iter <- ms1_peaks_i[peakfull %in% c("full", "apex"), unique(c(featureid, feature_idx))]
         ## Set all those features to '0' if not already extracted
         ms1_features[featureid %in% features_iter & is.na(iteration), iteration := 0]
@@ -278,7 +282,7 @@ DIANMF.f <- function(
             pure_mz[is.na(contribution), contribution := 0]
             # pure_mz[, contribution := value / sum(value), by = xic_label]
             ## Add max source contribution to peaks
-            xic_max_contrib <- pure_mz[contribution > min_contrib, .SD[which.max(contribution),], by = .(xic_label)][, .(xic_label, source = rank)]
+            xic_max_contrib <- pure_mz[contribution > min_contrib, .SD[which.max(contribution),], by = .(xic_label)][, .(xic_label, source = rank, contribution, apex_val, iteration = k)]
             peaks_ls[[i]] <- merge(
               peaks_ls[[i]],
               xic_max_contrib,
@@ -326,6 +330,38 @@ DIANMF.f <- function(
         if (NextIter) {
           next
         }
+        ## Reorder MS2 sources using similarity with MS1
+        if (all(c("MS1", "MS2") %in% nmf_result_ls$pure_rt[, unique(MSid)])) {
+          ## get ms1 pure rt
+          ms1prt <- nmf_result_ls$pure_rt[MSid == "MS1", ] %>% {
+              dcast(.[order(scan_norm),], rank ~ scan_norm, value.var = "value")
+            } %>% {as.matrix(.[, -1])}
+          ms2prt <- nmf_result_ls$pure_rt[MSid == "MS2", ] %>% {
+              dcast(.[order(scan_norm),], rank ~ scan_norm, value.var = "value")
+            } %>% {as.matrix(.[, -1])}
+          cor_dt <- data.table()
+          for (i in seq_len(nrow(ms1prt))) {
+            for (y in seq_len(nrow(ms2prt))) {
+              cor_val <- cor(ms1prt[i, ], ms2prt[y, ])
+              outdt <- data.table("rank_1" = i, "rank_2" = y, cor_sc = cor_val)
+              cor_dt <- rbind(cor_dt, outdt)
+            }
+          }
+          cor_dt <- cor_dt[order(-cor_sc), ]
+          rank_dic <- data.table()
+          for (rkn in seq_len(nrow(ms2prt))) {
+            outdt <- cor_dt[1,]
+            rank_dic <- rbind(rank_dic, outdt)
+            cor_dt <- cor_dt[
+              !rank_1 %in% outdt$rank_1 &
+                !rank_2 %in% outdt$rank_2,
+            ]
+          }
+          ## reorder MS1 sources
+          nmf_result_ls$pure_rt[MSid == "MS2", rank := rank_dic[rank_1 == rank, rank_2], by = .(rank)]
+          nmf_result_ls$pure_spectra[MSid == "MS2", rank := rank_dic[rank_1 == rank, rank_2], by = .(rank)]          
+        }
+
         
         features.l[[k]] <- list(
           "MS1_mixed_mat" = nmf_result_ls$mixed_mat[
@@ -385,32 +421,4 @@ DIANMF.f <- function(
   })
   names(res) <- tools::file_path_sans_ext(basename(file_info$mzml_path[sample_idx]))
   return(res)
-}
-
-
-#' Update df iteration columns
-#'
-#' @param ms1_peaks `data.frame` obtains from `DIANMF::extract_xcms_peaks()`
-#' @param ms1_features `data.frame` obtains from `DIANMF::extract_xcms_features()`
-#' @param idx `c(numeric)` row indexes
-#' @param iteration_number `numeric(1)`
-#'
-#' @return A `list` containing updated `ms1_peaks` and `ms1_features` data.tables.
-#' @export
-update_df <- function(ms1_peaks, ms1_features, idx, iteration_number){
-
-  # update ms1_peaks
-  ms1_peaks$iteration[idx] <- ifelse(
-    is.na(ms1_peaks$iteration[idx]),
-    iteration_number,
-    paste0(ms1_peaks$iteration[idx], ",", iteration_number)
-  )
-  
-  # update ms1_feature
-  ms1_features[, iteration := as.character(iteration)]
-  ms1_features[sapply(peakidx, function(p) any(unlist(p) %in% idx)), 
-               iteration := ifelse(is.na(iteration), as.character(iteration_number), 
-                                   paste0(iteration, ",", iteration_number))]
-  
-  return(list(ms1_peaks = ms1_peaks, ms1_features = ms1_features))
 }

@@ -52,10 +52,10 @@ get_spectra_values <- function(msexp, mslevel = NULL, isowin = NULL, combineSpec
   spec_obj <- MsExperiment::spectra(msexp)
   spec_obj <- setBackend(spec_obj, MsBackendMemory())
   if (!is.null(mslevel)) {
-    spec_obj <- Spectra::filterMsLevel(spec_obj, mslevel)
+    spec_obj <- Spectra::filterMsLevel(spec_obj, mslevel) %>% suppressMessages()
   }
   if (!is.null(isowin)) {
-    spec_obj <- Spectra::filterIsolationWindow(spec_obj, isowin)
+    spec_obj <- Spectra::filterIsolationWindow(spec_obj, isowin) %>% suppressMessages()
   }
   if (!is.null(combineSpectra_arg)) {
     spec_obj <- do.call(Spectra::combineSpectra, args = c(list("x" = spec_obj), combineSpectra_arg)) %>%
@@ -90,6 +90,7 @@ get_spectra_index <- function(msexp) {
 get_ms1_rtdiff <- function(msexp) {
   msexp %>%
     xcms::filterMsLevel(., 1L) %>%
+    suppressMessages() %>%
     xcms::rtime() %>%
     {.[1:2]} %>%
     diff() %>%
@@ -106,9 +107,68 @@ get_isowin <- function(msexp) {
   msexp %>%
     xcms::spectra() %>%
     xcms::filterMsLevel(., 2) %>%
+    suppressMessages() %>%
     xcms::isolationWindowTargetMz() %>%
     as.numeric() %>%
     unique() %>%
     na.omit() %>%
     return()
+}
+
+#' Get isolation windows
+#'
+#' @param feature_dt feature summary
+#' @param dt database to match (mandatory rt and mz columns)
+#' @param rttol rt tolerance (in seconds)
+#' @param ppm ppm tolerance for m/Z search
+#' @return a data.table
+#' @import data.table magrittr
+#' @export
+search_features <- function(
+  feature_dt,
+  dt,
+  rttol = 5,
+  ppm = 5
+) {
+    dtin <- copy(dt)
+    dtin[, TEMPID := seq_len(.N)]
+    dtin[, c("mzmin", "mzmax", "rtmin", "rtmax") := {
+      tpi <- PpmRange(mz, ppm)
+      tprt <- (rt + c(-rttol, +rttol))
+      .(tpi[1], tpi[2], tprt[1], tprt[2])
+    }, by = .(TEMPID)]
+    setnames(dtin, c("mz", "rt"), c("mz_db", "rt_db"))
+    feat_in <- copy(feature_dt)
+    feat_in <- feat_in[, .(mz = median(mz), rt = median(rt)), by = .(featureid)]
+    resmz <- data.table()
+    if (!is.null(ppm)) {
+      ## Filter mz
+      x <- feat_in[,  .(start = mz, end = mz, featureid)] %>% unique()
+      y <- dtin[, .(start = mzmin, end = mzmax, TEMPID)]
+      setkey(x, start, end)
+      setkey(y, start, end)
+      resmz <- foverlaps(x, y, type = "any", nomatch = NULL)[, .(TEMPID, featureid, match = "mz")]
+    }
+    if (!is.null(rttol)) {
+      ## Filter rt
+      x <- feat_in[,  .(start = rt, end = rt, featureid)] %>% unique()
+      y <- dtin[, .(start = rtmin, end = rtmax, TEMPID)]
+      setkey(x, start, end)
+      setkey(y, start, end)
+      resrt <- foverlaps(x, y, type = "any", nomatch = NULL)[, .(TEMPID, featureid, match = "rt")]
+    }
+    out <- rbind(resmz, resrt)
+    out_match <- out[, .(matchL = .N == 2), by = .(featureid, TEMPID)][matchL == TRUE,]
+    out_match %>%
+      merge(
+        .,
+        feat_in,
+        by = "featureid"
+      ) %>%
+      merge(
+        .,
+        dtin,
+        by = "TEMPID"
+      ) %>%
+      return()
 }
