@@ -10,7 +10,8 @@ plot_feature(
   feature_id = NULL,
   sample_index = 1,
   log2L = FALSE,
-  max_method
+  max_method,
+  method = c("all", "best")[2]
 )
 }
 \arguments{

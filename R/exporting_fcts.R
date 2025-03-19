@@ -28,9 +28,9 @@ get_feature_summary <- function(
     }
   }
   if (max_method == "max_value") {
-    output <- feature_dt[, .SD[which.max(apex_val), ], by = .(featureid, sample)]
+    output <- feature_dt[order(-apex_val), .SD[which.max(apex_val), ], by = .(featureid, sample)]
   } else if (max_method == "contribution") {
-    output <- feature_dt[, .SD[which.max(contribution), ], by = .(featureid, sample)]
+    output <- feature_dt[order(-apex_val), .SD[which.max(contribution), ], by = .(featureid, sample)]
   } else {
     stop(sprintf("max_method not recognized: %s", max_method))
   }
@@ -87,6 +87,9 @@ get_elutionprofile <- function(
   method = c("all", "best")[2],
   max_method
 ) {
+  if (is.null(summary_dt)) {
+    summary_dt <- get_feature_summary(features.l = features.l, max_method = max_method)
+  }
   feat_coord <- get_feature_coord(
     features.l = features.l,
     summary_dt = summary_dt,
@@ -161,6 +164,9 @@ get_spectra <- function(
   method = c("all", "best")[2],
   max_method
 ) {
+  if (is.null(summary_dt)) {
+    summary_dt <- get_feature_summary(features.l = features.l, max_method = max_method)
+  }
   feat_coord <- get_feature_coord(
     features.l = features.l,
     summary_dt = summary_dt,
@@ -202,7 +208,7 @@ get_spectra <- function(
     for (i in seq_len(2)) {
       i_names <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]] %>% names()
       if (all(c(mixed_names[i]) %in% i_names)) {
-        source_to_get <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][[mixed_names[i]]][, unique(source_to_get)]
+        source_to_get <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][[mixed_names[i]]][, unique(rank)]
         if (method == "best") {
           source_to_get <- feat_coord[, source]
         }
@@ -386,7 +392,8 @@ plot_feature <- function(
   feature_id = NULL,
   sample_index = 1,
   log2L = FALSE,
-  max_method
+  max_method,
+  method = c("all", "best")[2]
 ) {
   feat_coord <- get_feature_coord(
     features.l = features.l,
@@ -412,7 +419,8 @@ plot_feature <- function(
     sample_index = sample_index,
     type = "mixed",
     log2L = log2L,
-    max_method = max_method
+    max_method = max_method,
+    method = method
   )
   plotB <- plot_EluProfile(
     features.l = features.l,
@@ -421,7 +429,8 @@ plot_feature <- function(
     sample_index = sample_index,
     type = "pure",
     log2L = log2L,
-    max_method = max_method
+    max_method = max_method,
+    method = method
   )
   plotC <- plot_Spectra(
     features.l = features.l,
@@ -430,7 +439,8 @@ plot_feature <- function(
     sample_index = sample_index,
     type = "mixed",
     log2L = log2L,
-    max_method = max_method
+    max_method = max_method,
+    method = method
   )
   plotD <- plot_Spectra(
     features.l = features.l,
@@ -439,7 +449,8 @@ plot_feature <- function(
     sample_index = sample_index,
     type = "pure",
     log2L = log2L,
-    max_method = max_method
+    max_method = max_method,
+    method = method
   )
   ggpubr::ggarrange(
     ggpubr::ggarrange(plotA, plotC, ncol = 2, align = "hv", common.legend = TRUE),

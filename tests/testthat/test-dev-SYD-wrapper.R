@@ -1,54 +1,63 @@
 testthat::skip("development script; test the wrapper function")
 
-{
-  devtools::document()
-  devtools::load_all()
-  input_dir <- "/spi/scidospi/06_Data/BarbierSaintHilaire_ComparativeEvaluationData_2020/DIA/mzml/"
-  input_targ <- "/spi/scidospi/06_Data/BarbierSaintHilaire_ComparativeEvaluationData_2020/Compound_data_corrected_rt.csv"
-  targ_dt <- fread(input_targ)
-  mzml_dt <- prepare_mzMLfiles(input_dir = input_dir)
-  mzml_dt <- mzml_dt[class == 10.00, ]
-  params_ls <- list(
-    "CentWaveParam" = xcms::CentWaveParam(
-      ppm = 6,
-      peakwidth = c(6, 30),
-      snthresh = 2,
-      prefilter = c(5, 4000),
-      mzCenterFun = "wMeanApex3",
-      integrate = 2,
-      mzdiff = -0.005,
-      noise = 100,
-      firstBaselineCheck = FALSE
-    ),
-    "MergeNeighboringPeaksParam" = xcms::MergeNeighboringPeaksParam(
-      expandRt = 2,
-      expandMz = 0.001,
-      ppm = 2,
-      minProp = 0.75
-    ),
-    "ObiwarpParam" = xcms::ObiwarpParam(
-      binSize = 0.05
-    ),
-    "PeakDensityParam" = xcms::PeakDensityParam(
-      sampleGroups = NA,
-      bw = 10,
-      minFraction = 0.1,
-      minSamples = 2,
-      binSize = 0.01,
-      ppm = 7,
-      maxFeatures = 500
-    ),
-    "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
-  )
+devtools::document()
+devtools::load_all()
 
-  cache_path <- "/spi/scidospi/06_Data/deconv_nmf/temp.rds"
-  profile_path <- "/spi/scidospi/06_Data/deconv_nmf"
-  if (file.exists(cache_path)) {
-    xcms_obj <- readRDS(cache_path)
-  } else {
-    xcms_obj <- DIANMF::detect_xcms_peaks(sequence_table = mzml_dt, params = params_ls)
-    saveRDS(xcms_obj, cache_path)
-  }
+## automatically detect path prefix
+if(.Platform$OS.type == "unix") {
+  pref <- "/spi"
+  sysos <- "unix"
+} else {
+  pref <- "//fouet/spi"
+  sysos <- "windows"
+}
+input_dir <- file.path(pref, "scidospi/06_Data/BarbierSaintHilaire_ComparativeEvaluationData_2020/DIA/mzml/")
+input_targ <- file.path(pref, "scidospi/06_Data/BarbierSaintHilaire_ComparativeEvaluationData_2020/Compound_data_corrected_rt.csv")
+targ_dt <- fread(input_targ)
+mzml_dt <- prepare_mzMLfiles(input_dir = input_dir)
+mzml_dt <- mzml_dt[class == 10.00, ]
+params_ls <- list(
+  "CentWaveParam" = xcms::CentWaveParam(
+    ppm = 6,
+    peakwidth = c(6, 30),
+    snthresh = 2,
+    prefilter = c(5, 4000),
+    mzCenterFun = "wMeanApex3",
+    integrate = 2,
+    mzdiff = -0.005,
+    noise = 100,
+    firstBaselineCheck = FALSE
+  ),
+  "MergeNeighboringPeaksParam" = xcms::MergeNeighboringPeaksParam(
+    expandRt = 2,
+    expandMz = 0.001,
+    ppm = 2,
+    minProp = 0.75
+  ),
+  "ObiwarpParam" = xcms::ObiwarpParam(
+    binSize = 0.05
+  ),
+  "PeakDensityParam" = xcms::PeakDensityParam(
+    sampleGroups = NA,
+    bw = 10,
+    minFraction = 0.1,
+    minSamples = 2,
+    binSize = 0.01,
+    ppm = 7,
+    maxFeatures = 500
+  ),
+  "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
+)
+
+cache_dir <- file.path("/spi/scidospi/06_Data/deconv_nmf", sysos)
+cache_path <- file.path(cache_dir, "temp.rds")
+profile_path <- file.path("/spi/scidospi/06_Data/deconv_nmf", sysos)
+dir.create(dirname(cache_path))
+if (file.exists(cache_path)) {
+  xcms_obj <- readRDS(cache_path)
+} else {
+  xcms_obj <- DIANMF::detect_xcms_peaks(sequence_table = mzml_dt, params = params_ls)
+  saveRDS(xcms_obj, cache_path)
 }
 
 {
@@ -73,10 +82,16 @@ testthat::skip("development script; test the wrapper function")
         method = "svds",
         scan_rt_ext = 10,
         min_distance = 4,
-        featuresn = 4,
+        featuresn = 2,
         nscans = 6,
         rt_method = "constant",
-        combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp = 0.05),
+        clean_sources = TRUE,
+        combineSpectra_arg = list(
+          peaks = "intersect",
+          ppm = 4,
+          tolerance = 0.005,
+          minProp = 0.05
+        ),
         verbose = TRUE
       )
     }
@@ -84,53 +99,48 @@ testthat::skip("development script; test the wrapper function")
   htmlwidgets::saveWidget(proffres, profile_save_path)
 }
 
-devtools::load_all()
-devtools::document()
-{
-  cache_path <- "/spi/scidospi/06_Data/deconv_nmf/features.rds"
-  if (file.exists(cache_path)) {
-    features <- readRDS(cache_path)
-  } else {
-    data.table::setDTthreads(1)
-    A <- Sys.time()
-    rt_range <- targ_dt[grepl("Scopolamine", Compound), (rt_sec + c(-60, +60))]
-    msexp <- xcms::filterRt(xcms_obj, rt_range)
-    # msexp <- xcms_obj
-    features <- DIANMF.f(
-      msexp = msexp,
-      dir_out = FALSE,
-      sample_idx = NULL,
-      MS2_ISOEACHL = TRUE,
-      MS1MS2_L = FALSE,
-      rank = 20,
-      min_contrib = 0.6,
-      maximumIteration = 200,
-      maxFBIteration = 100,
-      toleranceFB = 1e-05,
-      initialization_method = "nndsvd",
-      errors_print = FALSE,
-      method = "svds",
-      scan_rt_ext = 10,
-      min_distance = 4,
-      featuresn = NULL,
-      nscans = 6,
-      rt_method = "constant",
-      clean_sources = TRUE,
-      combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp = 0.05),
-      verbose = TRUE
-    )
-    B <- Sys.time()
-    difftime(B, A)
-    # 2.28 hours for 3 files
-    saveRDS(features, cache_path)
-  }
+cache_path <- file.path(cache_dir, "features.rds")
+if (file.exists(cache_path)) {
+  features <- readRDS(cache_path)
+} else {
+  data.table::setDTthreads(1)
+  A <- Sys.time()
+  rt_range <- targ_dt[grepl("Scopolamine", Compound), (rt_sec + c(-60, +60))]
+  msexp <- xcms::filterRt(xcms_obj, rt_range)
+  # msexp <- xcms_obj
+  features <- DIANMF.f(
+    msexp = msexp,
+    dir_out = FALSE,
+    sample_idx = NULL,
+    MS2_ISOEACHL = TRUE,
+    MS1MS2_L = FALSE,
+    rank = 20,
+    min_contrib = 0.6,
+    maximumIteration = 200,
+    maxFBIteration = 100,
+    toleranceFB = 1e-05,
+    initialization_method = "nndsvd",
+    errors_print = FALSE,
+    method = "svds",
+    scan_rt_ext = 10,
+    min_distance = 4,
+    featuresn = NULL,
+    nscans = 6,
+    rt_method = "constant",
+    clean_sources = TRUE,
+    combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp = 0.05),
+    verbose = TRUE
+  )
+  B <- Sys.time()
+  difftime(B, A)
+  # 2.28 hours for 3 files
+  saveRDS(features, cache_path)
 }
 
 {
-  devtools::load_all()
   ## Features summary
   ### Annotate features
-  temp_ft <- get_feature_summary(features.l = features)
+  temp_ft <- get_feature_summary(features.l = features, max_method = "max_value")
   ft_match <- search_features(
     feature_dt = temp_ft,
     dt = targ_dt[, .(Compound, mz = mz_pos, rt = rt_sec)],
@@ -138,8 +148,9 @@ devtools::document()
     ppm = 10
   )
   temp_ft <- temp_ft[order(-into), ]
+
   ## Plot one sample diagnostic plot for one iteration
-  save_path <- "/spi/scidospi/06_Data/deconv_nmf/20250318_test"
+  save_path <- file.path(cache_dir, format(Sys.time(), "%y%m%d-%H%M"))
   dir.create(save_path)
   list.files(save_path, full.names = TRUE) %>% sapply(., unlink)
   for (feati in ft_match[, unique(featureid)]) {
@@ -152,7 +163,8 @@ devtools::document()
         feature_id = feati,
         sample_index = spli,
         log2L = FALSE,
-        max_method = "max_value"
+        max_method = "contribution",
+        method = "best"
       ) %>%
         suppressWarnings()
     }) %>% {
@@ -179,98 +191,59 @@ devtools::document()
     )
   }
 
-  ## Plot pure MS1/MS2 for a feature in different samples (with MS1 & MS2 matching)
+  feati <- ft_match[, unique(featureid)][1]
+  ## Get best source coordinate for feati in all samples
+  feat_coord <- get_feature_coord(
+    features.l = features,
+    feature_id = feati,
+    sample_index = NULL,
+    max_method = "contribution"
+  )
+  feat_coord[, .(featureid, sample, source, iteration, IsoWin)]
 
-  ## Plot xcms peaks ranges
-  require(ggplot2)
-  ggplot(ms1_features[is_filled == 0,]) +
-    geom_linerange(aes(y = mz, x = rt, xmin = rtmin, xmax = rtmax)) +
-    geom_linerange(data = ms1_peaks_i[is_filled == 0,], aes(y = mz, x = rt, xmin = rtmin, xmax = rtmax, color = peakfull)) + 
-    theme_bw()
-
-  nmf_result_ls$pure_rt[, value_sc := scales::rescale(value, to = c(0,1)), by = .(MSid, rank)]
-  ggplot(nmf_result_ls$pure_rt, aes(rtime, value_sc, color = rank, group = rank)) +
-    geom_hline(yintercept = 0) +
-    geom_line(data = nmf_result_ls$pure_rt[grepl("MS1", MSid), ]) +
-    geom_line(data = nmf_result_ls$pure_rt[grepl("MS2", MSid), ], aes(y = -value_sc)) +
-    facet_grid(rank ~ ., scales = "free_y") +
-    theme_bw()
-
-  ## Plot full iteration (mixed vs unmixed)
-
-
-
-}
-# Check feature 3008, 7797
-    # Generating MS2 peaks list
-    # Extracting ions signals
-    # Generating 717 XICs
-    # Build mixed matrix
-    # Unmixing MS1Error in U[, i] : subscript out of bounds
-{
-
-  ms_xics_i[xic_label %in% rownames(ms_mixed_i$mixedmat),] %>% {
-    ggplot(., aes(
-      rtime,
-      intensity,
-      color = isolationWindowTargetMz,
-      group = xic_label)
-    ) +
-      geom_line() +
-      theme_bw()
-  }
-
-  ms_xics_i[, .N, by = .(xic_label)][order(-N),]
-  ms_xics_i[xic_label %in% c("CP04497-1"), ]
-
-
-  nmf_result_ls$pure_rt %>% {
-    ggplot(., aes(
-      rtime,
-      value,
-      color = MSid)
-    ) +
-      facet_grid(rank ~ ., scales = "free_y") +
-      geom_line() +
-      theme_bw()
-  }
-
-  mixed_mat_out %>% {
-    ggplot(., aes(
-      rtime,
-      x,
-      color = mslevel)
-    ) +
-      facet_grid(xic_label ~ .) +
-      geom_line() +
-      theme_bw()
-  }
-}
-
-{
-  require(ggplot2)
-  ms1_peaks_i %>%
-    ggplot(., aes(group = peakid, color = peakfull)) +
-    geom_linerange(
-      data = ms1_features_peaks,
-      aes(
-        xmin = rtmin,
-        xmax = rtmax,
-        x = rtmed,
-        y = mzmed
-      ),
-      alpha = 0.2,
-      color = "black"
-    ) +
-    geom_point(aes(x = rtmed, y = mzmed), shape = 2) +
-    geom_point(aes(x = rt, y = mz)) +
-    geom_linerange(
-      aes(
-        xmin = rtmin,
-        xmax = rtmax,
-        x = rtmed,
-        y = mzmed
-      )
-    ) +
-    theme_bw()
+  ## Get best spectra for feati
+  get_spectra(
+    features.l = features,
+    feature_id = feati,
+    sample_index = 2,
+    type = "pure",
+    method = "best",
+    max_method = "contribution"
+  )
+  ## get best pure elution profile
+  get_elutionprofile(
+    features.l = features,
+    feature_id = feati,
+    sample_index = 2,
+    type = "pure",
+    method = "best",
+    max_method = "contribution"
+  )
+  ## Get best mixed spectra for feati
+  get_spectra(
+    features.l = features,
+    feature_id = feati,
+    sample_index = 2,
+    type = "mixed",
+    method = "best",
+    max_method = "contribution"
+  )
+  ## get best mixed elution profile
+  get_elutionprofile(
+    features.l = features,
+    feature_id = feati,
+    sample_index = 2,
+    type = "mixed",
+    method = "best",
+    max_method = "contribution"
+  )
+  ## get all sources for best iteration
+  get_spectra(
+    features.l = features,
+    feature_id = feati,
+    sample_index = 2,
+    type = "pure",
+    method = "all",
+    max_method = "contribution"
+  )
 }

@@ -49,6 +49,27 @@ DIANMF.f <- function(
   combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp = 0.05),
   verbose = FALSE
 ) {
+  # msexp = msexp
+  # dir_out = FALSE
+  # sample_idx = NULL
+  # MS2_ISOEACHL = TRUE
+  # MS1MS2_L = FALSE
+  # rank = 20
+  # min_contrib = 0.6
+  # maximumIteration = 200
+  # maxFBIteration = 100
+  # toleranceFB = 1e-05
+  # initialization_method = "nndsvd"
+  # errors_print = FALSE
+  # method = "svds"
+  # scan_rt_ext = 10
+  # min_distance = 4
+  # featuresn = NULL
+  # nscans = 6
+  # rt_method = "constant"
+  # clean_sources = TRUE
+  # combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp = 0.05)
+  # verbose = TRUE
   options(datatable.verbose = FALSE)
   ms1_peaks <- extract_xcms_peaks(msexp)
   ms1_features_all <- extract_xcms_features(msexp, quantifyL = TRUE)
@@ -91,7 +112,6 @@ DIANMF.f <- function(
     ms1_features <- ms1_features[order(-into), ]
     last_feature <- ms1_features[, last(featureid)]
     ## Extract features ----
-
     while (feature_idx != last_feature) {
       # Option to limit the number of features to extrac
       k <- k + 1
@@ -102,6 +122,8 @@ DIANMF.f <- function(
       }
       # Set current feature to process
       feature_idx <- ms1_features[is_filled == 0 & is.na(iteration), ][1, featureid]
+      # feature_idx <- "FT0757"
+      # feature_idx <- "FT2845"
       if (is.na(feature_idx)) {
         break
       }
@@ -113,11 +135,10 @@ DIANMF.f <- function(
         if (verbose) {message("    No peak found for this feature: skipping")}
         next
       } else {
-        rt_range <- peak_i[which.max(into), range(c(rtmin, rtmax)) + c(-scan_rt_ext - nev, +scan_rt_ext + nev)]
         if (rt_method == "constant") {
-          rt_range <- peak_i[which.max(into), rt + c(-scan_rt_ext - nev, +scan_rt_ext + nev)]
+          rt_range <- peak_i[, rt + c(-scan_rt_ext - nev, +scan_rt_ext + nev)]
         } else if (rt_method == "peak") {
-          rt_range <- peak_i[which.max(into), range(c(rtmin, rtmax)) + c(-scan_rt_ext - nev, +scan_rt_ext + nev)]
+          rt_range <- peak_i[, range(c(rtmin, rtmax)) + c(-scan_rt_ext - nev, +scan_rt_ext + nev)]
         } else {
           stop(sprintf("rt_method not recognized: %s", rt_method))
         }
@@ -133,10 +154,9 @@ DIANMF.f <- function(
         ## flag peaks partially, fully, apex inside apex_border from the window
         border_lim <- min(c(min_distance, floor(diff(rt_range) / 3)))
         rt_limits <- rt_range + c(+border_lim, -border_lim)
-        ms1_peaks_i[, peakfull := ifelse(
-          (rtmin >= rt_range[1] & rtmax <= rt_range[2]), "full",
-          ifelse(rt %between% rt_limits, "apex_border",
-          ifelse(rt %between% rt_range, "apex", "partial"
+        ms1_peaks_i[, peakfull := ifelse((rtmin >= rt_range[1] & rtmax <= rt_range[2]), "full",
+          ifelse(!rt %between% rt_limits, "apex_border",
+            ifelse(rt %between% rt_range, "apex", "partial"
         )))]
         ms1_peaks_i[, msLevel := 1]
         ms1_peaks_i[, xic_label := paste0(peakid, "-", msLevel), by = .(peakid, msLevel)]
@@ -237,7 +257,7 @@ DIANMF.f <- function(
             message(sprintf("    Unmixing %s", names(peaks_ls)[i]), appendLF = FALSE)
             timeA <- Sys.time()
           }
-          rank <- min(rank, (ncol(ms_mixed_i$mixedmat) - 1))
+          rank <- min(rank, (ncol(ms_mixed_i$mixedmat)))
           nmf_i <- nGMCAs(
             X.m = ms_mixed_i$mixedmat,
             rank = rank,
@@ -346,14 +366,18 @@ DIANMF.f <- function(
           ## get ms1 pure rt
           ms1prt <- nmf_result_ls$pure_rt[MSid == "MS1", ] %>% {
               dcast(.[order(scan_norm),], rank ~ scan_norm, value.var = "value")
-            } %>% {as.matrix(.[, -1])}
+            } %>% {
+              as.matrix(.[, -1])
+            }
           ms2prt <- nmf_result_ls$pure_rt[MSid == "MS2", ] %>% {
               dcast(.[order(scan_norm),], rank ~ scan_norm, value.var = "value")
-            } %>% {as.matrix(.[, -1])}
+            } %>% {
+              as.matrix(.[, -1])
+            }
           cor_dt <- data.table()
           for (i in seq_len(nrow(ms1prt))) {
             for (y in seq_len(nrow(ms2prt))) {
-              cor_val <- cor(ms1prt[i, ], ms2prt[y, ])
+              cor_val <- cor(ms1prt[i, ], ms2prt[y, ], method = "pearson")
               outdt <- data.table("rank_1" = i, "rank_2" = y, cor_sc = cor_val)
               cor_dt <- rbind(cor_dt, outdt)
             }
@@ -361,7 +385,7 @@ DIANMF.f <- function(
           cor_dt <- cor_dt[order(-cor_sc), ]
           rank_dic <- data.table()
           for (rkn in seq_len(nrow(ms2prt))) {
-            outdt <- cor_dt[1,]
+            outdt <- cor_dt[1, ]
             rank_dic <- rbind(rank_dic, outdt)
             cor_dt <- cor_dt[
               !rank_1 %in% outdt$rank_1 &
@@ -369,8 +393,9 @@ DIANMF.f <- function(
             ]
           }
           ## reorder MS1 sources
-          nmf_result_ls$pure_rt[MSid == "MS2", rank := rank_dic[rank_1 == rank, rank_2], by = .(rank)]
-          nmf_result_ls$pure_spectra[MSid == "MS2", rank := rank_dic[rank_1 == rank, rank_2], by = .(rank)]          
+          new_order <- rank_dic[order(rank_2), rank_1]
+          nmf_result_ls$pure_rt[MSid == "MS2", rank := new_order[rank]]
+          nmf_result_ls$pure_spectra[MSid == "MS2", rank := new_order[rank]]
         }
         ## Clean sources with less than 0.6 contribution for any peaks
         if (clean_sources) {
