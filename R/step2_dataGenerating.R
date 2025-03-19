@@ -38,9 +38,11 @@ has_n_consecutive_non_zero <- function(row, nscans = 4) {
 #' @import dplyr
 #' @export
 align_scans <- function(msexp, rt_range, sample_idx) {
-  raw_dt <- xcms::filterFile(msexp, sample_idx)
+  raw_dt <- xcms::filterFile(msexp, sample_idx) %>%
+    suppressMessages()
   if (!is.null(rt_range)) {
-    raw_dt <- xcms::filterRt(raw_dt, rt_range)
+    raw_dt <- xcms::filterRt(raw_dt, rt_range) %>%
+      suppressMessages()
   }
   nev <- get_ms1_rtdiff(raw_dt) * 1.5
   raw_dt <- raw_dt %>%

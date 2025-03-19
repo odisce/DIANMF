@@ -5,16 +5,19 @@
 \title{Extract Spectra}
 \usage{
 get_spectra(
-  features.l = features,
+  features.l,
   summary_dt = NULL,
-  feature_id = temp_ft[feature_i, featureid],
+  feature_id,
   sample_index = 1,
   type = c("pure", "mixed")[1],
+  method = c("all", "best")[2],
   max_method
 )
 }
 \arguments{
 \item{type}{\code{string} to retrieve the "pure" or "mixed" elution profiles.}
+
+\item{method}{\code{string} to extract "all" sources or just the "best".}
 }
 \value{
 \code{data.table} of features with their optimal sources

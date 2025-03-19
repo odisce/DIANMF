@@ -45,13 +45,14 @@ DIANMF.f <- function(
   min_distance = 5,
   nscans = 4,
   featuresn = NULL,
+  clean_sources = TRUE,
   combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp = 0.05),
   verbose = FALSE
 ) {
   options(datatable.verbose = FALSE)
   ms1_peaks <- extract_xcms_peaks(msexp)
   ms1_features_all <- extract_xcms_features(msexp, quantifyL = TRUE)
-  ms1_features_peaks <- ms1_features_all[, .(peakindex = unlist(peakidx)), by = featureid]
+  ms1_features_peaks <- ms1_features_all[, .(peakindex = unlist(peakidx), mzmed, rtmed), by = featureid]
   ms1_features_peaks <- merge(ms1_peaks, ms1_features_peaks, by = "peakindex")
   file_info <- MsExperiment::sampleData(msexp) %>% as.data.table()
 
@@ -130,27 +131,32 @@ DIANMF.f <- function(
         }
         ms1_peaks_i <- ms1_features[rtmin <= rt_range[2] & rtmax >= rt_range[1], -c("iteration")]
         ## flag peaks partially, fully, apex inside apex_border from the window
+        border_lim <- min(c(min_distance, floor(diff(rt_range) / 3)))
+        rt_limits <- rt_range + c(+border_lim, -border_lim)
         ms1_peaks_i[, peakfull := ifelse(
           (rtmin >= rt_range[1] & rtmax <= rt_range[2]), "full",
-          ifelse(rt %between% (rt_range + c(+3, -3)), "apex_border",
+          ifelse(rt %between% rt_limits, "apex_border",
           ifelse(rt %between% rt_range, "apex", "partial"
         )))]
         ms1_peaks_i[, msLevel := 1]
         ms1_peaks_i[, xic_label := paste0(peakid, "-", msLevel), by = .(peakid, msLevel)]
         ms1_peaks_i[, intensity := into]
-        features_iter <- ms1_peaks_i[peakfull %in% c("full", "apex"), unique(c(featureid, feature_idx))]
+        features_iter <- ms1_peaks_i[peakfull %in% c("full", "apex"), unique(featureid)]
+        ## Exclude features when rtmed not in range
+        feat_notinR <- ms1_peaks_i[!rtmed %between% rt_limits, unique(featureid)]
+        features_iter <- features_iter %>% {.[!. %in% feat_notinR]} %>% c(., feature_idx) %>% unique()
         ## Set all those features to '0' if not already extracted
-        ms1_features[featureid %in% features_iter & is.na(iteration), iteration := 0]
+        ms1_features[featureid %in% features_iter & is.na(iteration), iteration := "0"]
 
         if (verbose) {
           message(
             sprintf(
-              "    Unmixing %i/%i features (%i/%i/%i, apex+full/border/partial)",
-              ms1_peaks_i[, length(unique(featureid))],
-              ms1_features[is.na(iteration), .N],
+              "    Unmixing %i/%i features (peaks: %i/%i/%i, apex+full/border/partial)",
               length(features_iter),
-              ms1_peaks_i[peakfull == "apex_border", length(unique(featureid))],
-              ms1_peaks_i[peakfull == "partial", length(unique(featureid))]
+              ms1_features[is.na(iteration), length(unique(featureid))],
+              ms1_peaks_i[peakfull %in% c("full", "apex"), length(unique(peakid))],
+              ms1_peaks_i[peakfull == "apex_border", length(unique(peakid))],
+              ms1_peaks_i[peakfull == "partial", length(unique(peakid))]
             )
           )
         }
@@ -282,7 +288,7 @@ DIANMF.f <- function(
             pure_mz[is.na(contribution), contribution := 0]
             # pure_mz[, contribution := value / sum(value), by = xic_label]
             ## Add max source contribution to peaks
-            xic_max_contrib <- pure_mz[contribution > min_contrib, .SD[which.max(contribution),], by = .(xic_label)][, .(xic_label, source = rank, contribution, apex_val, iteration = k)]
+            xic_max_contrib <- pure_mz[, .SD[which.max(contribution),], by = .(xic_label)][, .(xic_label, source = rank, contribution, apex_val, iteration = k)]
             peaks_ls[[i]] <- merge(
               peaks_ls[[i]],
               xic_max_contrib,
@@ -295,24 +301,29 @@ DIANMF.f <- function(
             message(sprintf(": Done (%0.2fs)", difftime(timeC, timeB, units = "secs")), appendLF = TRUE)
           }
           nmf_result_ls <- list(
-            "ms_info" = rbind(
-              nmf_result_ls$ms_info,
-              peaks_ls[[i]],
+            "ms_info" = data.table::rbindlist(
+              list(
+                nmf_result_ls$ms_info,
+                peaks_ls[[i]]
+              ),
               fill = TRUE
             ),
             "mixed_mat" = rbind(
               nmf_result_ls$mixed_mat,
-              ms_mixed_i$mixedmat,
+              ms_mixed_i$mixedmat
+            ),
+            "pure_rt" = data.table::rbindlist(
+              list(
+                nmf_result_ls$pure_rt,
+                pure_rt
+              ),
               fill = TRUE
             ),
-            "pure_rt" = rbind(
-              nmf_result_ls$pure_rt,
-              pure_rt,
-              fill = TRUE
-            ),
-            "pure_spectra" = rbind(
-              nmf_result_ls$pure_spectra,
-              pure_mz,
+            "pure_spectra" = data.table::rbindlist(
+              list(
+                nmf_result_ls$pure_spectra,
+                pure_mz
+              ),
               fill = TRUE
             )
           )
@@ -361,8 +372,13 @@ DIANMF.f <- function(
           nmf_result_ls$pure_rt[MSid == "MS2", rank := rank_dic[rank_1 == rank, rank_2], by = .(rank)]
           nmf_result_ls$pure_spectra[MSid == "MS2", rank := rank_dic[rank_1 == rank, rank_2], by = .(rank)]          
         }
-
-        
+        ## Clean sources with less than 0.6 contribution for any peaks
+        if (clean_sources) {
+          source_to_keep <- nmf_result_ls$ms_info[contribution >= min_contrib, unique(source)]
+          nmf_result_ls$pure_rt <- nmf_result_ls$pure_rt[rank %in% source_to_keep,]
+          nmf_result_ls$pure_spectra <- nmf_result_ls$pure_spectra[rank %in% source_to_keep,]
+          rm(source_to_keep)
+        }
         features.l[[k]] <- list(
           "MS1_mixed_mat" = nmf_result_ls$mixed_mat[
             rownames(nmf_result_ls$mixed_mat) %in% nmf_result_ls$ms_info[msLevel == 1, xic_label],
@@ -382,7 +398,7 @@ DIANMF.f <- function(
         )
 
         ## Mark valid features
-        valid_features <- nmf_result_ls$ms_info[!is.na(source), unique(featureid)]
+        valid_features <- nmf_result_ls$ms_info[featureid %in% features_iter & !is.na(source) & contribution >= min_contrib, unique(featureid)]
         ms1_features[featureid %in% valid_features, iteration := {
           iteration %>%
             strsplit(., ",") %>%
@@ -401,7 +417,7 @@ DIANMF.f <- function(
               "    iter %i : Extracted %i/%i elligible features %i/%i/%i (cumulated/remaining/total) in: %0.2fs",
               k,
               length(valid_features),
-              nmf_result_ls$ms_info[peakfull %in% c("apex", "full"), length(unique(featureid))],
+              length(features_iter),
               ms1_features[!is.na(iteration), length(unique(featureid))],
               ms1_features[is.na(iteration), length(unique(featureid))],
               ms1_features[, length(unique(featureid))],

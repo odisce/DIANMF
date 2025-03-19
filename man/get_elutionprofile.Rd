@@ -10,11 +10,14 @@ get_elutionprofile(
   feature_id,
   sample_index = NULL,
   type = c("pure", "mixed")[1],
+  method = c("all", "best")[2],
   max_method
 )
 }
 \arguments{
 \item{type}{\code{string} to retrieve the "pure" or "mixed" elution profiles.}
+
+\item{method}{\code{string} to extract "all" sources or just the "best".}
 }
 \value{
 \code{data.table} of features with their optimal sources

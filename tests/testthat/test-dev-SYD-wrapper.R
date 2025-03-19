@@ -34,7 +34,7 @@ testthat::skip("development script; test the wrapper function")
       bw = 10,
       minFraction = 0.1,
       minSamples = 2,
-      binSize = 0.008,
+      binSize = 0.01,
       ppm = 7,
       maxFeatures = 500
     ),
@@ -58,11 +58,13 @@ testthat::skip("development script; test the wrapper function")
   proffres <- profvis::profvis(
     expr = {
       features <- DIANMF.f(
-        msexp = xcms_obj, dir_out = FALSE,
-        sample_idx = 1,
+        msexp = xcms_obj,
+        dir_out = FALSE,
+        sample_idx = NULL,
         MS2_ISOEACHL = TRUE,
         MS1MS2_L = FALSE,
-        rank = 10,
+        rank = 20,
+        min_contrib = 0.6,
         maximumIteration = 200,
         maxFBIteration = 100,
         toleranceFB = 1e-05,
@@ -70,8 +72,12 @@ testthat::skip("development script; test the wrapper function")
         errors_print = FALSE,
         method = "svds",
         scan_rt_ext = 10,
-        min_distance = 5,
-        featuresn = 2
+        min_distance = 4,
+        featuresn = 4,
+        nscans = 6,
+        rt_method = "constant",
+        combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp = 0.05),
+        verbose = TRUE
       )
     }
   )
@@ -79,6 +85,7 @@ testthat::skip("development script; test the wrapper function")
 }
 
 devtools::load_all()
+devtools::document()
 {
   cache_path <- "/spi/scidospi/06_Data/deconv_nmf/features.rds"
   if (file.exists(cache_path)) {
@@ -103,11 +110,12 @@ devtools::load_all()
       initialization_method = "nndsvd",
       errors_print = FALSE,
       method = "svds",
-      scan_rt_ext = 15,
+      scan_rt_ext = 10,
       min_distance = 4,
       featuresn = NULL,
       nscans = 6,
       rt_method = "constant",
+      clean_sources = TRUE,
       combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp = 0.05),
       verbose = TRUE
     )
@@ -126,14 +134,14 @@ devtools::load_all()
   ft_match <- search_features(
     feature_dt = temp_ft,
     dt = targ_dt[, .(Compound, mz = mz_pos, rt = rt_sec)],
-    rttol = 20,
-    ppm = 8
+    rttol = 30,
+    ppm = 10
   )
   temp_ft <- temp_ft[order(-into), ]
   ## Plot one sample diagnostic plot for one iteration
   save_path <- "/spi/scidospi/06_Data/deconv_nmf/20250318_test"
   dir.create(save_path)
-  # list.files(save_path, full.names = TRUE) %>% sapply(., unlink)
+  list.files(save_path, full.names = TRUE) %>% sapply(., unlink)
   for (feati in ft_match[, unique(featureid)]) {
     timeA <- Sys.time()
     message(sprintf("Extracting: %s", feati), appendLF = FALSE)
@@ -144,7 +152,7 @@ devtools::load_all()
         feature_id = feati,
         sample_index = spli,
         log2L = FALSE,
-        max_method = "contribution"
+        max_method = "max_value"
       ) %>%
         suppressWarnings()
     }) %>% {
@@ -170,8 +178,7 @@ devtools::load_all()
       appendLF = TRUE
     )
   }
-  
-  
+
   ## Plot pure MS1/MS2 for a feature in different samples (with MS1 & MS2 matching)
 
   ## Plot xcms peaks ranges
@@ -238,4 +245,32 @@ devtools::load_all()
       geom_line() +
       theme_bw()
   }
+}
+
+{
+  require(ggplot2)
+  ms1_peaks_i %>%
+    ggplot(., aes(group = peakid, color = peakfull)) +
+    geom_linerange(
+      data = ms1_features_peaks,
+      aes(
+        xmin = rtmin,
+        xmax = rtmax,
+        x = rtmed,
+        y = mzmed
+      ),
+      alpha = 0.2,
+      color = "black"
+    ) +
+    geom_point(aes(x = rtmed, y = mzmed), shape = 2) +
+    geom_point(aes(x = rt, y = mz)) +
+    geom_linerange(
+      aes(
+        xmin = rtmin,
+        xmax = rtmax,
+        x = rtmed,
+        y = mzmed
+      )
+    ) +
+    theme_bw()
 }

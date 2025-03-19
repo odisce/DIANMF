@@ -11,6 +11,7 @@ plot_EluProfile(
   sample_index = 1,
   log2L = FALSE,
   type = c("pure", "mixed")[1],
+  method = c("all", "best")[2],
   max_method
 )
 }

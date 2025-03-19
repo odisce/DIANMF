@@ -139,7 +139,7 @@ search_features <- function(
     }, by = .(TEMPID)]
     setnames(dtin, c("mz", "rt"), c("mz_db", "rt_db"))
     feat_in <- copy(feature_dt)
-    feat_in <- feat_in[, .(mz = median(mz), rt = median(rt)), by = .(featureid)]
+    feat_in <- feat_in[, .(mz = median(mzmed), rt = median(rtmed)), by = .(featureid)]
     resmz <- data.table()
     if (!is.null(ppm)) {
       ## Filter mz

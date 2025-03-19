@@ -71,6 +71,7 @@ get_feature_coord <- function(
 #' Extract elution profile
 #'
 #' @param type `string` to retrieve the "pure" or "mixed" elution profiles.
+#' @param method `string` to extract "all" sources or just the "best".
 #' @inheritParams get_feature_coord
 #'
 #' @returns `data.table` of features with their optimal sources
@@ -83,6 +84,7 @@ get_elutionprofile <- function(
   feature_id,
   sample_index = NULL,
   type = c("pure", "mixed")[1],
+  method = c("all", "best")[2],
   max_method
 ) {
   feat_coord <- get_feature_coord(
@@ -117,7 +119,7 @@ get_elutionprofile <- function(
         rm(output)
       }
     }
-    mixed_mat_out <- mixed_mat_out[, .(xic_label, rtime, value, mslevel)]
+    mixed_mat_out <- mixed_mat_out[, .(xic_label, rtime, value, mslevel, rank = as.integer(NA))]
   } else if (type == "pure") {
     mixed_names <- c("MS1_pure_elution_profiles", "MS2_pure_elution_profiles")
     mslve_vc <- c("MS1", "MS2")
@@ -125,12 +127,16 @@ get_elutionprofile <- function(
     for (i in seq_len(2)) {
       i_names <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]] %>% names()
       if (all(c(mixed_names[i]) %in% i_names)) {
-        output <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][[mixed_names[i]]][rank == feat_coord[, source],]
+        source_to_get <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][[mixed_names[i]]][, unique(rank)]
+        if (method == "best") {
+          source_to_get <- feat_coord[, source]
+        }
+        output <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][[mixed_names[i]]][rank %in% source_to_get,]
         mixed_mat_out <- rbind(mixed_mat_out, output, fill = TRUE)
         rm(output)
       }
     }
-    mixed_mat_out <- mixed_mat_out[, .("xic_label" = rank, rtime, value, "mslevel" = MSid)]
+    mixed_mat_out <- mixed_mat_out[, .("xic_label" = rank, rtime, value, "mslevel" = MSid, rank = rank)]
   } else {
     stop('type argument not recognized')
   }
@@ -147,11 +153,12 @@ get_elutionprofile <- function(
 #'
 #' @import data.table magrittr
 get_spectra <- function(
-  features.l = features,
+  features.l,
   summary_dt = NULL,
-  feature_id = temp_ft[feature_i, featureid],
+  feature_id,
   sample_index = 1,
   type = c("pure", "mixed")[1],
+  method = c("all", "best")[2],
   max_method
 ) {
   feat_coord <- get_feature_coord(
@@ -180,7 +187,7 @@ get_spectra <- function(
         ms_info_dt <- features.l[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][["ms_info"]]
         output <- merge(
           mixed_mat_dt,
-          ms_info_dt[, .(xic_label, msLevel, IsoWin, featureid, mz, rt)],
+          ms_info_dt[, .(xic_label, msLevel, IsoWin, featureid, mz, rt, rank = as.integer(NA))],
           by = "xic_label"
         )
         output[, mslevel := mslve_vc[i]]
@@ -195,7 +202,11 @@ get_spectra <- function(
     for (i in seq_len(2)) {
       i_names <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]] %>% names()
       if (all(c(mixed_names[i]) %in% i_names)) {
-        output <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][[mixed_names[i]]][rank == feat_coord[, source],]
+        source_to_get <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][[mixed_names[i]]][, unique(source_to_get)]
+        if (method == "best") {
+          source_to_get <- feat_coord[, source]
+        }
+        output <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][[mixed_names[i]]][rank %in% source_to_get,]
         ms_info_dt <- features.l[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][["ms_info"]]
         output <- merge(
           output,
@@ -211,7 +222,7 @@ get_spectra <- function(
     stop('type argument not recognized')
   }
   
-  return(mixed_mat_out[, .(xic_label, IsoWin, mslevel, mz, value)])
+  return(mixed_mat_out[, .(xic_label, IsoWin, mslevel, mz, value, rank)])
 }
 
 #' Export MS Spectra
@@ -234,6 +245,7 @@ plot_EluProfile <- function(
   sample_index = 1,
   log2L = FALSE,
   type = c("pure", "mixed")[1],
+  method = c("all", "best")[2],
   max_method
 ) {
   if (is.null(summary_dt)) {
@@ -246,7 +258,8 @@ plot_EluProfile <- function(
     feature_id = feature_id,
     sample_index = sample_index,
     type = type,
-    max_method = max_method
+    max_method = max_method,
+    method = method
   )
 
   if (log2L) {
@@ -268,7 +281,8 @@ plot_EluProfile <- function(
       rtime %between% feat_coord[, c(rtmin, rtmax)]
     ][grepl(targ_feat, xic_label), ], alpha = 1, color = "red") +
     theme_bw() +
-    scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+    facet_grid(rank ~ .) +
+    scale_y_continuous(labels = function(x) sprintf("%0.2g", x)) +
     labs(
       title = sprintf(
         "%s matrix of feature: %s",
@@ -299,6 +313,7 @@ plot_Spectra <- function(
   sample_index = 1,
   log2L = FALSE,
   type = c("pure", "mixed")[1],
+  method = c("all", "best")[2],
   max_method
 ) {
   if (is.null(summary_dt)) {
@@ -311,7 +326,8 @@ plot_Spectra <- function(
     feature_id = feature_id,
     sample_index = sample_index,
     type = type,
-    max_method = max_method
+    max_method = max_method,
+    method = method
   )
 
   if (log2L) {
@@ -343,7 +359,8 @@ plot_Spectra <- function(
       color = "red"
     ) +
     theme_bw() +
-    scale_y_continuous(labels = function(x) format(x, scientific = TRUE)) +
+    facet_grid(rank ~ .) +
+    scale_y_continuous(labels = function(x) sprintf("%0.2g", x)) +
     labs(
       title = sprintf(
         "%s matrix of feature: %s",

@@ -23,6 +23,7 @@ DIANMF.f(
   min_distance = 5,
   nscans = 4,
   featuresn = NULL,
+  clean_sources = TRUE,
   combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp =
     0.05),
   verbose = FALSE
