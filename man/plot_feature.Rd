@@ -17,7 +17,15 @@ plot_feature(
 \arguments{
 \item{features.l}{\code{list} obtainer with \code{DIANMF::DIANMF.f()}}
 
-\item{log2L}{}
+\item{summary_dt}{\code{data.table}}
+
+\item{feature_id}{\code{character}}
+
+\item{sample_index}{\code{numeric}}
+
+\item{log2L}{\code{logic}}
+
+\item{method}{\code{string} to extract "all" sources or just the "best".}
 }
 \value{
 \code{ggplot} of the mixed spectra for the asked feature.

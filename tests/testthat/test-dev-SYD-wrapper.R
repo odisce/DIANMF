@@ -49,9 +49,9 @@ params_ls <- list(
   "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
 )
 
-cache_dir <- file.path("/spi/scidospi/06_Data/deconv_nmf", sysos)
+cache_dir <- file.path(pref, "scidospi/06_Data/deconv_nmf", sysos)
 cache_path <- file.path(cache_dir, "temp.rds")
-profile_path <- file.path("/spi/scidospi/06_Data/deconv_nmf", sysos)
+profile_path <- file.path(pref, "scidospi/06_Data/deconv_nmf", sysos)
 dir.create(dirname(cache_path))
 if (file.exists(cache_path)) {
   xcms_obj <- readRDS(cache_path)
@@ -105,9 +105,9 @@ if (file.exists(cache_path)) {
 } else {
   data.table::setDTthreads(1)
   A <- Sys.time()
-  rt_range <- targ_dt[grepl("Scopolamine", Compound), (rt_sec + c(-60, +60))]
-  msexp <- xcms::filterRt(xcms_obj, rt_range)
-  # msexp <- xcms_obj
+  # rt_range <- targ_dt[grepl("Scopolamine", Compound), (rt_sec + c(-60, +60))]
+  # msexp <- xcms::filterRt(xcms_obj, rt_range)
+  msexp <- xcms_obj
   features <- DIANMF.f(
     msexp = msexp,
     dir_out = FALSE,
@@ -154,6 +154,7 @@ if (file.exists(cache_path)) {
   dir.create(save_path)
   list.files(save_path, full.names = TRUE) %>% sapply(., unlink)
   for (feati in ft_match[, unique(featureid)]) {
+    # feati <- "FT1501"
     timeA <- Sys.time()
     message(sprintf("Extracting: %s", feati), appendLF = FALSE)
     plot_out <- lapply(temp_ft[, unique(sample)], function(spli) {

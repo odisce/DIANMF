@@ -2,16 +2,22 @@
 % Please edit documentation in R/exporting_fcts.R
 \name{exportMSSpectra}
 \alias{exportMSSpectra}
-\title{Export MS Spectra}
+\title{Extract MS Spectra of all identified features/peaks}
 \usage{
-exportMSSpectra(features.l)
+exportMSSpectra(features.l, sample_index, type, method, max_method)
 }
 \arguments{
-\item{features.l}{\code{list}}
+\item{features.l}{\code{list} obtainer with \code{DIANMF::DIANMF.f()}}
+
+\item{sample_index}{\code{numeric}}
+
+\item{type}{\code{string} to retrieve the "pure" or "mixed" elution profiles.}
+
+\item{method}{\code{string} to extract "all" sources or just the "best".}
 }
 \value{
-\code{list} of \code{Spectra} objects
+\code{list} of Spectra objects for all identified features
 }
 \description{
-Export MS Spectra
+Extract MS Spectra of all identified features/peaks
 }

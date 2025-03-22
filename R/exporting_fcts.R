@@ -234,11 +234,11 @@ get_spectra <- function(
 #' Export MS Spectra
 #'
 #' @param features.l `list` obtainer with `DIANMF::DIANMF.f()`
-#' @param summary_dt
-#' @param feature_id
-#' @param sample_index
-#' @param log2L
-#' @inheritParams 
+#' @param summary_dt `data.table`
+#' @param feature_id `character`
+#' @param sample_index `numeric`
+#' @param log2L `logic`
+#' @inheritParams get_elutionprofile
 #'
 #' @returns `ggplot` of the mixed matrix for the asked feature.
 #' @export
@@ -302,11 +302,7 @@ plot_EluProfile <- function(
 
 #' Plot MS Spectra
 #'
-#' @param features.l `list` obtainer with `DIANMF::DIANMF.f()`
-#' @param summary_dt
-#' @param feature_id
-#' @param sample_index
-#' @param log2L
+#' @inheritParams plot_EluProfile
 #'
 #' @returns `ggplot` of the mixed spectra for the asked feature.
 #' @export
@@ -460,75 +456,177 @@ plot_feature <- function(
     common.legend = TRUE
   )
 }
-#' Export MS Spectra
+
+
+# nev <- get_ms1_rtdiff(msexp_idx) * 1.5
+# scan_rt_ext <- 10
+# rt_method <- "constant"
+# rt_range ?!
+
+#' Plot the XCMS peaks of one iteration after post-deconvolution (i.e. filtering pure sources) 
 #'
-#' @param features.l `list`
+#' @inheritParams get_spectra
+#' @param iteration_index `numeric` 
 #'
-#' @returns `list` of `Spectra` objects
-#' @export
+#' @returns ggplot2 plot
+#' @export 
 #' 
-#' @importFrom Spectra Spectra
-#' @import dplyr
-exportMSSpectra <- function(features.l) {
+#' @import ggplot2
+plot_xcms_peaks_range <- function(summary_dt, sample_index, iteration_index){
   
-  MSSpectra <- lapply(seq_along(features.l), function(iteration) {
-    
-    ms1PureSpectra <- features.l[[iteration]]$ms1_pure_spectra %>%
-      arrange(rank) %>%
-      group_by(rank) %>%
-      group_split()
-    
-    ms2PureSpectra <- features.l[[iteration]]$ms2_pure_spectra %>%
-      arrange(isolationWindowTargetMz) %>%
-      group_by(rank) %>%
-      group_split()
-    
-    info <- features.l[[iteration]]$xcms_assigned_sources %>%
-      arrange(source) %>%
-      group_by(source) %>%
-      group_split()
-    
-    res <- lapply(seq_along(ms1PureSpectra), function(source_idx) {
-      # MS1
-      ms1_df <- ms1PureSpectra[[source_idx]]
-      ms1_spd <- S4Vectors::DataFrame(
-        msLevel = 1L,
-        name = iteration,
-        id = unique(ms1_df$rank),
-        rtime = mean(info[[source_idx]]$rt),
-        COMMENT = paste(info[[source_idx]]$xic_label, collapse = ";")
+  xcms_peaks <- summary_dt[ sample == sample_index & iteration == iteration_index,  ]
+  rt_range <- c( xcms_peaks[1, ]$rtmin-10 , xcms_peaks[1, ]$rtmax+10) 
+  
+  ggplot(xcms_peaks, aes(rt, mz, group = peakid)) +
+    geom_pointrange(aes(x = rt, xmin = rtmin, xmax = rtmax, color = peakfull)) +
+    geom_vline(xintercept = rt_range, linetype = 2, color = "red") +
+    theme_bw() +
+    labs(
+      title = "MS1 peak in range",
+      caption = sprintf(
+        "
+            Total MS1 peaks: %i\n
+            Peak include in range: %i
+          ",
+        xcms_peaks[, .N],
+        xcms_peaks[peakfull == TRUE, .N]
+      )
+    )
+}
+
+#' Extract spectrum (of class `Spectra`) from `data.table` `data.frame`
+#'
+#' @param ms_Spectrum `data.table` `data.frame`
+#' @inheritParams get_spectra
+#'
+#' @returns `Spectra` object
+#' @importFrom Spectra Spectra
+#' @importFrom S4Vectors DataFrame
+get_spectrum_obj <- function(ms_Spectrum, feature_id){
+  
+  # MS1
+  ms1_df <- ms_Spectrum[ms_Spectrum$mslevel == "MS1", ]
+  ms1_spd <- DataFrame(
+    msLevel = 1L,
+    name = feature_id,
+    id = unique(ms1_df$rank),
+    COMMENT = paste(ms1_df$xic_label, collapse = ";")  )
+  
+  ms1_spd$mz <- list(ms1_df$mz)
+  ms1_spd$intensity <- list(ms1_df$value)
+  ms1_spectrum <- Spectra(ms1_spd)
+  
+  # MS2
+  ms2_df <- ms_Spectrum[ms_Spectrum$mslevel == "MS2", ]
+  if( nrow(ms2_df) > 0 ){
+      isolation_spectra <- lapply(unique(ms2_df$IsoWin), function(targetMz) {
+      subset_df <- ms2_df[ms2_df$IsoWin == targetMz, ]  
+      
+      ms2_spd <- S4Vectors::DataFrame(
+        msLevel = 2L,
+        name = feature_id,
+        id = unique(ms2_df$rank),
+        isolationWindowTargetMz = as.numeric(targetMz)
+        # isolationWindowLowerMz = as.numeric(unique(subset_df$isolationWindowLowerMz)),
+        # isolationWindowUpperMz = as.numeric(unique(subset_df$isolationWindowUpperMz))
       )
       
-      ms1_spd$mz <- list(ms1_df$mz)
-      ms1_spd$intensity <- list(ms1_df$value)
-      ms1_spectra <- Spectra::Spectra(ms1_spd)
-      
-      # MS2
-      ms2_df <- ms2PureSpectra[[source_idx]]
-      isolation_spectra <- lapply(unique(ms2_df$isolationWindowTargetMz), function(targetMz) {
-        subset_df <- ms2_df[ms2_df$isolationWindowTargetMz == targetMz, ]  
-        
-        ms2_spd <- S4Vectors::DataFrame(
-          msLevel = 2L,
-          name = iteration,
-          id = unique(subset_df$rank), 
-          isolationWindowTargetMz = as.numeric(targetMz),  
-          isolationWindowLowerMz = as.numeric(unique(subset_df$isolationWindowLowerMz)),
-          isolationWindowUpperMz = as.numeric(unique(subset_df$isolationWindowUpperMz))  )
-        
-        ms2_spd$mz <- list(subset_df$mz)
-        ms2_spd$intensity <- list(subset_df$value)
-        return(Spectra::Spectra(ms2_spd))
-      })
-      
-      isolation_spectra <- do.call(c, isolation_spectra)
-      msSpectra <- c(ms1_spectra, isolation_spectra)
-      return(msSpectra) 
+      ms2_spd$mz <- list(subset_df$mz)
+      ms2_spd$intensity <- list(subset_df$value)
+      return(Spectra::Spectra(ms2_spd))
     })
-    
-    return(res)
-  })
+    isolationWin_spectra <- do.call(c, isolation_spectra)
+  } else {
+    isolationWin_spectra <- NULL
+  }
   
-  MSSpectra <- unlist(MSSpectra, recursive = FALSE)
+  ms_spectra <- c(ms1_spectrum, isolationWin_spectra)
+  return(ms_spectra)
+}
+
+
+#' Extract `Spectra` object of a feature
+#'
+#' @inheritParams plot_Spectra
+#'
+#' @returns `Spectra` object of a feature
+#' @export
+export_featureSpect <- function(features.l, feature_id, sample_index, type, method, max_method){
+  
+  temp_ft <- get_feature_summary(features.l, max_method)
+  temp_ft_sample <- temp_ft[ sample == sample_index, ]
+  ms_Spectrum <- get_spectra(features.l, summary_dt = temp_ft_sample, feature_id,
+                             sample_index,
+                             type,
+                             method,
+                             max_method)
+  
+  if( nrow(ms_Spectrum) > 0){
+    if( method == "best" ){
+      sp <- get_spectrum_obj(ms_Spectrum, feature_id)
+      return(sp)
+    }else{
+      sp_diff_sources <- lapply(unique(ms_Spectrum$rank), function(source){
+        sub_ms_Spectrum <- ms_Spectrum[ rank == source, ]
+        sp <- get_spectrum_obj(sub_ms_Spectrum, feature_id)
+        return(sp)
+      })
+      sp_diff_sources <- do.call(c, sp_diff_sources)
+      return(sp_diff_sources)
+    }
+  }else{
+    return(NULL)
+  }
+}
+
+#' Extract MS Spectra of all identified features/peaks
+#'
+#' @inheritParams plot_Spectra
+#'
+#' @returns `list` of Spectra objects for all identified features
+#' @export
+exportMSSpectra <- function(features.l, sample_index, type, method, max_method) {
+
+  temp_ft <- get_feature_summary(features.l, max_method)
+  temp_ft_sample <- temp_ft[ sample == sample_index, ]
+  
+  MSSpectra <- lapply(unique(temp_ft_sample$featureid), function(featureid) {
+    MSSpectrum <- export_featureSpect(features.l, feature_id = featureid, sample_index, type, method, max_method)
+  })
+  MSSpectra <- do.call(c, MSSpectra)
   return(MSSpectra)
 }
+
+
+# test the three export spectra function
+# temp_ft <- get_feature_summary(features.l = features, max_method = "max_value")
+# 
+# spect <- export_featureSpect(features.l = features, feature_id = "FT1451", sample_index = 1, type = "pure", method = "all", max_method = "contribution")
+# ms1_spect <- filterMsLevel(spect, 1L)
+# mz(ms1_spect)
+# intensity(ms1_spect)
+# 
+# ms_Spectrum_df <- get_spectra(features.l = features, summary_dt = temp_ft, feature_id = "FT1451",
+#                              sample_index = 1,
+#                              type = "pure",
+#                              method= "best",
+#                              max_method = "max_value")
+# 
+# spect_obj <- get_spectrum_obj(ms_Spectrum_df)
+# MsBackendMgf::export(spect, backend = MsBackendMgf(), file = "output.mgf")
+# 
+# A <- Sys.time()
+# all_spectra <- exportMSSpectra(features.l = features, sample_index = 1, type = "pure", method = "best", max_method = "max_value")
+# B <- Sys.time()
+# B - A
+# # Time difference of 7.889102 mins
+# some filtering tests on all_spectra
+# MsBackendMgf::export(all_spectra, backend = MsBackendMgf(), file = "output.mgf")
+# spectraVariables(all_spectra)
+# filtered_spectra <- filterValues(all_spectra, "name", "FT2251") # filterValues filter just numerical spectraVariables
+# filtered_spect <- all_spectra[spectraData(all_spectra)$name == "FT2251"]
+# mz(filtered_spect)
+# intensity(filtered_spect)
+# ms2_spect <- filterMsLevel(filtered_spect, 2L)
+# filterValues(ms2_spect, "isolationWindowTargetMz", 500)
+

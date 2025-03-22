@@ -460,6 +460,6 @@ DIANMF.f <- function(
       )
     )
   })
-  names(res) <- tools::file_path_sans_ext(basename(file_info$mzml_path[sample_idx]))
+  names(res) <- tools::file_path_sans_ext(basename(file_info$mzml_path))
   return(res)
 }
