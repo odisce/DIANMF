@@ -565,7 +565,7 @@ export_featureSpect <- function(features.l, feature_id, sample_index, type, meth
     if( method == "best" ){
       sp <- get_spectrum_obj(ms_Spectrum, feature_id)
       return(sp)
-    }else{
+    }else if(method == "all"){
       sp_diff_sources <- lapply(unique(ms_Spectrum$rank), function(source){
         sub_ms_Spectrum <- ms_Spectrum[ rank == source, ]
         sp <- get_spectrum_obj(sub_ms_Spectrum, feature_id)
@@ -573,6 +573,8 @@ export_featureSpect <- function(features.l, feature_id, sample_index, type, meth
       })
       sp_diff_sources <- do.call(c, sp_diff_sources)
       return(sp_diff_sources)
+    } else{
+      stop("method doesn't exist.")
     }
   }else{
     return(NULL)
@@ -596,7 +598,6 @@ exportMSSpectra <- function(features.l, sample_index, type, method, max_method) 
   MSSpectra <- do.call(c, MSSpectra)
   return(MSSpectra)
 }
-
 
 # test the three export spectra function
 # temp_ft <- get_feature_summary(features.l = features, max_method = "max_value")
