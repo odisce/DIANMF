@@ -5,7 +5,7 @@
 \title{Plot MS Spectra}
 \usage{
 plot_Spectra(
-  features.l = features,
+  features.l = features.l,
   summary_dt = NULL,
   feature_id = NULL,
   sample_index = 1,

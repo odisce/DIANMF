@@ -26,7 +26,8 @@ DIANMF.f(
   clean_sources = TRUE,
   combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp =
     0.05),
-  verbose = FALSE
+  verbose = FALSE,
+  BPPARAM = bpparam()
 )
 }
 \arguments{
@@ -69,6 +70,8 @@ DIANMF.f(
 \item{combineSpectra_arg}{(optional) combineSpectra argument as a list}
 
 \item{verbose}{\code{logical} to show execution messages}
+
+\item{BPPARAM}{}
 }
 \value{
 \code{list}

@@ -206,13 +206,13 @@ get_spectra <- function(
     mslve_vc <- c("MS1", "MS2")
     mixed_mat_out <- data.table()
     for (i in seq_len(2)) {
-      i_names <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]] %>% names()
+      i_names <- features.l[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]] %>% names()
       if (all(c(mixed_names[i]) %in% i_names)) {
-        source_to_get <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][[mixed_names[i]]][, unique(rank)]
+        source_to_get <- features.l[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][[mixed_names[i]]][, unique(rank)]
         if (method == "best") {
           source_to_get <- feat_coord[, source]
         }
-        output <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][[mixed_names[i]]][rank %in% source_to_get,]
+        output <- features.l[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][[mixed_names[i]]][rank %in% source_to_get,]
         ms_info_dt <- features.l[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][["ms_info"]]
         output <- merge(
           output,
@@ -278,7 +278,7 @@ plot_EluProfile <- function(
   }
 
   ## Get feature related peaks
-  targ_feat <- features[[feat_coord$sample]]$ms1_features[featureid == feature_id, ][which.max(into), peakid]
+  targ_feat <- features.l[[feat_coord$sample]]$ms1_features[featureid == feature_id, ][which.max(into), peakid]
 
   ggplot(mixed_mat_out, aes(rtime, x, group = interaction(xic_label, mslevel), color = mslevel)) +
     geom_hline(yintercept = 0) +
@@ -309,7 +309,7 @@ plot_EluProfile <- function(
 #'
 #' @import ggplot2 data.table magrittr
 plot_Spectra <- function(
-  features.l = features,
+  features.l = features.l,
   summary_dt = NULL,
   feature_id = NULL,
   sample_index = 1,
