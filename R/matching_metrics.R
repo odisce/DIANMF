@@ -287,22 +287,54 @@ prepare_spectrum <- function(spect_df){
 #' 
 #' @import ggplot2
 #' @importFrom ggpubr ggarrange
-plot_spectra_vs <- function(measuredSpectra_pure, measuredSpectra_mixed, librarySpectra, scores_pure, scores_mixed, mslevel){
- 
+plot_spectra_vs <- function(measuredSpectra_pure, measuredSpectra_mixed, librarySpectra, scores_pure, scores_mixed, mslevel) {
+  
+  if (mslevel == "MS2") {
+    # MS2: color by IsoWin, include name in caption
+    p_mixed <- ggplot() + 
+      geom_linerange(data = measuredSpectra_mixed, aes(x = mz_value, ymin = 0, ymax = intensity, color = as.factor(IsoWin))) +
+      geom_linerange(data = librarySpectra, aes(x = mz_value, ymin = -intensity, ymax = 0), color = 'red') +
+      theme_bw(base_size = 14) +
+      guides(color = guide_legend(title = "IsoWin")) +
+      labs(caption = paste("MS2 Mix vs. lib [", scores_pure$name, "]:",
+                           " DP:", scores_mixed$dp,
+                           " IDP:", scores_mixed$rdp,
+                           " FPP:", scores_mixed$fp))
+    
+    p_pure <- ggplot() + 
+      geom_linerange(data = measuredSpectra_pure, aes(x = mz_value, ymin = 0, ymax = intensity, color = as.factor(IsoWin))) +
+      geom_linerange(data = librarySpectra, aes(x = mz_value, ymin = -intensity, ymax = 0), color = 'red') +
+      theme_bw(base_size = 14) +
+      guides(color = guide_legend(title = "IsoWin")) +
+      labs(caption = paste("MS2 Pure vs. lib [", scores_pure$name, "]:",
+                           " DP:", scores_pure$dp,
+                           " IDP:", scores_pure$rdp,
+                           " FPP:", scores_pure$fp))
+    
+  } else {
+    # MS1 or other: no coloring by IsoWin
     p_mixed <- ggplot() + 
       geom_linerange(data = measuredSpectra_mixed, aes(x = mz_value, ymin = 0, ymax = intensity), color = 'blue') +
       geom_linerange(data = librarySpectra, aes(x = mz_value, ymin = -intensity, ymax = 0), color = 'red') +
-      guides(color = "none") +
       theme_bw(base_size = 14) +
-      labs(caption = paste(mslevel, "Mix vs. lib:", "DP:", scores_mixed$dp, " IDP", scores_mixed$rdp, " FPP:", scores_mixed$fp ))
+      labs(caption = paste(mslevel, "Mix vs. lib:",
+                           " DP:", scores_mixed$dp,
+                           " IDP:", scores_mixed$rdp,
+                           " FPP:", scores_mixed$fp)) +
+      guides(color = "none")
     
-    p_pure <- ggplot() +
-      geom_linerange(data = measuredSpectra_pure, aes(x = mz_value, ymin = 0, ymax = intensity), color = 'blue') + 
+    p_pure <- ggplot() + 
+      geom_linerange(data = measuredSpectra_pure, aes(x = mz_value, ymin = 0, ymax = intensity), color = 'blue') +
       geom_linerange(data = librarySpectra, aes(x = mz_value, ymin = -intensity, ymax = 0), color = 'red') +
-      guides(color = "none") +
       theme_bw(base_size = 14) +
-      labs(caption = paste(mslevel, "Pure vs. lib:", " DP:", scores_pure$dp, " IDP", scores_pure$rdp, " FPP:", scores_pure$fp ))
-    
-    ggpubr::ggarrange(p_mixed, p_pure, nrow = 2)
+      labs(caption = paste(mslevel, "Pure vs. lib:",
+                           " DP:", scores_pure$dp,
+                           " IDP:", scores_pure$rdp,
+                           " FPP:", scores_pure$fp)) +
+      guides(color = "none")
+  }
+  
+  ggpubr::ggarrange(p_mixed, p_pure, nrow = 2)
 }
+
 
