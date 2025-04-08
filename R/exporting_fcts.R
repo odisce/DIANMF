@@ -342,7 +342,7 @@ plot_Spectra <- function(
   }
 
   ## Get feature related peaks
-  targ_feat <- features[[feat_coord$sample]]$ms1_features[featureid == feature_id, ][which.max(into), peakid]
+  targ_feat <- features.l[[feat_coord$sample]]$ms1_features[featureid == feature_id, ][which.max(into), peakid]
 
   ggplot(mixed_mat_out, aes(
     x = mz,
