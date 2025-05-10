@@ -44,11 +44,11 @@ create_seq <- function(mzml_dt) {
 
 #' Detect MS1 peaks using XCMS.
 #'
-#' @param sequence_table A data.frame with at least (mzml_path, class, InjectionOrder).
-#' @param params A list to set the parameters from xcms pipeline steps.
-#'               List names should be xcms parameters methods (ex: `list("CentWaveParam" = CentWaveParam()`)
-#' @return MsExperiment objects
-#' @param rt_range (Optional) rt range to subset before running peak detection
+#' @param sequence_table A `data.frame` with at least (mzml_path, class, InjectionOrder).
+#' @param params A `list` to set the parameters from xcms pipeline steps.
+#'               List names should be xcms parameters methods (ex: `list("CentWaveParam" = CentWaveParam()`).
+#' @return `MsExperiment` objects
+#' @param rt_range (Optional) rt range to subset before running peak detection.
 #' 
 #' @export
 #' 
@@ -115,7 +115,7 @@ extract_xcms_peaks <- function(msexp) {
 #'
 #' @inheritParams extract_xcms_peaks
 #' @param orderL_sample `character` sample name.
-#' @param quantifyL Logical to perform quantification with `xcms::quantify()`
+#' @param quantifyL `Logical` to perform quantification with `xcms::quantify()`
 #'
 #' @return `data.table` `data.frame` object.
 #' @export

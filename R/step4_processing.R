@@ -1,22 +1,22 @@
 #' Process xcms object
-#'
-#' @inheritParams extract_xcms_peaks
+#' 
+#' @inheritParams align_scans
 #' @param dir_out `logical` TRUE to save results, else FALSE
-#' @param sample_idx NULL to process all files else, `numeric` index of the sample.
 #' @param MS2_ISOEACHL `logical`
 #' @param MS1MS2_L `logical`
 #' @inheritParams get_spectra_values
 #' @inheritParams nGMCAs
 #' @param rt_method c("peak", "constant")
 #' @inheritParams has_n_consecutive_non_zero
-#' @param scan_rt_ext `numeric`
-#' @param min_contrib `numeric` contribution proportion to keep ions (between 0 and 1)
-#' @param min_distance `numeric`
-#' @param featuresn `numeric` to limit the number if iteration (k) on each file for testing purpose, set it to NULL to extract all features.
-#' @param verbose `logical` to show execution messages
-#' @param BPPARAM
+#' @param scan_rt_ext `numeric` retention time extension of the rt window.
+#' @param min_contrib `numeric` contribution proportion to keep ions (between 0 and 1).
+#' @param min_distance `numeric` mark the allowed distance from the rt window border for a peak to be entirely in the window or partially.
+#' @param featuresn `numeric` to limit the number if iteration (k) on each file for testing purpose, set it to `NULL` to extract all features.
+#' @param verbose `logical` to show execution messages.
+#' @param clean_sources `TRUE` to clean/remove sources with less than 0.6 contribution for any peaks, `FALSE` to keep all sources.
+#' @param BPPARAM A `BiocParallelParam` object defining the parallelization backend to be used. Defaults to the value returned by `BiocParallel::bpparam()`.
 #'
-#' @return `list`
+#' @return `list` of info of deconvoluted (pure) sources with the peaks-features data.
 #' @export
 #' 
 #' @importFrom xcms findChromPeaks chromPeaks
@@ -91,14 +91,14 @@ DIANMF.f <- function(
 
   ## Iterate over files ----
   res <- BiocParallel::bplapply(
-    X = seq_len(file_info[, .N]),
+    X = file_info$InjectionOrder,
     FUN = function(s_idx) {
-      # s_idx = 1
+      # s_idx = 4
       ms1_features <- copy(ms1_features_peaks[sample == s_idx, ])
       ms1_features[, iteration := as.character(NA) ]
       msexp_idx <- xcms::filterFile(msexp, s_idx)
       nev <- get_ms1_rtdiff(msexp_idx) * 1.5
-      s_idx_name <- file_info[s_idx, basename(mzml_path)]
+      s_idx_name <- file_info[InjectionOrder == s_idx, ]$file_name
       if (verbose) {
         message(
           sprintf(
@@ -457,16 +457,18 @@ DIANMF.f <- function(
           }
         }
       }
-      return(
-        list(
-          "PureFeatures" = features.l,
-          "ms1_features_peaks" = ms1_features_peaks,
-          "ms1_features" = ms1_features
-        )
+      
+      l_output <-  list(
+        "PureFeatures" = features.l,
+        "ms1_features_peaks" = ms1_features_peaks,
+        "ms1_features" = ms1_features
       )
+        
+      rm(ms1_features)
+      return(l_output)
     },
     BPPARAM = BPPARAM
   )
-  names(res) <- tools::file_path_sans_ext(basename(file_info$mzml_path))
+  names(res) <- file_info$file_name
   return(res)
 }

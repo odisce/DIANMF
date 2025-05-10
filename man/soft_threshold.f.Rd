@@ -7,7 +7,7 @@
 soft_threshold.f(Y, threshold)
 }
 \arguments{
-\item{Y}{\code{matrix}}
+\item{Y}{\code{matrix}.}
 
 \item{threshold}{\code{numeric(1)} thresholding parameter.}
 }

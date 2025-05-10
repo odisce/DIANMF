@@ -2,7 +2,7 @@
 % Please edit documentation in R/step3.2_NMF.R
 \name{updateA.f}
 \alias{updateA.f}
-\title{Update A.}
+\title{Update A}
 \usage{
 updateA.f(
   Y,
@@ -14,7 +14,7 @@ updateA.f(
 )
 }
 \arguments{
-\item{Y}{\code{matrix}}
+\item{Y}{\code{matrix}.}
 
 \item{A_init}{\code{matrix} every column is an elution profile.}
 
@@ -24,11 +24,11 @@ updateA.f(
 
 \item{toleranceFB}{\code{numeric(1)} tolerance or stopping value of the FB algorithm.}
 
-\item{method}{Method to compute svd: "base", "fast" or "svds"}
+\item{method}{Method to compute svd: "base", "fast" or "svds".}
 }
 \value{
 \code{matrix} A of updated elution profiles.
 }
 \description{
-Update A.
+Update A
 }

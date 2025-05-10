@@ -69,7 +69,7 @@ if (file.exists(cache_path)) {
       features <- DIANMF.f(
         msexp = xcms_obj,
         dir_out = FALSE,
-        sample_idx = NULL,
+        sample_idx = 1,
         MS2_ISOEACHL = TRUE,
         MS1MS2_L = FALSE,
         rank = 20,
@@ -124,7 +124,7 @@ if (file.exists(cache_path)) {
     method = "svds",
     scan_rt_ext = 10,
     min_distance = 4,
-    featuresn = NULL,
+    featuresn = 2,
     nscans = 6,
     rt_method = "constant",
     clean_sources = TRUE,

@@ -13,8 +13,8 @@ build_mixed_matrix(xicdt, nscans = 4)
 }
 \value{
 \code{list} of the mixed matrices (ions x scans) with two levels:by
-- \link{1} mixed matrix with more than nscans consectuvies scans
-- \link{2} mixed matrix with less than nscans consectuvies scans
+- [1] mixed matrix with more than nscans consectuvies scans
+- [2] mixed matrix with less than nscans consectuvies scans
 }
 \description{
 Create the mixed matrix

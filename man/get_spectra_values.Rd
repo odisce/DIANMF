@@ -12,7 +12,7 @@ get_spectra_values(
 )
 }
 \arguments{
-\item{msexp}{MsExperiment object}
+\item{msexp}{\code{MsExperiment} object}
 
 \item{mslevel}{(optional) MSLevel to subset}
 
@@ -21,7 +21,7 @@ get_spectra_values(
 \item{combineSpectra_arg}{(optional) combineSpectra argument as a list}
 }
 \value{
-a data.table containing spectra infos
+a \code{data.table} containing spectra infos
 }
 \description{
 Get spectra value in MsExperiment

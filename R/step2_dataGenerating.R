@@ -28,8 +28,8 @@ has_n_consecutive_non_zero <- function(row, nscans = 4) {
 #' Get scan time and align between ms events
 #'
 #' @inheritParams extract_xcms_peaks
-#' @param rt_range retention time range
-#' @param sample_idx subset a sample
+#' @param rt_range retention time range.
+#' @param sample_idx `NULL` to process all files else, `numeric` index of the sample.
 #'
 #' @return `list` of `data.table` `data.frame` objects: raw_dt and time_dic.
 #'
@@ -110,7 +110,7 @@ align_scans <- function(msexp, rt_range, sample_idx) {
 #' Build MS1 xics from peak list
 #'
 #' @param peaks_dt `data.table` `data.frame` targeted peaks in one rt_range.
-#' @param rawdt `data.frame` from `DIANMF::get_rawD_ntime`
+#' @param rawdt `data.frame` from `DIANMF::get_rawD_ntime`.
 #' @param method `string` to select a method for returning data:
 #'   - `all`: return all points in range.
 #'   - `max`: return max point by retention time.
@@ -163,10 +163,9 @@ build_XICs <- function(
 #' Build MS2 xics
 #'
 #' @inheritParams extract_xcms_peaks
-#' @inheritParams build_XICs
 #' @inheritParams get_spectra_values
-#' @param ms2isowinL `logical` is TRUE to build the MS2 xics from raw data, else from xcms peaks. 
-#' @param ppm ppm to use for returning mzmin and mzmax values
+#' @param ms2isowinL `logical` is `TRUE` to build the MS2 xics from raw data, else from xcms peaks. 
+#' @param ppm `numeric` used for returning mzmin and mzmax values.
 #'
 #' @return `data.table` `data.frame` MS2 EICs.
 #' @export
@@ -259,8 +258,8 @@ generate_peaklist <- function(
 #' @inheritParams has_n_consecutive_non_zero
 #'
 #' @return `list` of the mixed matrices (ions x scans) with two levels:by
-#'            - [1] mixed matrix with more than nscans consectuvies scans
-#'            - [2] mixed matrix with less than nscans consectuvies scans
+#'            - \[1\] mixed matrix with more than nscans consectuvies scans
+#'            - \[2\] mixed matrix with less than nscans consectuvies scans
 #' @export
 build_mixed_matrix <- function(xicdt, nscans = 4) {
   mixeddt <- dcast(

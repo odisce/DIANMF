@@ -17,11 +17,11 @@ generate_peaklist(
 
 \item{mslevel}{(optional) MSLevel to subset}
 
-\item{ms2isowinL}{\code{logical} is TRUE to build the MS2 xics from raw data, else from xcms peaks.}
+\item{ms2isowinL}{\code{logical} is \code{TRUE} to build the MS2 xics from raw data, else from xcms peaks.}
 
 \item{combineSpectra_arg}{(optional) combineSpectra argument as a list}
 
-\item{ppm}{ppm to use for returning mzmin and mzmax values}
+\item{ppm}{\code{numeric} used for returning mzmin and mzmax values.}
 }
 \value{
 \code{data.table} \code{data.frame} MS2 EICs.

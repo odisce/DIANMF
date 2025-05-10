@@ -8,6 +8,8 @@ get_spectrum_obj(ms_Spectrum, feature_id)
 }
 \arguments{
 \item{ms_Spectrum}{\code{data.table} \code{data.frame}}
+
+\item{feature_id}{\code{character} feature id.}
 }
 \value{
 \code{Spectra} object

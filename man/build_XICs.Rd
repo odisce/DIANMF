@@ -9,7 +9,7 @@ build_XICs(peaks_dt, rawdt, method = c("all", "max")[2])
 \arguments{
 \item{peaks_dt}{\code{data.table} \code{data.frame} targeted peaks in one rt_range.}
 
-\item{rawdt}{\code{data.frame} from \code{DIANMF::get_rawD_ntime}}
+\item{rawdt}{\code{data.frame} from \code{DIANMF::get_rawD_ntime}.}
 
 \item{method}{\code{string} to select a method for returning data:
 \itemize{

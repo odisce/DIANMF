@@ -34,9 +34,9 @@ nGMCAs(
 
 \item{errors_print}{\code{Logical} \code{TRUE} to print the error difference, \code{FALSE} otherwise.}
 
-\item{scaleL}{Logical to scale the data (row-wise) before applying NMF.}
+\item{scaleL}{\code{Logical} to scale the data (row-wise) before applying NMF.}
 
-\item{method}{Method to compute svd: "base", "fast" or "svds"}
+\item{method}{Method to compute svd: "base", "fast" or "svds".}
 }
 \value{
 \code{list} of 2 matrices A and S.

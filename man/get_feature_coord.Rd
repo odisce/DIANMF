@@ -12,6 +12,21 @@ get_feature_coord(
   max_method
 )
 }
+\arguments{
+\item{features.l}{\code{list} obtained with \code{DIANMF::DIANMF.f()}}
+
+\item{summary_dt}{\code{data.table} of features with their optimal sources obtained from DIANMF::get_feature_summary().}
+
+\item{feature_id}{\code{character} feature id.}
+
+\item{sample_index}{\code{numeric} sample index.}
+
+\item{max_method}{\code{string} to choose a method to select the optimal iteration:
+\itemize{
+\item \code{contribution}: select the first iteration with maximum contribution.
+\item \code{max_value}: select the first iteration with maximum apex pure value.
+}}
+}
 \value{
 \code{data.table} of features with their optimal sources
 }

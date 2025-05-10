@@ -16,19 +16,25 @@ plot_EluProfile(
 )
 }
 \arguments{
-\item{features.l}{\code{list} obtainer with \code{DIANMF::DIANMF.f()}}
+\item{features.l}{\code{list} obtained with \code{DIANMF::DIANMF.f()}}
 
-\item{summary_dt}{\code{data.table}}
+\item{summary_dt}{\code{data.table} of features with their optimal sources obtained from DIANMF::get_feature_summary().}
 
-\item{feature_id}{\code{character}}
+\item{feature_id}{\code{character} feature id.}
 
-\item{sample_index}{\code{numeric}}
+\item{sample_index}{\code{numeric} sample index.}
 
-\item{log2L}{\code{logic}}
+\item{log2L}{\code{logic} is \code{TRUE} for logarithmic transformation, else \code{FALSE}.}
 
 \item{type}{\code{string} to retrieve the "pure" or "mixed" elution profiles.}
 
-\item{method}{\code{string} to extract "all" sources or just the "best".}
+\item{method}{\code{string} to extract "all" sources or just the "best" source.}
+
+\item{max_method}{\code{string} to choose a method to select the optimal iteration:
+\itemize{
+\item \code{contribution}: select the first iteration with maximum contribution.
+\item \code{max_value}: select the first iteration with maximum apex pure value.
+}}
 }
 \value{
 \code{ggplot} of the mixed matrix for the asked feature.

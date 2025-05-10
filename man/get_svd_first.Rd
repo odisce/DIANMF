@@ -7,9 +7,9 @@
 get_svd_first(x, method = c("base", "fast", "svds"))
 }
 \arguments{
-\item{x}{\code{matrix}}
+\item{x}{\code{matrix}.}
 
-\item{method}{Method to compute svd: "base", "fast" or "svds"}
+\item{method}{Method to compute svd: "base", "fast" or "svds".}
 }
 \value{
 \code{ numeric(1)} relative error.

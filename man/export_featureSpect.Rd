@@ -14,15 +14,21 @@ export_featureSpect(
 )
 }
 \arguments{
-\item{features.l}{\code{list} obtainer with \code{DIANMF::DIANMF.f()}}
+\item{features.l}{\code{list} obtained with \code{DIANMF::DIANMF.f()}}
 
-\item{feature_id}{\code{character}}
+\item{feature_id}{\code{character} feature id.}
 
-\item{sample_index}{\code{numeric}}
+\item{sample_index}{\code{numeric} sample index.}
 
 \item{type}{\code{string} to retrieve the "pure" or "mixed" elution profiles.}
 
-\item{method}{\code{string} to extract "all" sources or just the "best".}
+\item{method}{\code{string} to extract "all" sources or just the "best" source.}
+
+\item{max_method}{\code{string} to choose a method to select the optimal iteration:
+\itemize{
+\item \code{contribution}: select the first iteration with maximum contribution.
+\item \code{max_value}: select the first iteration with maximum apex pure value.
+}}
 }
 \value{
 \code{Spectra} object of a feature

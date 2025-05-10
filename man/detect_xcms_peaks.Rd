@@ -14,15 +14,15 @@ detect_xcms_peaks(
 )
 }
 \arguments{
-\item{sequence_table}{A data.frame with at least (mzml_path, class, InjectionOrder).}
+\item{sequence_table}{A \code{data.frame} with at least (mzml_path, class, InjectionOrder).}
 
-\item{params}{A list to set the parameters from xcms pipeline steps.
-List names should be xcms parameters methods (ex: \verb{list("CentWaveParam" = CentWaveParam()})}
+\item{params}{A \code{list} to set the parameters from xcms pipeline steps.
+List names should be xcms parameters methods (ex: \verb{list("CentWaveParam" = CentWaveParam()}).}
 
-\item{rt_range}{(Optional) rt range to subset before running peak detection}
+\item{rt_range}{(Optional) rt range to subset before running peak detection.}
 }
 \value{
-MsExperiment objects
+\code{MsExperiment} objects
 }
 \description{
 Detect MS1 peaks using XCMS.

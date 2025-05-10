@@ -9,9 +9,9 @@ align_scans(msexp, rt_range, sample_idx)
 \arguments{
 \item{msexp}{\code{MsExperiment} object obtained from xcms or with \code{DIANMF::detect_xcms_peaks()}.}
 
-\item{rt_range}{retention time range}
+\item{rt_range}{retention time range.}
 
-\item{sample_idx}{subset a sample}
+\item{sample_idx}{\code{NULL} to process all files else, \code{numeric} index of the sample.}
 }
 \value{
 \code{list} of \code{data.table} \code{data.frame} objects: raw_dt and time_dic.

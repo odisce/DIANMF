@@ -11,7 +11,7 @@ extract_xcms_features(msexp, orderL_sample = NULL, quantifyL = FALSE)
 
 \item{orderL_sample}{\code{character} sample name.}
 
-\item{quantifyL}{Logical to perform quantification with \code{xcms::quantify()}}
+\item{quantifyL}{\code{Logical} to perform quantification with \code{xcms::quantify()}}
 }
 \value{
 \code{data.table} \code{data.frame} object.

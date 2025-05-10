@@ -1,6 +1,6 @@
 #' Calculate the difference between Y an its approximation A*S.
 #'
-#' @param Y `matrix`
+#' @param Y `matrix`.
 #' @param A `matrix` every column is an elution profile.
 #' @param S `matrix` every row is a pure spectrum.
 #'
@@ -11,8 +11,8 @@ error_function <- function(Y, A, S){
 
 #' Get first singular value using svd
 #'
-#' @param x `matrix`
-#' @param method Method to compute svd: "base", "fast" or "svds"
+#' @param x `matrix`.
+#' @param method Method to compute svd: "base", "fast" or "svds".
 #' @importFrom corpcor fast.svd
 #' @importFrom RSpectra svds
 #' @return` numeric(1)` relative error.
@@ -26,7 +26,7 @@ get_svd_first <- function(x, method = c("base", "fast", "svds")) {
   )
 }
 
-#' Update A.
+#' Update A
 #'
 #' @inheritParams error_function
 #' @param A_init `matrix` every column is an elution profile.
@@ -101,7 +101,7 @@ soft_threshold.f <- function(Y, threshold){
 }
 
 
-#' Update S.
+#' Update S
 #'
 #' @inheritParams error_function
 #' @param S_init `matrix` every row is a pure spectrum.
@@ -153,7 +153,7 @@ updateS.f <- function(Y, A, S_init, lambda, maxFBIteration, toleranceFB, method 
 #' @param errors_print `Logical` `TRUE` to print the error difference, `FALSE` otherwise. 
 #' @param initialization_method `character` to specify the initialization method: random, nndsvd or subSample. 
 #' @param maximumIteration `numeric(1)` maximum number of iterations.
-#' @param scaleL Logical to scale the data (row-wise) before applying NMF.
+#' @param scaleL `Logical` to scale the data (row-wise) before applying NMF.
 #' @inheritParams updateA.f
 #' @inheritParams get_svd_first
 #' @param H_sub `matrix` of elution profiles used with subSample initialization method.

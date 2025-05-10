@@ -7,7 +7,7 @@
 get_feature_summary(features.l, max_method = c("contribution", "max_value")[1])
 }
 \arguments{
-\item{features.l}{\code{list} obtainer with \code{DIANMF::DIANMF.f()}}
+\item{features.l}{\code{list} obtained with \code{DIANMF::DIANMF.f()}}
 
 \item{max_method}{\code{string} to choose a method to select the optimal iteration:
 \itemize{

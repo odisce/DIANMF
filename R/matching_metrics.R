@@ -208,6 +208,20 @@ getReverseSearchingSimilarity <- function(measuredSpectra, librarySpectra, bin){
 }
 
 
+#' Match a measured spectrum with a database or a specific reference spectrum, by calculating the three scores: dot product, reverse dot product and fragment presence percentage.
+#'
+#' @param polarity `character` "POS" or "NEG".
+#' @param mz_prec `numeric` precursor mz.
+#' @param data_base spectra data base.
+#' @param measured_spectra `data.frame` or `data.table` of two columns 'mz' and 'intensity'. 
+#' @param mz_tol `numeric` mz tolerance.
+#' @param idx `numeric` index of a specific reference spectrum to match with.
+#'
+#' @returns `data.table` matching results.
+#' @export
+#' 
+#' @importFrom parallel mclapply
+#' @import data.table
 ms2_matching <- function(polarity, mz_prec, data_base, measured_spectra, mz_tol = NULL, idx = NA) {
 
   if ( is.null(mz_tol) ){
@@ -263,14 +277,14 @@ ms2_matching <- function(polarity, mz_prec, data_base, measured_spectra, mz_tol 
 }
 
 
-prepare_spectrum <- function(spect_df){
-  spect_df <- spect_df[, c('mz', 'value')]
-  colnames(spect_df) <- c("mz_value", "intensity")
-  spect_df <- spect_df[spect_df$intensity > 0, ]
-  spect_df$intensity <- spect_df$intensity / max(spect_df$intensity)
-  spect_df <- as.data.frame(spect_df)
-  return(spect_df)
-}
+# prepare_spectrum <- function(spect_df){
+#   spect_df <- spect_df[, c('mz', 'value')]
+#   colnames(spect_df) <- c("mz_value", "intensity")
+#   spect_df <- spect_df[spect_df$intensity > 0, ]
+#   spect_df$intensity <- spect_df$intensity / max(spect_df$intensity)
+#   spect_df <- as.data.frame(spect_df)
+#   return(spect_df)
+# }
 
 
 #'  Plot measured (mixed and pure) vs. library spectra of a feature

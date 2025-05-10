@@ -35,7 +35,7 @@ DIANMF.f(
 
 \item{dir_out}{\code{logical} TRUE to save results, else FALSE}
 
-\item{sample_idx}{NULL to process all files else, \code{numeric} index of the sample.}
+\item{sample_idx}{\code{NULL} to process all files else, \code{numeric} index of the sample.}
 
 \item{MS2_ISOEACHL}{\code{logical}}
 
@@ -49,32 +49,34 @@ DIANMF.f(
 
 \item{toleranceFB}{\code{numeric(1)} tolerance or stopping value of the FB algorithm.}
 
-\item{min_contrib}{\code{numeric} contribution proportion to keep ions (between 0 and 1)}
+\item{min_contrib}{\code{numeric} contribution proportion to keep ions (between 0 and 1).}
 
 \item{initialization_method}{\code{character} to specify the initialization method: random, nndsvd or subSample.}
 
 \item{errors_print}{\code{Logical} \code{TRUE} to print the error difference, \code{FALSE} otherwise.}
 
-\item{method}{Method to compute svd: "base", "fast" or "svds"}
+\item{method}{Method to compute svd: "base", "fast" or "svds".}
 
 \item{rt_method}{c("peak", "constant")}
 
-\item{scan_rt_ext}{\code{numeric}}
+\item{scan_rt_ext}{\code{numeric} retention time extension of the rt window.}
 
-\item{min_distance}{\code{numeric}}
+\item{min_distance}{\code{numeric} mark the allowed distance from the rt window border for a peak to be entirely in the window or partially.}
 
 \item{nscans}{number of minimal consecutive value to check}
 
-\item{featuresn}{\code{numeric} to limit the number if iteration (k) on each file for testing purpose, set it to NULL to extract all features.}
+\item{featuresn}{\code{numeric} to limit the number if iteration (k) on each file for testing purpose, set it to \code{NULL} to extract all features.}
+
+\item{clean_sources}{\code{TRUE} to clean/remove sources with less than 0.6 contribution for any peaks, \code{FALSE} to keep all sources.}
 
 \item{combineSpectra_arg}{(optional) combineSpectra argument as a list}
 
-\item{verbose}{\code{logical} to show execution messages}
+\item{verbose}{\code{logical} to show execution messages.}
 
-\item{BPPARAM}{}
+\item{BPPARAM}{A \code{BiocParallelParam} object defining the parallelization backend to be used. Defaults to the value returned by \code{BiocParallel::bpparam()}.}
 }
 \value{
-\code{list}
+\code{list} of info of deconvoluted (pure) sources with the peaks-features data.
 }
 \description{
 Process xcms object

@@ -1,12 +1,9 @@
 # the following function, extract for every identified pure source in all iterations one Spectra object;
-# this object contains 1 MS1 pure spectra and the 10 MS2 pure spectra from different isolation windows.
+# this object contains 1 MS1 pure spectra and the 10 MS2 pure spectra from the different isolation windows.
 
 #' Export MS Spectra
 #'
-#' @param features.l `list` obtainer with `DIANMF::DIANMF.f()`
-#' @param max_method `string` to choose a method to select the optimal iteration:
-#'   - `contribution`: select the first iteration with maximum contribution.
-#'   - `max_value`: select the first iteration with maximum apex pure value.
+#' @inheritParams get_elutionprofile
 #' @returns `data.table` of features with their optimal sources
 #' @export
 #'
@@ -68,11 +65,17 @@ get_feature_coord <- function(
   return(feat_coord)
 }
 
-#' Extract elution profile
+#' Extract elution profile for a specific feature
 #'
+#' @param features.l `list` obtained with `DIANMF::DIANMF.f()`
+#' @param summary_dt `data.table` of features with their optimal sources obtained from DIANMF::get_feature_summary().
+#' @param feature_id `character` feature id.
+#' @param sample_index `numeric` sample index.
 #' @param type `string` to retrieve the "pure" or "mixed" elution profiles.
-#' @param method `string` to extract "all" sources or just the "best".
-#' @inheritParams get_feature_coord
+#' @param method `string` to extract "all" sources or just the "best" source.
+#' @param max_method `string` to choose a method to select the optimal iteration:
+#'   - `contribution`: select the first iteration with maximum contribution.
+#'   - `max_value`: select the first iteration with maximum apex pure value.
 #'
 #' @returns `data.table` of features with their optimal sources
 #' @export
@@ -128,13 +131,13 @@ get_elutionprofile <- function(
     mslve_vc <- c("MS1", "MS2")
     mixed_mat_out <- data.table()
     for (i in seq_len(2)) {
-      i_names <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]] %>% names()
+      i_names <- features.l[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]] %>% names()
       if (all(c(mixed_names[i]) %in% i_names)) {
-        source_to_get <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][[mixed_names[i]]][, unique(rank)]
+        source_to_get <- features.l[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][[mixed_names[i]]][, unique(rank)]
         if (method == "best") {
           source_to_get <- feat_coord[, source]
         }
-        output <- features[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][[mixed_names[i]]][rank %in% source_to_get,]
+        output <- features.l[[feat_coord$sample]]$PureFeatures[[feat_coord$iteration]][[mixed_names[i]]][rank %in% source_to_get,]
         mixed_mat_out <- rbind(mixed_mat_out, output, fill = TRUE)
         rm(output)
       }
@@ -148,7 +151,6 @@ get_elutionprofile <- function(
 
 #' Extract Spectra
 #'
-#' @inheritParams get_feature_coord
 #' @inheritParams get_elutionprofile
 #'
 #' @returns `data.table` of features with their optimal sources
@@ -233,17 +235,14 @@ get_spectra <- function(
 
 #' Export MS Spectra
 #'
-#' @param features.l `list` obtainer with `DIANMF::DIANMF.f()`
-#' @param summary_dt `data.table`
-#' @param feature_id `character`
-#' @param sample_index `numeric`
-#' @param log2L `logic`
 #' @inheritParams get_elutionprofile
+#' @param log2L `logic` is `TRUE` for logarithmic transformation, else `FALSE`.
 #'
 #' @returns `ggplot` of the mixed matrix for the asked feature.
 #' @export
 #'
 #' @import ggplot2 data.table magrittr
+#' @importFrom stringr str_to_sentence
 plot_EluProfile <- function(
   features.l,
   summary_dt = NULL,
@@ -308,6 +307,7 @@ plot_EluProfile <- function(
 #' @export
 #'
 #' @import ggplot2 data.table magrittr
+#' @importFrom stringr str_to_sentence
 plot_Spectra <- function(
   features.l = features.l,
   summary_dt = NULL,
@@ -374,9 +374,9 @@ plot_Spectra <- function(
     )
 }
 
-#' Multiplot mixed/pure feature
+#' Multi-plot mixed/pure feature
 #'
-#' @inheritParams plot_Spectra
+#' @inheritParams plot_EluProfile
 #'
 #' @returns `ggplot` of the mixed spectra for the asked feature.
 #' @export
@@ -466,9 +466,9 @@ plot_feature <- function(
 #' Plot the XCMS peaks of one iteration after post-deconvolution (i.e. filtering pure sources) 
 #'
 #' @inheritParams get_spectra
-#' @param iteration_index `numeric` 
+#' @param iteration_index `numeric` iteration index. 
 #'
-#' @returns ggplot2 plot
+#' @returns ggplot2 plot of peaks kept in the post-deconvolution step.
 #' @export 
 #' 
 #' @import ggplot2
@@ -585,7 +585,7 @@ export_featureSpect <- function(features.l, feature_id, sample_index, type, meth
 #'
 #' @inheritParams plot_Spectra
 #'
-#' @returns `list` of Spectra objects for all identified features
+#' @returns `list` of Spectra objects for all identified features of one sample.
 #' @export
 exportMSSpectra <- function(features.l, sample_index, type, method, max_method) {
 

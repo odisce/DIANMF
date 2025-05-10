@@ -7,10 +7,14 @@
 plot_xcms_peaks_range(summary_dt, sample_index, iteration_index)
 }
 \arguments{
-\item{iteration_index}{\code{numeric}}
+\item{summary_dt}{\code{data.table} of features with their optimal sources obtained from DIANMF::get_feature_summary().}
+
+\item{sample_index}{\code{numeric} sample index.}
+
+\item{iteration_index}{\code{numeric} iteration index.}
 }
 \value{
-ggplot2 plot
+ggplot2 plot of peaks kept in the post-deconvolution step.
 }
 \description{
 Plot the XCMS peaks of one iteration after post-deconvolution (i.e. filtering pure sources)

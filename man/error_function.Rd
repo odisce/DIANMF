@@ -7,7 +7,7 @@
 error_function(Y, A, S)
 }
 \arguments{
-\item{Y}{\code{matrix}}
+\item{Y}{\code{matrix}.}
 
 \item{A}{\code{matrix} every column is an elution profile.}
 

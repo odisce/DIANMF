@@ -39,11 +39,11 @@ get_mslevels <- function(msexp) {
 
 #' Get spectra value in MsExperiment
 #'
-#' @param msexp MsExperiment object
+#' @param msexp `MsExperiment` object
 #' @param mslevel (optional) MSLevel to subset
 #' @param isowin (optional) isolation window to subset
 #' @param combineSpectra_arg (optional) combineSpectra argument as a list
-#' @return a data.table containing spectra infos 
+#' @return a `data.table` containing spectra infos 
 #' @import MsExperiment
 #' @importFrom data.table as.data.table
 #' @importFrom Spectra asDataFrame filterIsolationWindow combineSpectra

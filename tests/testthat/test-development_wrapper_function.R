@@ -46,6 +46,9 @@ if (file.exists(cache_path)) {
   saveRDS(xcms_obj, cache_path)
 }
 
+register(SnowParam(workers = 1))
+# registered()
+
 features <- DIANMF.f(
   msexp = xcms_obj, dir_out = FALSE,
   sample_idx = 1,
