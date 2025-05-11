@@ -9,7 +9,7 @@ DIANMF.f(
   dir_out = FALSE,
   sample_idx = 1,
   MS2_ISOEACHL = TRUE,
-  MS1MS2_L = FALSE,
+  MS1MS2_L = TRUE,
   rank = 10,
   maximumIteration = 200,
   maxFBIteration = 100,

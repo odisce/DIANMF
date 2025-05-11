@@ -33,7 +33,7 @@ DIANMF.f <- function(
   dir_out = FALSE,
   sample_idx = 1,
   MS2_ISOEACHL = TRUE,
-  MS1MS2_L = FALSE,
+  MS1MS2_L = TRUE,
   rank = 10,
   maximumIteration = 200,
   maxFBIteration = 100,
@@ -52,7 +52,7 @@ DIANMF.f <- function(
   verbose = FALSE,
   BPPARAM = bpparam()
 ) {
-  # msexp = msexp
+  # msexp = xcms_obj
   # dir_out = FALSE
   # sample_idx = NULL
   # MS2_ISOEACHL = TRUE
@@ -67,7 +67,7 @@ DIANMF.f <- function(
   # method = "svds"
   # scan_rt_ext = 10
   # min_distance = 4
-  # featuresn = NULL
+  # featuresn = 2
   # nscans = 6
   # rt_method = "constant"
   # clean_sources = TRUE
@@ -93,7 +93,7 @@ DIANMF.f <- function(
   res <- BiocParallel::bplapply(
     X = file_info$InjectionOrder,
     FUN = function(s_idx) {
-      # s_idx = 4
+      # s_idx = 1
       ms1_features <- copy(ms1_features_peaks[sample == s_idx, ])
       ms1_features[, iteration := as.character(NA) ]
       msexp_idx <- xcms::filterFile(msexp, s_idx)
