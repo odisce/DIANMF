@@ -56,7 +56,7 @@ DIANMF.f <- function(
   # dir_out = FALSE
   # sample_idx = NULL
   # MS2_ISOEACHL = TRUE
-  # MS1MS2_L = FALSE
+  # MS1MS2_L = TRUE
   # rank = 20
   # min_contrib = 0.6
   # maximumIteration = 200

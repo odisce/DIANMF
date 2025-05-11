@@ -18,7 +18,7 @@ plot_rtWind_info(
 
 \item{iteration_idx}{\code{numeric} iteration index.}
 
-\item{targets}{\code{list} of ...}
+\item{targets}{\code{data.frame} of two columns c(compound, mz) of co-eluting compounds, to highlight their eics in the mixed chromatograms plot.}
 }
 \value{
 ggplot

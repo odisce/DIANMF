@@ -2,14 +2,14 @@
 #'
 #' @inheritParams get_elutionprofile 
 #' @param iteration_idx `numeric` iteration index.
-#' @param targets `list` of ...
+#' @param targets `data.frame` of two columns c(compound, mz) of co-eluting compounds, to highlight their eics in the mixed chromatograms plot.
 #'
 #' @returns ggplot  
 #' @export
 #' 
 #' @import data.table ggplot2 dplyr 
 #' @importFrom ggpubr ggarrange
-#' @importFrom cowplot ggdraw
+#' @importFrom cowplot ggdraw draw_plot 
 plot_rtWind_info <- function(features.l, sample_index = 1, iteration_idx = 1, targets = NULL){
   
   sample_features <- features.l[[sample_index]]$PureFeatures

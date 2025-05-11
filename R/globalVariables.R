@@ -3,4 +3,4 @@ utils::globalVariables(c("mslevel", "isowin", "rtmed", "MSid", "apex_val",
                          "start", "end", "res", "peakindex", "ISOWIN",
                          "MSLEVEL", "features", "MSid",
                          "x", "TEMPID", "mzmed", "matchL", "is_filled",
-                         "Polarity" ))
+                         "Polarity", "compound" ))

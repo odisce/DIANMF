@@ -71,7 +71,7 @@ features <- DIANMF.f(
   method = "svds",
   scan_rt_ext = 10,
   min_distance = 4,
-  featuresn = NULL,
+  featuresn = 2,
   nscans = 6,
   rt_method = "constant",
   clean_sources = TRUE,
@@ -84,4 +84,4 @@ features <- DIANMF.f(
   verbose = T
 )
 
-saveRDS(features, '~/dianmf_results/Results/features.rds')
+# saveRDS(features, '~/dianmf_results/Results/features.rds')
