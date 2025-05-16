@@ -55,7 +55,8 @@ plot_rtWind_info <- function(features.l, sample_index = 1, iteration_idx = 1, ta
     guides(color = 'none')
   
   ms1_pure_chrom <- info$MS1_pure_elution_profiles
-  rt_axis <- ms1_pure_chrom[rank == 10, ]$rtime
+  ranks_good <- unique(ms1_pure_chrom$rank) 
+  rt_axis <- ms1_pure_chrom[rank == ranks_good[1], ]$rtime
   
   ms1_pure_chrom$mslevel <- "MS1"
   ms1_pure_chrom <- ms1_pure_chrom %>%

@@ -157,6 +157,7 @@ updateS.f <- function(Y, A, S_init, lambda, maxFBIteration, toleranceFB, method 
 #' @inheritParams updateA.f
 #' @inheritParams get_svd_first
 #' @param H_sub `matrix` of elution profiles used with subSample initialization method.
+#' @param sparsityA `Logical` TRUE to force sparsity on A, else FALSE.
 #'
 #' @return `list` of 2 matrices A and S.
 #' 
@@ -171,7 +172,8 @@ nGMCAs <- function(
   H_sub = NULL,
   errors_print = FALSE,
   scaleL = FALSE,
-  method
+  method,
+  sparsityA
 ){
   if (scaleL) {
     X.m / rowMax(X.m)
@@ -214,23 +216,27 @@ nGMCAs <- function(
     ) 
     if( is.null(data$S) ) { return(NULL) }
     
-    data$A <- updateA.f(
-      Y = X.m,
-      A_init = data$A,
-      S = data$S,
-      maxFBIteration = maxFBIteration,
-      toleranceFB = toleranceFB,
-      method = method
-    )
-    # data$A <- updateA.f_sparse(
-    #     Y = X.m,
-    #     A_init = data$A,
-    #     S = data$S,
-    #     lambda = lambda,
-    #     maxFBIteration = maxFBIteration,
-    #     toleranceFB = toleranceFB,
-    #     method = method
-    #   )
+    
+    if( isFALSE(sparsityA) ){
+      data$A <- updateA.f(
+        Y = X.m,
+        A_init = data$A,
+        S = data$S,
+        maxFBIteration = maxFBIteration,
+        toleranceFB = toleranceFB,
+        method = method
+      )
+    }else{
+      data$A <- updateA.f_sparse(
+          Y = X.m,
+          A_init = data$A,
+          S = data$S,
+          lambda = lambda,
+          maxFBIteration = maxFBIteration,
+          toleranceFB = toleranceFB,
+          method = method
+        )
+    }
     
     error_k_new <- error_function(Y = X.m, A = data$A, S = data$S)
     if( abs(error_k_new - error_k) <= toleranceFB ) {

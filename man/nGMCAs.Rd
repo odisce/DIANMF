@@ -14,7 +14,8 @@ nGMCAs(
   H_sub = NULL,
   errors_print = FALSE,
   scaleL = FALSE,
-  method
+  method,
+  sparsityA
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ nGMCAs(
 \item{scaleL}{\code{Logical} to scale the data (row-wise) before applying NMF.}
 
 \item{method}{Method to compute svd: "base", "fast" or "svds".}
+
+\item{sparsityA}{\code{Logical} TRUE to force sparsity on A, else FALSE.}
 }
 \value{
 \code{list} of 2 matrices A and S.

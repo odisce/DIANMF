@@ -272,7 +272,7 @@ build_mixed_matrix <- function(xicdt, nscans = 4) {
   mixedmat <- as.matrix(mixeddt, rownames = 1)
   row_filter_ms1 <- apply(mixedmat, 1, has_n_consecutive_non_zero, n = nscans)
   
-  # # put the eics of mslevel 1 at the upper part, the eics of MS2 # it introduce some errors in the results!! I should check why
+  # # put the eics of mslevel 1 at the upper part# it introduce some errors in the results!! I should check why
   # mixedmat <- mixedmat[grepl("-1$", rownames(mixedmat)), , drop = FALSE] %>%
   #   rbind(mixedmat[grepl("-2$", rownames(mixedmat)), , drop = FALSE])
   return(

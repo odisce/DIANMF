@@ -42,6 +42,7 @@ DIANMF.f <- function(
   initialization_method = "nndsvd",
   errors_print = FALSE,
   method = "svds",
+  sparsityA = FALSE,
   rt_method = c("peak", "constant"),
   scan_rt_ext = 10,
   min_distance = 5,

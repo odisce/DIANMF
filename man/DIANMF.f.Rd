@@ -18,6 +18,7 @@ DIANMF.f(
   initialization_method = "nndsvd",
   errors_print = FALSE,
   method = "svds",
+  sparsityA = FALSE,
   rt_method = c("peak", "constant"),
   scan_rt_ext = 10,
   min_distance = 5,
@@ -56,6 +57,8 @@ DIANMF.f(
 \item{errors_print}{\code{Logical} \code{TRUE} to print the error difference, \code{FALSE} otherwise.}
 
 \item{method}{Method to compute svd: "base", "fast" or "svds".}
+
+\item{sparsityA}{\code{Logical} TRUE to force sparsity on A, else FALSE.}
 
 \item{rt_method}{c("peak", "constant")}
 
