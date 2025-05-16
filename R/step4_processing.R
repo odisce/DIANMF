@@ -273,7 +273,8 @@ DIANMF.f <- function(
               initialization_method = initialization_method,
               H_sub = ms2H,
               errors_print = errors_print,
-              method = method
+              method = method,
+              sparsityA = TRUE
             )
             if (verbose) {
               timeB <- Sys.time()
