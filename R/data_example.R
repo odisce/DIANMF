@@ -52,4 +52,3 @@ get_test_peaks <- function(){
       "ChromPeakAreaParam" = xcms::ChromPeakAreaParam() )
   )
 }
-

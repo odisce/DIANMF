@@ -55,7 +55,7 @@ DIANMF.f <- function(
 ) {
   # msexp = xcms_obj
   # dir_out = FALSE
-  # sample_idx = NULL
+  # sample_idx = 1
   # MS2_ISOEACHL = TRUE
   # MS1MS2_L = TRUE
   # rank = 20
@@ -72,9 +72,9 @@ DIANMF.f <- function(
   # nscans = 6
   # rt_method = "constant"
   # clean_sources = TRUE
-  # combineSpectra_arg = list(peaks = "intersect", ppm = 4, tolerance = 0.005, minProp = 0.05)
+  # combineSpectra_arg = list(peaks = "union", ppm = 5, tolerance = 0.005)
   # verbose = TRUE
-  options(datatable.verbose = FALSE)
+  # options(datatable.verbose = FALSE)
   ms1_peaks <- extract_xcms_peaks(msexp)
   ms1_features_all <- extract_xcms_features(msexp, quantifyL = TRUE)
   ms1_features_peaks <- ms1_features_all[, .(peakindex = unlist(peakidx), mzmed, rtmed), by = featureid]
@@ -128,8 +128,8 @@ DIANMF.f <- function(
         }
         # Set current feature to process
         feature_idx <- ms1_features[is_filled == 0 & is.na(iteration), ][1, featureid]
-        # feature_idx <- "FT0757"
-        # feature_idx <- "FT2845"
+        # feature_idx <- "FT04898"
+        
         if (is.na(feature_idx)) {
           break
         }

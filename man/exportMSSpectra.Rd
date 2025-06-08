@@ -4,7 +4,13 @@
 \alias{exportMSSpectra}
 \title{Extract MS Spectra of all identified features/peaks}
 \usage{
-exportMSSpectra(features.l, sample_index, type, method, max_method)
+exportMSSpectra(
+  features.l,
+  sample_index,
+  type = c("pure", "mixed")[1],
+  method = c("all", "best")[2],
+  max_method = c("contribution", "max_value")[2]
+)
 }
 \arguments{
 \item{features.l}{\code{list} obtained with \code{DIANMF::DIANMF.f()}}

@@ -8,9 +8,9 @@ export_featureSpect(
   features.l,
   feature_id,
   sample_index,
-  type,
-  method,
-  max_method
+  type = c("pure", "mixed")[1],
+  method = c("all", "best")[2],
+  max_method = c("contribution", "max_value")[2]
 )
 }
 \arguments{
