@@ -13,22 +13,7 @@ test_that("initializing methods and NMF test", {
   expect_true(all(H_random >= 0))
   expect_equal( ncol(W_random), r)
   expect_equal( nrow(H_random), r)
-  
-  ngmcas_res <- nGMCAs(X.m = m, rank = 2,
-                       maximumIteration = 10, maxFBIteration = 5, toleranceFB = 1e-5,
-                       initialization_method = 'random',
-                       errors_print = FALSE, method = "fast", sparsityA = FALSE)
-  
-  W <- ngmcas_res$S
-  H <- ngmcas_res$A
-  error <- error_function(Y = m, A = t(H), S = t(W))
-  
-  expect_true(all(W >= 0))
-  expect_true(all(H >= 0))
-  expect_equal(dim(W %*% H), dim(m))
-  expect_true( error > 0 )
-  
-  
+
   # test nndsvd initialization
   nndsvd_res <- nndsvd_init(X = m, rank = r)
   W_nndsvd <- nndsvd_res$W

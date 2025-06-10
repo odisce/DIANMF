@@ -7,7 +7,7 @@ test_that("data example functions test", {
   expect_equal(length(mzml_files_paths), 2)
   expect_true( "data.frame" %in% class(mzml_dt_data_test) )
   expect_true( ncol(mzml_dt_data_test) == 3 )
-  expect_equal( colnames(mzml_dt_data_test), c("mzml_path", "class" ,"InjectionOrder") )
+  expect_named( mzml_dt_data_test, c("mzml_path", "class" ,"InjectionOrder") )
   expect_true( "XcmsExperiment" %in%  class(mzml_peaks) )
 
   file_info <- MsExperiment::sampleData(mzml_peaks) %>% as.data.table()

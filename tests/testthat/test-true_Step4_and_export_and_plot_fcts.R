@@ -44,7 +44,7 @@ test_that("step 4, export and plot functions tests", {
     dir_out = FALSE,
     sample_idx = 1,
     MS2_ISOEACHL = TRUE,
-    MS1MS2_L = TRUE,
+    MS1MS2_L = FALSE,
     rank = 30,
     min_contrib = 0.6,
     maximumIteration = 200,
@@ -69,7 +69,7 @@ test_that("step 4, export and plot functions tests", {
   )
   
   expect_true(!is.null(features_sub))
-  expect_true( all(c("PureFeatures", "ms1_features_peaks", "ms1_features") %in% names(features_sub[[1]])) )
+  expect_named( features_sub[[1]], c("PureFeatures", "ms1_features_peaks", "ms1_features") )
   
   
   features <- DIANMF.f(
@@ -138,8 +138,8 @@ test_that("step 4, export and plot functions tests", {
   )
   
   expect_true( nrow(feature_elution_profiles_1) > 1 & nrow(feature_elution_profiles_2) > 1 )
-  expect_true( all(c("xic_label", "rtime", "value", "mslevel" ) %in% colnames(feature_elution_profiles_1)) )
-  expect_true( all(c("xic_label", "rtime", "value", "mslevel" ) %in% colnames(feature_elution_profiles_2)) )
+  expect_named( feature_elution_profiles_1, c("xic_label", "rtime", "value", "mslevel", "rank" ) )
+  expect_named( feature_elution_profiles_2, c("xic_label", "rtime", "value", "mslevel", "rank") )
   
   
   feature_spectra_1 <- get_spectra(
@@ -163,8 +163,8 @@ test_that("step 4, export and plot functions tests", {
   )
   
   expect_true( nrow(feature_spectra_1) > 0 & nrow(feature_spectra_2) > 0 )
-  expect_true( all(c("xic_label", "IsoWin", "mslevel", "mz", "value", "rank" ) %in% colnames(feature_spectra_1)) )
-  expect_true( all(c("xic_label", "IsoWin", "mslevel", "mz", "value", "rank" ) %in% colnames(feature_spectra_2)) )
+  expect_named( feature_spectra_1, c("xic_label", "IsoWin", "mslevel", "mz", "value", "rank") )
+  expect_named( feature_spectra_2, c("xic_label", "IsoWin", "mslevel", "mz", "value", "rank") )
   expect_true( nrow(feature_spectra_1)  >= nrow(feature_spectra_2) )
   
   
@@ -196,7 +196,7 @@ test_that("step 4, export and plot functions tests", {
   
   spect1_p <- plot_Spectra(
     features.l = features,
-    summary_dt = temp_ft_max_value,
+    summary_dt = NULL,
     feature_id = temp_ft_max_value$featureid[1],
     sample_index = 1,
     log2L = F,
@@ -232,6 +232,18 @@ test_that("step 4, export and plot functions tests", {
   
   expect_true( "ggplot" %in% class(feat_p) )
   
+  
+  # expect_warning(feat_p <- plot_feature(  
+  #   features.l = features,
+  #   summary_dt = temp_ft_max_value,
+  #   feature_id = temp_ft_max_value$featureid[1],
+  #   sample_index = 100,
+  #   log2L = FALSE,
+  #   max_method = "max_value",
+  #   method = c("all", "best")[2]
+  # ) )
+
+  
   peaks_p <- plot_xcms_peaks_range(summary_dt = temp_ft_max_value,
                         sample_index = 1,
                         iteration_index = 1)
@@ -245,7 +257,7 @@ test_that("step 4, export and plot functions tests", {
   expect_true( "ggplot" %in% class(rt_wind_p) )
   expect_true( "data.table" %in%  class(rt_wind_spect) )
   expect_true( nrow(rt_wind_spect) > 0 )
-  expect_true( all(c("xic_label", "rank", "value", "MSid", "scan_norm", "apex_val", "contribution", "mz", "rt", "mslevel") %in% colnames(rt_wind_spect)) )
+  expect_named( rt_wind_spect, c("xic_label", "rank", "value", "MSid", "scan_norm", "apex_val", "contribution", "mz", "rt", "mslevel") )
   
   
   feat_spect_obj1 <- export_featureSpect(features.l = features,

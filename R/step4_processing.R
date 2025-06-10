@@ -69,7 +69,7 @@ DIANMF.f <- function(
   # scan_rt_ext = 10
   # min_distance = 4
   # featuresn = 2
-  # nscans = 6
+  # nscans = 3
   # rt_method = "constant"
   # clean_sources = TRUE
   # combineSpectra_arg = list(peaks = "union", ppm = 5, tolerance = 0.005)
