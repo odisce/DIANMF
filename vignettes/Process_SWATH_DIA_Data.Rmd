@@ -65,8 +65,8 @@ library(DIANMF)
 library(BiocParallel)
 # load the dataset
 
-input_dir <- system.file("extdata", package = "DIANMF")
-input_dir
+# input_dir <- system.file("extdata", package = "DIANMF")
+# input_dir
 # file1 <- system.file("extdata", "test_data_20170805_FS-DIA-E2-10ng-rep1_pos_49.mzml", package = "DIANMF")
 # file2 <- system.file("extdata", "test_data_20170805_FS-DIA-E2-10ng-rep2_pos_50.mzml", package = "DIANMF")
 
@@ -77,92 +77,81 @@ input_dir
 
 ```{r detect peaks by xcms, echo=TRUE }
 
-mzml_dt <- prepare_mzMLfiles(input_dir)
-mzml_seq <- create_seq(mzml_dt)
-
-params_ls <- list(
-    "CentWaveParam" = xcms::CentWaveParam(
-      ppm = 5,
-      peakwidth = c(3, 15),
-      snthresh = 2,
-      prefilter = c(5, 4000),
-      mzCenterFun = "wMeanApex3",
-      integrate = 2,
-      mzdiff = -0.005,
-      noise = 100,
-      firstBaselineCheck = FALSE
-    ),
-    "MergeNeighboringPeaksParam" = xcms::MergeNeighboringPeaksParam(
-      expandRt = 2,
-      expandMz = 0.001,
-      ppm = 2,
-      minProp = 0.75
-    ),
-    "ObiwarpParam" = xcms::ObiwarpParam(
-      binSize = 0.05
-    ),
-    "PeakDensityParam" = xcms::PeakDensityParam(
-      sampleGroups = NA,
-      bw = 10,
-      minFraction = 0.1,
-      minSamples = 2,
-      binSize = 0.01,
-      ppm = 7,
-      maxFeatures = 500
-    ),
-    "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
-  )
-
-xcms_obj <- detect_xcms_peaks(sequence_table = mzml_seq, params = params_ls)
-xcms_obj
+# mzml_dt <- prepare_mzMLfiles(input_dir)
+# mzml_seq <- create_seq(mzml_dt)
+# 
+# params_ls <- list(
+#     "CentWaveParam" = xcms::CentWaveParam(
+#       ppm = 5,
+#       peakwidth = c(3, 15),
+#       snthresh = 2,
+#       prefilter = c(5, 4000),
+#       mzCenterFun = "wMeanApex3",
+#       integrate = 2,
+#       mzdiff = -0.005,
+#       noise = 100,
+#       firstBaselineCheck = FALSE
+#     ),
+#     "MergeNeighboringPeaksParam" = xcms::MergeNeighboringPeaksParam(
+#       expandRt = 2,
+#       expandMz = 0.001,
+#       ppm = 2,
+#       minProp = 0.75
+#     ),
+#     "ObiwarpParam" = xcms::ObiwarpParam(
+#       binSize = 0.05
+#     ),
+#     "PeakDensityParam" = xcms::PeakDensityParam(
+#       sampleGroups = NA,
+#       bw = 10,
+#       minFraction = 0.1,
+#       minSamples = 2,
+#       binSize = 0.01,
+#       ppm = 7,
+#       maxFeatures = 500
+#     ),
+#     "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
+#   )
+# 
+# xcms_obj <- detect_xcms_peaks(sequence_table = mzml_seq, params = params_ls)
+# xcms_obj
 
 ```
-
-The first main step, detecting MS1 peaks, is performed by [xcms](https://bioconductor.org/packages/release/bioc/html/xcms.html) software. It is also possible to provide the MS1 peaks as a matrix or data frame in [ms1_peaks]{style="background-color: rgba(169, 169, 169, 0.4);"} with [peaks_by_xcms = FALSE]{style="background-color: rgba(169, 169, 169, 0.4);"}.
-
-[dia_nmf.f()]{style="background-color: rgba(169, 169, 169, 0.4);"} parameters:
-
-1.  [mzML_path]{style="background-color: rgba(169, 169, 169, 0.4);"} mzML file path.
-2.  [ms_level]{style="background-color: rgba(169, 169, 169, 0.4);"} character 'MS1' or 'MS2' level.
-3.  [peaks_by_xcms]{style="background-color: rgba(169, 169, 169, 0.4);"} Logical TRUE if the user wants to detect MS1 levels using XCMS, FALSE if the user will provide the peaks matrix or data frame to be identified.
-4.  [ms1_peaks]{style="background-color: rgba(169, 169, 169, 0.4);"} matrix or data.frame contains MS1 peaks to be identified. It should contain these columns: mz, mzmin, mzmax, rt, rtmin, rtmax, into.
-5.  Some [xcms::findChromPeaks()]{style="background-color: rgba(169, 169, 169, 0.4);"} parameters: ppm, peakwidth, snthresh, prefilter, mzCenterFun, integrate, mzdiff, ...
-
 
 ## Wrapper DIA-NMF Workflow Function
 
 
 ```{r wrapper function, echo=TRUE }
 
-BiocParallel::register(SnowParam(workers = 1))
- 
-features <- DIANMF.f(
-    msexp = xcms_obj,
-    sample_idx = 1,
-    MS1MS2_L = TRUE,
-    rank = 30,
-    min_contrib = 0.6,
-    maximumIteration = 200,
-    maxFBIteration = 100,
-    toleranceFB = 1e-05,
-    initialization_method = "nndsvd",
-    errors_print = FALSE,
-    method = "svds",
-    sparsityA = TRUE,
-    scan_rt_ext = 10,
-    min_distance = 4,
-    featuresn = NULL,
-    nscans = 3,
-    rt_method = "constant",
-    clean_sources = TRUE,
-    combineSpectra_arg = list(
-      peaks = "union",
-      ppm = 5,
-      tolerance = 0.005
-    ),
-    verbose = T,
-    BPPARAM = bpparam()
-  )
+# BiocParallel::register(SnowParam(workers = 1))
+#  
+# features <- DIANMF.f(
+#     msexp = xcms_obj,
+#     sample_idx = 1,
+#     MS1MS2_L = TRUE,
+#     rank = 30,
+#     min_contrib = 0.6,
+#     maximumIteration = 200,
+#     maxFBIteration = 100,
+#     toleranceFB = 1e-05,
+#     initialization_method = "nndsvd",
+#     errors_print = FALSE,
+#     method = "svds",
+#     sparsityA = TRUE,
+#     scan_rt_ext = 10,
+#     min_distance = 4,
+#     featuresn = NULL,
+#     nscans = 3,
+#     rt_method = "constant",
+#     clean_sources = TRUE,
+#     combineSpectra_arg = list(
+#       peaks = "union",
+#       ppm = 5,
+#       tolerance = 0.005
+#     ),
+#     verbose = T,
+#     BPPARAM = bpparam()
+#   )
 
 ```
 
@@ -172,39 +161,39 @@ features <- DIANMF.f(
 ### Exporting Functions
 ```{r Exporting functions, echo=TRUE}
 
-temp_ft <- get_feature_summary(features.l = features, max_method = "max_value")
-knitr::kable(head(temp_ft), row.names = FALSE)
-
-feature_info <- get_feature_coord(
-    features.l = features,
-    summary_dt = temp_ft,
-    feature_id = temp_ft$featureid[1],
-    sample_index = 1,
-    max_method = "max_value" )
-feature_info
-
-feature_elution_profile <- get_elutionprofile(
-    features.l = features,
-    summary_dt = temp_ft,
-    feature_id = temp_ft$featureid[1],
-    sample_index = 1,
-    type = c("pure", "mixed")[1],
-    method = c("all", "best")[2],
-    max_method = "max_value"
-  )
-
-knitr::kable(head(feature_elution_profile), row.names = FALSE)
-
-feature_spectra <- get_spectra(
-    features.l = features,
-    summary_dt = temp_ft,
-    feature_id = temp_ft$featureid[1],
-    sample_index = 1,
-    type = c("pure", "mixed")[1],
-    method = c("all", "best")[2],
-    max_method = "max_value"
-  )
-knitr::kable(head(feature_spectra), row.names = FALSE)
+# temp_ft <- get_feature_summary(features.l = features, max_method = "max_value")
+# knitr::kable(head(temp_ft), row.names = FALSE)
+# 
+# feature_info <- get_feature_coord(
+#     features.l = features,
+#     summary_dt = temp_ft,
+#     feature_id = temp_ft$featureid[1],
+#     sample_index = 1,
+#     max_method = "max_value" )
+# feature_info
+# 
+# feature_elution_profile <- get_elutionprofile(
+#     features.l = features,
+#     summary_dt = temp_ft,
+#     feature_id = temp_ft$featureid[1],
+#     sample_index = 1,
+#     type = c("pure", "mixed")[1],
+#     method = c("all", "best")[2],
+#     max_method = "max_value"
+#   )
+# 
+# knitr::kable(head(feature_elution_profile), row.names = FALSE)
+# 
+# feature_spectra <- get_spectra(
+#     features.l = features,
+#     summary_dt = temp_ft,
+#     feature_id = temp_ft$featureid[1],
+#     sample_index = 1,
+#     type = c("pure", "mixed")[1],
+#     method = c("all", "best")[2],
+#     max_method = "max_value"
+#   )
+# knitr::kable(head(feature_spectra), row.names = FALSE)
 
 # feat_spect_obj1 <- export_featureSpect(features.l = features,
 #                                         feature_id = temp_ft$featureid[1],
@@ -229,90 +218,50 @@ knitr::kable(head(feature_spectra), row.names = FALSE)
 
 ```{r Plotting functions, echo=TRUE}
 
-chrom <- plot_EluProfile(
-    features.l = features,
-    summary_dt = temp_ft,
-    feature_id = temp_ft$featureid[1],
-    sample_index = 1,
-    log2L = FALSE,
-    type = c("pure", "mixed")[1],
-    method = c("all", "best")[1],
-    max_method
-  )
-
-chrom
-
-spect1_p <- plot_Spectra(
-    features.l = features,
-    summary_dt = NULL,
-    feature_id = temp_ft$featureid[1],
-    sample_index = 1,
-    log2L = F,
-    type = c("pure", "mixed")[1],
-    method = c("all", "best")[2],
-    max_method
-  )
-spect1_p
-
-feat_p <- plot_feature(
-    features.l = features,
-    summary_dt = temp_ft,
-    feature_id = temp_ft$featureid[1],
-    sample_index = 1,
-    log2L = FALSE,
-    max_method = "max_value",
-    method = c("all", "best")[2]
-  )
-feat_p
-
-rt_wind <- plot_rtWind_info(features.l = features, sample_index = 1, iteration_idx = 1, targets = NULL)
-rt_wind_p <- rt_wind$p_final
-rt_wind_p
+# chrom <- plot_EluProfile(
+#     features.l = features,
+#     summary_dt = temp_ft,
+#     feature_id = temp_ft$featureid[1],
+#     sample_index = 1,
+#     log2L = FALSE,
+#     type = c("pure", "mixed")[1],
+#     method = c("all", "best")[1],
+#     max_method
+#   )
+# 
+# chrom
+# 
+# spect1_p <- plot_Spectra(
+#     features.l = features,
+#     summary_dt = NULL,
+#     feature_id = temp_ft$featureid[1],
+#     sample_index = 1,
+#     log2L = F,
+#     type = c("pure", "mixed")[1],
+#     method = c("all", "best")[2],
+#     max_method
+#   )
+# spect1_p
+# 
+# feat_p <- plot_feature(
+#     features.l = features,
+#     summary_dt = temp_ft,
+#     feature_id = temp_ft$featureid[1],
+#     sample_index = 1,
+#     log2L = FALSE,
+#     max_method = "max_value",
+#     method = c("all", "best")[2]
+#   )
+# feat_p
+# 
+# rt_wind <- plot_rtWind_info(features.l = features, sample_index = 1, iteration_idx = 1, targets = NULL)
+# rt_wind_p <- rt_wind$p_final
+# rt_wind_p
 
 ```
 
 
 ## Spectral matching
-
-The MS2 pure spectrum is matched against our in-house DDA database of reference spectra using the mean of three classical scores [@Tsugawa_2015_MSDIALDataindependentMS]:
-
--   The dot product: $\sum (I_{measured} \times I_{library})^2 / (\sum I^2_{measured} \times \sum I^2_{library})$.
--   The inverse dot product: same as the dot product but restricted to the fragments common to the query and reference spectra.
--   The percentage of reference peaks found in the query spectrum: (matched fragments) / (reference fragments).
-
-These scores can be calculated using these **DIANMF** functions:
-
--   [GetSimpleDotProductSimilarity()]{style="background-color: rgba(169, 169, 169, 0.4);"}.
--   [GetPresenceSimilarity()]{style="background-color: rgba(169, 169, 169, 0.4);"}.
--   [getReverseSearchingSimilarity()]{style="background-color: rgba(169, 169, 169, 0.4);"}.
-
-or, directly by the main function [match_pure_scores2()]{style="background-color: rgba(169, 169, 169, 0.4);"}. The function parameters are:
-
--   [polarity]{style="background-color: rgba(169, 169, 169, 0.4);"} *POS* or *NEG*.
--   [mz_prec]{style="background-color: rgba(169, 169, 169, 0.4);"} precursor mz value.
--   [data_base]{style="background-color: rgba(169, 169, 169, 0.4);"} library database.
--   [measured_spectra]{style="background-color: rgba(169, 169, 169, 0.4);"} experimental pure spectrum.
--   [mz_tol]{style="background-color: rgba(169, 169, 169, 0.4);"}: mz tolerance to bin the ions.
-
-The compound from the database with the highest matching mean score above 0.3 is assigned to the MS1 precursor.
-
-```{r match the spectrum, echo=TRUE }
-# # the database is included in the package
-# # sub_database
-# # calculate the scores
-# scores <- match_pure_scores2(polarity = 'POS', mz_prec = mz_prec, data_base = sub_database, measured_spectra = ms2_pure_spectrum_specific)
-# scores
-# 
-# # extract the best match spectrum
-# spect_idx <- as.numeric(scores[ which.max(scores$total_score) , 'ref_spectrum_index'])
-# reference_spectrum <- sub_database$spectra[[ spect_idx ]]
-# 
-# # plot measured vs library spectra
-# p <- plot_spectra_vs(measured_spectrum = ms2_pure_spectrum_specific, library_spectrum = reference_spectrum)
-# p
-```
-
-
 
 
 
