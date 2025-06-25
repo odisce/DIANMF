@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils-function.R
 \name{search_features}
 \alias{search_features}
-\title{Get isolation windows}
+\title{Search for features related to specific compounds}
 \usage{
 search_features(feature_dt, dt, rttol = 5, ppm = 5)
 }
@@ -19,5 +19,5 @@ search_features(feature_dt, dt, rttol = 5, ppm = 5)
 a data.table
 }
 \description{
-Get isolation windows
+Search for features related to specific compounds
 }

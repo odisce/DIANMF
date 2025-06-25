@@ -109,7 +109,7 @@ get_isowin <- function(msexp) {
 
 
 
-#' Get isolation windows
+#' Search for features related to specific compounds
 #'
 #' @param feature_dt feature summary
 #' @param dt database to match (mandatory rt and mz columns)
