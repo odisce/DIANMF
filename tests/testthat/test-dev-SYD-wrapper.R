@@ -68,9 +68,7 @@ if (file.exists(cache_path)) {
     expr = {
       features <- DIANMF.f(
         msexp = xcms_obj,
-        dir_out = FALSE,
         sample_idx = 1,
-        MS2_ISOEACHL = TRUE,
         MS1MS2_L = FALSE,
         rank = 20,
         min_contrib = 0.6,
@@ -110,9 +108,7 @@ if (file.exists(cache_path)) {
   msexp <- xcms_obj
   features <- DIANMF.f(
     msexp = msexp,
-    dir_out = FALSE,
     sample_idx = NULL,
-    MS2_ISOEACHL = TRUE,
     MS1MS2_L = FALSE,
     rank = 20,
     min_contrib = 0.6,

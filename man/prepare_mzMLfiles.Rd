@@ -7,10 +7,10 @@
 prepare_mzMLfiles(input_dir)
 }
 \arguments{
-\item{input_dir}{\code{character} mzML files directory path.}
+\item{input_dir}{\code{character} mzML/mzXML files directory path.}
 }
 \value{
-\code{data.table} \code{data.frame} contains mzML files information.
+\code{data.table} \code{data.frame} contains mzML/mzXML files information.
 }
 \description{
 Load and prepare mzML files

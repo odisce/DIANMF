@@ -57,9 +57,7 @@ require(DIANMF)
 
 features <- DIANMF.f(
   msexp = xcms_obj,
-  dir_out = FALSE,
   sample_idx = NULL,
-  MS2_ISOEACHL = TRUE,
   MS1MS2_L = TRUE,
   rank = 30,
   min_contrib = 0.6,

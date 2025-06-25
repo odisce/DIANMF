@@ -41,9 +41,7 @@ test_that("step 4, export and plot functions tests", {
   
   features_sub <- DIANMF.f(
     msexp = xcms_obj,
-    dir_out = FALSE,
     sample_idx = 1,
-    MS2_ISOEACHL = TRUE,
     MS1MS2_L = FALSE,
     rank = 30,
     min_contrib = 0.6,
@@ -74,9 +72,7 @@ test_that("step 4, export and plot functions tests", {
   
   features <- DIANMF.f(
     msexp = xcms_obj,
-    dir_out = FALSE,
     sample_idx = NULL,
-    MS2_ISOEACHL = TRUE,
     MS1MS2_L = TRUE,
     rank = 30,
     min_contrib = 0.6,

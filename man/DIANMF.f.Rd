@@ -6,9 +6,7 @@
 \usage{
 DIANMF.f(
   msexp,
-  dir_out = FALSE,
   sample_idx = 1,
-  MS2_ISOEACHL = TRUE,
   MS1MS2_L = TRUE,
   rank = 10,
   maximumIteration = 200,
@@ -34,11 +32,7 @@ DIANMF.f(
 \arguments{
 \item{msexp}{\code{MsExperiment} object obtained from xcms or with \code{DIANMF::detect_xcms_peaks()}.}
 
-\item{dir_out}{\code{logical} TRUE to save results, else FALSE}
-
 \item{sample_idx}{\code{NULL} to process all files else, \code{numeric} index of the sample.}
-
-\item{MS2_ISOEACHL}{\code{logical}}
 
 \item{MS1MS2_L}{\code{logical}}
 

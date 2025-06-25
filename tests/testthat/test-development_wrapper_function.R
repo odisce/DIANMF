@@ -50,9 +50,8 @@ register(SnowParam(workers = 1))
 # registered()
 
 features <- DIANMF.f(
-  msexp = xcms_obj, dir_out = FALSE,
+  msexp = xcms_obj,
   sample_idx = 1,
-  MS2_ISOEACHL = T,
   MS1MS2_L = F,
   rank = 10,
   maximumIteration = 200,

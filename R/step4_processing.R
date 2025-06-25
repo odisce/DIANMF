@@ -1,8 +1,6 @@
 #' Process xcms object
 #' 
 #' @inheritParams align_scans
-#' @param dir_out `logical` TRUE to save results, else FALSE
-#' @param MS2_ISOEACHL `logical`
 #' @param MS1MS2_L `logical`
 #' @inheritParams get_spectra_values
 #' @inheritParams nGMCAs
@@ -30,9 +28,7 @@
 #' @importFrom tools file_path_sans_ext
 DIANMF.f <- function(
   msexp,
-  dir_out = FALSE,
   sample_idx = 1,
-  MS2_ISOEACHL = TRUE,
   MS1MS2_L = TRUE,
   rank = 10,
   maximumIteration = 200,
@@ -54,9 +50,7 @@ DIANMF.f <- function(
   BPPARAM = bpparam()
 ) {
   # msexp = xcms_obj
-  # dir_out = FALSE
   # sample_idx = 1
-  # MS2_ISOEACHL = TRUE
   # MS1MS2_L = TRUE
   # rank = 20
   # min_contrib = 0.6

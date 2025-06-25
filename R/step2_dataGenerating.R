@@ -220,7 +220,6 @@ generate_peaklist <- function(
 # #' @inheritParams build_ms1XICS
 # #' @param time_dic `data.frame` from `DIANMF::get_rawD_ntime`.
 # #' @inheritParams get_rawD_ntime
-# #' @param MS2_ISOEACHL `logical` is TRUE to build the MS2 xics from raw data, else from xcms peaks. 
 # #'
 # #' @return `data.table` `data.frame` MS2 EICs.
 # #' @export

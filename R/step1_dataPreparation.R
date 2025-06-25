@@ -2,15 +2,23 @@
 
 #' Load and prepare mzML files
 #'
-#' @param input_dir `character` mzML files directory path.
+#' @param input_dir `character` mzML/mzXML files directory path.
 #'
-#' @return `data.table` `data.frame` contains mzML files information.
+#' @return `data.table` `data.frame` contains mzML/mzXML files information.
 #' @export
 #' 
 #' @import data.table 
 #' @importFrom tools file_path_sans_ext
 prepare_mzMLfiles <- function(input_dir){
-  input_files <- list.files(input_dir, pattern = ".mzml", full.names = TRUE, ignore.case = TRUE)
+  
+  # input_files <- list.files(input_dir, pattern = ".mzml", full.names = TRUE, ignore.case = TRUE)
+  input_files <- list.files(
+    input_dir, 
+    pattern = "\\.mz(ML|XML)$", 
+    full.names = TRUE, 
+    ignore.case = TRUE
+  )
+  
   mzml_dt <- data.table(
     "mzml_path" = input_files,
     "file_name" = tools::file_path_sans_ext(basename(input_files)),

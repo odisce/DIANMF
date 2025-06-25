@@ -1,0 +1,375 @@
+---
+title: "Combined MS and MS/MS deconvolution of SWATH DIA data with the DIA-NMF workflow for comprehensive annotation in metabolomics"
+author: "Diana Karaki"
+date: "`r Sys.Date()`"
+package: "`r pkg_ver('DIANMF')`"
+vignette: >
+  %\VignetteIndexEntry{process_swath_dia_data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: '`r system.file("bib", "references-vignette.bib", package = "DIANMF")`'
+output: 
+  BiocStyle::html_document:
+    citation_package: natbib
+    csl: nature.csl
+    fig_caption: yes
+    toc: yes
+    toc_depth: 4
+    toc_float:
+      collapsed: false
+    editor_options: 
+      markdown: 
+       wrap: 72
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+```{r setup}
+library(DIANMF)
+```
+
+
+**DIANMF** 
+
+
+# Introduction {#intro}
+
+One of the main challenge in untargeted metabolomics is molecule identification and annotation. Fragmentation methods are widely used in **M**ass **S**pectrometry (MS) based approaches to gather specific information on unknown molecules. Different fragmentation methods exists, each one having a trade-off between specificity and coverage. A promising with wide coverage is the **S**equential **W**indow **A**cquisition of all **TH**eoretical **D**ata-**I**ndependent **A**cquisition (SWATH-DIA) methods. However, the acquired MS2 spectra are hybrid mixtures, posing significant annotation challenges. We developed the **DIANMF** R package to adress to overcome this challenges and propose a robust and efficient way to unmix the spectra for untargeted metabolomics applications.
+
+Non-negative matrix factorization is widely used for analyzing high-dimensional data and feature extraction [@Fu_2019_NonnegativeMatrixFactorization]. It automatically extracts meaningful features from a set of non-negative linear mixtures. This non-negativity arises naturally in many real problems such as hyperspectral sensors [@Brezini_2020_NMFBasedMethodHyperspectral], audio processing [@Fevotte_2009_NonnegativeMatrixFactorization], clustering [@Kim_2008_SparseNonnegativeMatrix], and spectrometry [@Dubroca_2012_WeightedNMFHighresolution]. It has been recently applied to LC-MS [@Rapin_2016_ApplicationNonnegativeMatrix]and has been shown superior to model peak algorithms for gas chromatography (GC)-MS data [@Smirnov_2019_ADAPGCApplicationClusteringAssisted]. Furthermore, on the assumption that for every metabolite, the existing information in the MS1 data correlates in the same sample with its MS2 data. Exploits this quantitative information to deconvolute complex SWATH DIA spectra.
+
+The two existing approaches that address the issue of DIA data without relying on predefined spectral libraries for un-mixing are MS-DIAL [@Tsugawa_2015_MSDIALDataindependentMS] and DecoMetDIA [@Yin_DecometdiaDeconvolutionMultiplexed_2019]. These workflows are based on determining peak models for each precursor: the mixed elution profiles are decomposed as linear combinations of these peaks. Such a strategy, however, is not appropriate for small peaks whose retention time is close to more intense ones (co-eluting compounds). In such cases, the peak shape defined by the algorithm may encompass several analytical peaks and may not allow their proper deconvolution [@Smirnov_2019_ADAPGCApplicationClusteringAssisted].
+
+NMF is not the only advantage of **DIANMF**.
+
+
+# Dataset description and loading
+
+For demonstration purposes and to speed up the processing of this document, we will analyze a tiny subset of real spiked data from [@BarbierSaintHilaire_ComparativeEvaluationData_2020]. This dataset correspond to Human plasma samples with a pool of 47 chemical compounds added at 7 known concentrations (from 0 to 10 ng/ML). Each sample was acquired in triplicate by LC-(ESI+)MS/MS using a SWATH-DIA method on an Orbitrap Fusion instrument. Each full scan MS event was followed by ten MS2 spectra collected from consecutive isolation windows (20 to 50 Da each). A stepped fragmentation method was used at 30 $\pm$ 20 Normalized Collision Energy (NCE). MS1 and MS2 spectra were recorded at a resolution of 120,000 and 15,000 (at $m/Z$ 200), respectively.
+
+The data test mzML files is provided in our package. They are subsets from replicate 1 and 2 of the 10 ng/ML concentration file from 280-320 $m/z$, and 280-320 seconds. The data set consists of the "" spiked compound of $m/Z$ and $rt$ seconds.
+
+Let us load our package and the dataset mzML files.
+
+```{r load mzML file, echo=TRUE }
+
+# load  the package
+library(DIANMF)
+library(BiocParallel)
+# load the dataset
+
+input_dir <- system.file("extdata", package = "DIANMF")
+input_dir
+# file1 <- system.file("extdata", "test_data_20170805_FS-DIA-E2-10ng-rep1_pos_49.mzml", package = "DIANMF")
+# file2 <- system.file("extdata", "test_data_20170805_FS-DIA-E2-10ng-rep2_pos_50.mzml", package = "DIANMF")
+
+```
+
+
+## MS1 Peak Detection 
+
+```{r detect peaks by xcms, echo=TRUE }
+
+mzml_dt <- prepare_mzMLfiles(input_dir)
+mzml_seq <- create_seq(mzml_dt)
+
+params_ls <- list(
+    "CentWaveParam" = xcms::CentWaveParam(
+      ppm = 5,
+      peakwidth = c(3, 15),
+      snthresh = 2,
+      prefilter = c(5, 4000),
+      mzCenterFun = "wMeanApex3",
+      integrate = 2,
+      mzdiff = -0.005,
+      noise = 100,
+      firstBaselineCheck = FALSE
+    ),
+    "MergeNeighboringPeaksParam" = xcms::MergeNeighboringPeaksParam(
+      expandRt = 2,
+      expandMz = 0.001,
+      ppm = 2,
+      minProp = 0.75
+    ),
+    "ObiwarpParam" = xcms::ObiwarpParam(
+      binSize = 0.05
+    ),
+    "PeakDensityParam" = xcms::PeakDensityParam(
+      sampleGroups = NA,
+      bw = 10,
+      minFraction = 0.1,
+      minSamples = 2,
+      binSize = 0.01,
+      ppm = 7,
+      maxFeatures = 500
+    ),
+    "ChromPeakAreaParam" = xcms::ChromPeakAreaParam()
+  )
+
+xcms_obj <- detect_xcms_peaks(sequence_table = mzml_seq, params = params_ls)
+xcms_obj
+
+```
+
+The first main step, detecting MS1 peaks, is performed by [xcms](https://bioconductor.org/packages/release/bioc/html/xcms.html) software. It is also possible to provide the MS1 peaks as a matrix or data frame in [ms1_peaks]{style="background-color: rgba(169, 169, 169, 0.4);"} with [peaks_by_xcms = FALSE]{style="background-color: rgba(169, 169, 169, 0.4);"}.
+
+[dia_nmf.f()]{style="background-color: rgba(169, 169, 169, 0.4);"} parameters:
+
+1.  [mzML_path]{style="background-color: rgba(169, 169, 169, 0.4);"} mzML file path.
+2.  [ms_level]{style="background-color: rgba(169, 169, 169, 0.4);"} character 'MS1' or 'MS2' level.
+3.  [peaks_by_xcms]{style="background-color: rgba(169, 169, 169, 0.4);"} Logical TRUE if the user wants to detect MS1 levels using XCMS, FALSE if the user will provide the peaks matrix or data frame to be identified.
+4.  [ms1_peaks]{style="background-color: rgba(169, 169, 169, 0.4);"} matrix or data.frame contains MS1 peaks to be identified. It should contain these columns: mz, mzmin, mzmax, rt, rtmin, rtmax, into.
+5.  Some [xcms::findChromPeaks()]{style="background-color: rgba(169, 169, 169, 0.4);"} parameters: ppm, peakwidth, snthresh, prefilter, mzCenterFun, integrate, mzdiff, ...
+
+
+## Wrapper DIA-NMF Workflow Function
+
+
+```{r wrapper function, echo=TRUE }
+
+BiocParallel::register(SnowParam(workers = 1))
+ 
+features <- DIANMF.f(
+    msexp = xcms_obj,
+    sample_idx = 1,
+    MS1MS2_L = TRUE,
+    rank = 30,
+    min_contrib = 0.6,
+    maximumIteration = 200,
+    maxFBIteration = 100,
+    toleranceFB = 1e-05,
+    initialization_method = "nndsvd",
+    errors_print = FALSE,
+    method = "svds",
+    sparsityA = TRUE,
+    scan_rt_ext = 10,
+    min_distance = 4,
+    featuresn = NULL,
+    nscans = 3,
+    rt_method = "constant",
+    clean_sources = TRUE,
+    combineSpectra_arg = list(
+      peaks = "union",
+      ppm = 5,
+      tolerance = 0.005
+    ),
+    verbose = T,
+    BPPARAM = bpparam()
+  )
+
+```
+
+
+
+## Interactive Output and Functionalities of the DIA-NMF Package
+### Exporting Functions
+```{r Exporting functions, echo=TRUE}
+
+temp_ft <- get_feature_summary(features.l = features, max_method = "max_value")
+knitr::kable(head(temp_ft), row.names = FALSE)
+
+feature_info <- get_feature_coord(
+    features.l = features,
+    summary_dt = temp_ft,
+    feature_id = temp_ft$featureid[1],
+    sample_index = 1,
+    max_method = "max_value" )
+feature_info
+
+feature_elution_profile <- get_elutionprofile(
+    features.l = features,
+    summary_dt = temp_ft,
+    feature_id = temp_ft$featureid[1],
+    sample_index = 1,
+    type = c("pure", "mixed")[1],
+    method = c("all", "best")[2],
+    max_method = "max_value"
+  )
+
+knitr::kable(head(feature_elution_profile), row.names = FALSE)
+
+feature_spectra <- get_spectra(
+    features.l = features,
+    summary_dt = temp_ft,
+    feature_id = temp_ft$featureid[1],
+    sample_index = 1,
+    type = c("pure", "mixed")[1],
+    method = c("all", "best")[2],
+    max_method = "max_value"
+  )
+knitr::kable(head(feature_spectra), row.names = FALSE)
+
+# feat_spect_obj1 <- export_featureSpect(features.l = features,
+#                                         feature_id = temp_ft$featureid[1],
+#                                         sample_index = 1,
+#                                         type = c("pure", "mixed")[1],
+#                                         method = c("all", "best")[1],
+#                                         max_method = c("contribution", "max_value")[2] )
+# 
+# msSpectra <- exportMSSpectra(features.l = features,
+#                                sample_index = 1,
+#                                type = c("pure", "mixed")[1],
+#                                method = c("all", "best")[2],
+#                                max_method = c("contribution", "max_value")[2] )
+# 
+# 
+# filtered_spect <- msSpectra[spectraData(msSpectra)$name == temp_ft$featureid[1]]
+# ms2_spect <- filterMsLevel(filtered_spect, 2L)
+  
+```
+
+### Plotting Functions
+
+```{r Plotting functions, echo=TRUE}
+
+chrom <- plot_EluProfile(
+    features.l = features,
+    summary_dt = temp_ft,
+    feature_id = temp_ft$featureid[1],
+    sample_index = 1,
+    log2L = FALSE,
+    type = c("pure", "mixed")[1],
+    method = c("all", "best")[1],
+    max_method
+  )
+
+chrom
+
+spect1_p <- plot_Spectra(
+    features.l = features,
+    summary_dt = NULL,
+    feature_id = temp_ft$featureid[1],
+    sample_index = 1,
+    log2L = F,
+    type = c("pure", "mixed")[1],
+    method = c("all", "best")[2],
+    max_method
+  )
+spect1_p
+
+feat_p <- plot_feature(
+    features.l = features,
+    summary_dt = temp_ft,
+    feature_id = temp_ft$featureid[1],
+    sample_index = 1,
+    log2L = FALSE,
+    max_method = "max_value",
+    method = c("all", "best")[2]
+  )
+feat_p
+
+rt_wind <- plot_rtWind_info(features.l = features, sample_index = 1, iteration_idx = 1, targets = NULL)
+rt_wind_p <- rt_wind$p_final
+rt_wind_p
+
+```
+
+
+## Spectral matching
+
+The MS2 pure spectrum is matched against our in-house DDA database of reference spectra using the mean of three classical scores [@Tsugawa_2015_MSDIALDataindependentMS]:
+
+-   The dot product: $\sum (I_{measured} \times I_{library})^2 / (\sum I^2_{measured} \times \sum I^2_{library})$.
+-   The inverse dot product: same as the dot product but restricted to the fragments common to the query and reference spectra.
+-   The percentage of reference peaks found in the query spectrum: (matched fragments) / (reference fragments).
+
+These scores can be calculated using these **DIANMF** functions:
+
+-   [GetSimpleDotProductSimilarity()]{style="background-color: rgba(169, 169, 169, 0.4);"}.
+-   [GetPresenceSimilarity()]{style="background-color: rgba(169, 169, 169, 0.4);"}.
+-   [getReverseSearchingSimilarity()]{style="background-color: rgba(169, 169, 169, 0.4);"}.
+
+or, directly by the main function [match_pure_scores2()]{style="background-color: rgba(169, 169, 169, 0.4);"}. The function parameters are:
+
+-   [polarity]{style="background-color: rgba(169, 169, 169, 0.4);"} *POS* or *NEG*.
+-   [mz_prec]{style="background-color: rgba(169, 169, 169, 0.4);"} precursor mz value.
+-   [data_base]{style="background-color: rgba(169, 169, 169, 0.4);"} library database.
+-   [measured_spectra]{style="background-color: rgba(169, 169, 169, 0.4);"} experimental pure spectrum.
+-   [mz_tol]{style="background-color: rgba(169, 169, 169, 0.4);"}: mz tolerance to bin the ions.
+
+The compound from the database with the highest matching mean score above 0.3 is assigned to the MS1 precursor.
+
+```{r match the spectrum, echo=TRUE }
+# # the database is included in the package
+# # sub_database
+# # calculate the scores
+# scores <- match_pure_scores2(polarity = 'POS', mz_prec = mz_prec, data_base = sub_database, measured_spectra = ms2_pure_spectrum_specific)
+# scores
+# 
+# # extract the best match spectrum
+# spect_idx <- as.numeric(scores[ which.max(scores$total_score) , 'ref_spectrum_index'])
+# reference_spectrum <- sub_database$spectra[[ spect_idx ]]
+# 
+# # plot measured vs library spectra
+# p <- plot_spectra_vs(measured_spectrum = ms2_pure_spectrum_specific, library_spectrum = reference_spectrum)
+# p
+```
+
+
+
+
+
+
+# Appendix
+
+## NMF algorithm nGMCA$^s$ {#mainproblem}
+
+Given a mixed matrix $X\in \mathds{R} ^{m \times n}$, the components' sources are mixed up in an unknown but linear way. The un-mixing model can be compactly written in this matrix form:
+
+```{=tex}
+\begin{equation}
+\label{eq1}
+X_{m,n} \approx W_{m,r} H_{r,n} \;\ \text{(1)}
+\end{equation}
+```
+where $W \in \mathbf{R}^{m \times r}$ is the basis matrix and $H \in \mathbf{R}^{r \times n}$ is the coefficients matrix. Each column of $W$ is the unknown spectrum/source that is not negative, whereas each row of $H$ represents an elution profile that determines the contribution of each source, which is also non-negative. Thus, $n$ is the number of measurements, $m$ is the number of source samples, and $r$ is the number of pure sources exist in $X_{m,n}$.
+
+The rank of factorization ($r$) remains a challenge in NMF problems. However, it is robust in our case, meaning ranking over estimations is worse than assigning a fixed tiny rank. Until now, we have set it to three, so we are confident that one pure component is related to the precursor we are attempting to identify, one to another precursor, and the third may collect all noise in the matrix.
+
+Solving problem [(1)](#mainproblem) can be written under the constrained form:
+
+\begin{align} \label{eq2} 
+\underset{\substack{W, H \geqslant 0}}{\text{argmin}} \, \mathcal{D}(X \parallel WH) + J(W). 
+\end{align} $\mathcal{D}$ is a divergence function, as the Euclidean distance $(l_2)$, it measures the discrepancy between the data $X$ and it's factorization $WH$. $J$ is an optional regularization function providing prior information about the spectra.
+
+Rapin \textit{et al.} introduced the nGMCA$^s$ [@Rapin_2016_ApplicationNonnegativeMatrix], [@Rapin_2013_SparseNonNegativeBSS] algorithm, which aims to solve the sparse non-negative blind source separation. This algorithm minimizes the following optimization problem: \begin{align} \label{sp_W}
+    \underset{\substack{W, H}}{\text{argmin}} \, \frac{1}{2}||X - WH||^2_2 + \lambda ||W||_1 + i^{+}(W) +  i^{+}(H),
+\end{align} where $i^{+}$ is the characteristic function of the non-negative orthant that enforces the non-negative constraints; it is applied point-wise on every entry of $W$ and $H$: \vspace{-0.1cm} \begin{align}
+i^{+}(w_{i,j}) =
+\begin{cases}
+0 & \text{if} \quad w_{i,j} \geq 0. \\
++ \infty  & \text{otherwise.}
+\end{cases}
+\end{align}
+
+nGMCA$^s$ alternatively minimizes the constrained sub-problems to obtain stable solutions with the sought structure:
+
+1.  Fix H, sub-problem in W is: \begin{align}
+    \underset{\substack{W}}{\text{argmin}} \, \frac{1}{2}||X - WH||^2_2 + \lambda ||W||_1 + i^{+}(W).
+    \end{align}
+2.  Fix W, sub-problem in H is: \begin{align}
+    \underset{\substack{H}}{\text{argmin}} \, \frac{1}{2}||X - WH||^2_2 + i^{+}(H).
+    \end{align}
+
+These sub-problems can be solved by the forward-backward splitting algorithm (FBS) [@Combettes_2005_SignalRecoveryProximal] from proximal splitting methods.
+
+
+# Cheat sheet
+
+
+# Session info
+
+Here is the output of `sessionInfo()` on the system on which this document was compiled:
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```
+
+# References
