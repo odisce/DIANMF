@@ -1,6 +1,7 @@
 #' Process xcms object
 #' 
 #' @inheritParams align_scans
+#' @inheritParams generate_peaklist
 #' @param MS1MS2_L `logical`
 #' @inheritParams get_spectra_values
 #' @inheritParams nGMCAs
@@ -29,6 +30,7 @@
 DIANMF.f <- function(
   msexp,
   sample_idx = 1,
+  ms2isowinL = TRUE,
   MS1MS2_L = TRUE,
   rank = 10,
   maximumIteration = 200,
@@ -198,7 +200,7 @@ DIANMF.f <- function(
           ms2_peaks_i <- generate_peaklist(
             msexp = msexp_idx_rt,
             mslevel = 2,
-            ms2isowinL = TRUE,
+            ms2isowinL = ms2isowinL,
             combineSpectra_arg = combineSpectra_arg,
             ppm = 6
           )

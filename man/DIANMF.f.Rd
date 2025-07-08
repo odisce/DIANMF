@@ -7,6 +7,7 @@
 DIANMF.f(
   msexp,
   sample_idx = 1,
+  ms2isowinL = TRUE,
   MS1MS2_L = TRUE,
   rank = 10,
   maximumIteration = 200,
@@ -33,6 +34,8 @@ DIANMF.f(
 \item{msexp}{\code{MsExperiment} object obtained from xcms or with \code{DIANMF::detect_xcms_peaks()}.}
 
 \item{sample_idx}{\code{NULL} to process all files else, \code{numeric} index of the sample.}
+
+\item{ms2isowinL}{\code{logical} is \code{TRUE} to build the MS2 xics from raw data, else from xcms peaks.}
 
 \item{MS1MS2_L}{\code{logical}}
 
