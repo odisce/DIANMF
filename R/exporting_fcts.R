@@ -70,7 +70,7 @@ get_feature_coord <- function(
 #' @param features.l `list` obtained with `DIANMF::DIANMF.f()`
 #' @param summary_dt `data.table` of features with their optimal sources obtained from DIANMF::get_feature_summary().
 #' @param feature_id `character` feature id.
-#' @param sample_index `numeric` sample index.
+#' @param sample_index `numeric(1)` sample index.
 #' @param type `string` to retrieve the "pure" or "mixed" elution profiles.
 #' @param method `string` to extract "all" sources or just the "best" source.
 #' @param max_method `string` to choose a method to select the optimal iteration:

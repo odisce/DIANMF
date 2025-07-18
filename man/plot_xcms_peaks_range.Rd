@@ -9,7 +9,7 @@ plot_xcms_peaks_range(summary_dt, sample_index, iteration_index)
 \arguments{
 \item{summary_dt}{\code{data.table} of features with their optimal sources obtained from DIANMF::get_feature_summary().}
 
-\item{sample_index}{\code{numeric} sample index.}
+\item{sample_index}{\code{numeric(1)} sample index.}
 
 \item{iteration_index}{\code{numeric} iteration index.}
 }

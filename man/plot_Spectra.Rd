@@ -22,7 +22,7 @@ plot_Spectra(
 
 \item{feature_id}{\code{character} feature id.}
 
-\item{sample_index}{\code{numeric} sample index.}
+\item{sample_index}{\code{numeric(1)} sample index.}
 
 \item{log2L}{\code{logic} is \code{TRUE} for logarithmic transformation, else \code{FALSE}.}
 

@@ -14,7 +14,7 @@ plot_rtWind_info(
 \arguments{
 \item{features.l}{\code{list} obtained with \code{DIANMF::DIANMF.f()}}
 
-\item{sample_index}{\code{numeric} sample index.}
+\item{sample_index}{\code{numeric(1)} sample index.}
 
 \item{iteration_idx}{\code{numeric} iteration index.}
 

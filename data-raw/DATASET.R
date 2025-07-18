@@ -12,7 +12,7 @@ for(i in c(17,18)){
   rawData.onDiskMSnExp <- MSnbase::readMSData(file, mode = "onDisk")
   temp_dt <- rawData.onDiskMSnExp %>%
     MSnbase::filterRt(., c(280, 320)) %>%
-    MSnbase::filterMz(., c(280, 320)) %>%
+    MSnbase::filterMz(., c(250, 320)) %>%
     MSnbase::filterEmptySpectra()
 
   fdt_sub <- fData(temp_dt) %>% as.data.table()

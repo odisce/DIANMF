@@ -18,7 +18,7 @@ export_featureSpect(
 
 \item{feature_id}{\code{character} feature id.}
 
-\item{sample_index}{\code{numeric} sample index.}
+\item{sample_index}{\code{numeric(1)} sample index.}
 
 \item{type}{\code{string} to retrieve the "pure" or "mixed" elution profiles.}
 

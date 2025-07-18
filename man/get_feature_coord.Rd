@@ -19,7 +19,7 @@ get_feature_coord(
 
 \item{feature_id}{\code{character} feature id.}
 
-\item{sample_index}{\code{numeric} sample index.}
+\item{sample_index}{\code{numeric(1)} sample index.}
 
 \item{max_method}{\code{string} to choose a method to select the optimal iteration:
 \itemize{
