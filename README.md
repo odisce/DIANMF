@@ -13,7 +13,7 @@
 
 The workflow detects MS1 peaks, extracts mixed MS1 and MS2 signals within minimally overlapping retention time windows, aligns them, and jointly unimixes these to recover pure precursor and fragment patterns (MS1 and MS2 spectra, respectively).
         
-![DIA-NMF Workflow](vignettes/figures/dianmf_workflow.png)
+![DIA-NMF Workflow](vignettes/figures/dianmf_workflow.PNG)
 
         
 
