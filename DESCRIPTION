@@ -1,0 +1,79 @@
+Type: Package
+Package: DIANMF
+Title:  Non-negative matrix factorization approaches for the high-throughput processing and analysis of tandem mass spectrometry data 
+          in metabolomics for biomarker identification
+    Data
+Version: 0.1.0
+Authors@R: c(
+    person(given = "Diana", family = "Karaki", email = "diana.karaki@cea.fr", role = c("aut", "cre")),
+    person(given = "Sylvain", family = "Dechaumet", email = "sylvain.dechaumet@cea.fr", role = "aut"),
+    person(given = "Etienne", family = "Thevenot", email = "etienne.thevenot@cea.fr", role = "ctb")
+  )
+Description: Mass spectrometry (MS)-based metabolomics is a leading analytical strategy for discovering biomarkers in health and disease.
+        In particular, tandem mass spectrometry (MS/MS) enables the structural characterization of metabolites by acquiring fragmentation 
+        spectra (MS2). Among recent advances, Data Independent Acquisition (DIA), and especially SWATH-type acquisitions, offer high-throughput
+        and comprehensive MS/MS data scans of all precursor ions. However, SWATH DIA spectra are complex and hybrid, as they contain mixed 
+        fragments from multiple co-eluting and co-isolated compounds, complicating compound identification. There remains a critical need for 
+        tools capable of unmixing such complex signals in a fully untargeted manner.
+        We therefore developed DIA-NMF, a novel computational workflow based on sparse non-negative matrix factorization (NMF),
+        designed to unmix MS1 and SWATH DIA MS2 spectra. It is the first blind source separation (BSS) method to simultaneously 
+        process both MS and MS/MS data in a unified framework, without relying on predefined peak models or spectral libraries.
+        The algorithm detects MS1 peaks, extracts mixed MS1 and MS2 signals within minimally overlapping retention time windows,
+        aligns them, and jointly unimixes these to recover pure precursor and fragment patterns (MS1 and MS2 spectra, respectively).
+        DIA-NMF is the only available tool that provides pure MS1 spectra and unmixed MS2 spectra, enabling precursor-level interpretation
+        and improving metabolite annotation. Notably, DIA-NMF can resolve co-eluting compounds and systematically group all related ion
+        species-adducts, isotopes, and neutral losses-into chemically coherent spectra. Moreover, the recovered MS2 spectra integrate
+        fragment ions originating from all relevant SWATH isolation windows, providing an enriched and structurally informative view 
+        of each compound, which helps the MS/MS compound identification.
+        The Non-negative Generalized Morphological Component Analysis with soft-thresholding (nGMCAs) 
+        is a BSS algorithm adapted to unmix MS/MS data. Unlike traditional NMF methods, nGMCAs leverages non-negativity
+        and sparsity (in a predefined known transform domain) and morphological diversity to enhance separation in highly mixed
+        linear data. The method formulates an optimization problem that approximates the data matrix X as the product WH, imposing
+        non-negativity and promoting sparsity in the spectral matrix W using the ℓ1-norm. To solve this non-convex optimization problem,
+        nGMCAs alternately and exactly solves subproblems in W and H using proximal calculus and splitting techniques, specifically 
+        forward-backward splitting (FBS) algorithms. This approach ensures convergence and yields stable solutions with the desired structural 
+        properties.
+        The DIA-NMF workflow is implemented as a fast, open-source R package DIANMF.
+License: file LICENSE
+biocViews:
+Imports: 
+    data.table (>= 1.16.4),
+    dplyr (>= 1.1.4),
+    magrittr (>= 2.0.3),
+    MSnbase (>= 2.32.0),
+    reshape2 (>= 1.4.4),
+    stats (>= 4.3.0),
+    xcms (>= 4.4.0), 
+    MsExperiment (>= 1.8.0),
+    MsFeatures (>= 1.14.0),
+    RSpectra (>= 0.16),
+    Spectra (>= 1.16.0),
+    SummarizedExperiment (>= 1.36.0),
+    corpcor (>= 1.6.10),
+    S4Vectors (>= 0.44.0),
+    ggplot2 (>= 3.5.1),
+    ggpubr (>= 0.6.0),
+    BiocParallel (>= 1.40.0),
+    stringr (>= 1.5.1),
+    cowplot (>= 1.1.3),
+    tools (>= 4.4.1)
+Suggests:
+    devtools,
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    BiocStyle (>= 2.34.0),
+    scales (>= 1.3.0),
+    patchwork (>= 1.3.0),
+    MsBackendMsp (>= 1.10.0), 
+    MsBackendMgf (>= 1.14.0),
+    profvis (>= 0.4.0),
+    htmlwidgets (>= 1.6.4)
+Config/testthat/edition: 3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends: 
+    R (>= 4.4)
+VignetteBuilder: knitr
