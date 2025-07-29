@@ -140,7 +140,9 @@ build_XICs <- function(
     y <- peaks_dt[tempi, on = key_join][, .(start = mzmin, end = mzmax, xic_label)]
     
     if( anyNA(x$start) | anyNA(x$end) | anyNA(y$start) | anyNA(y$end)  ){
+      
       return(NULL)
+      
     }else {
       setkey(x, start, end)
       setkey(y, start, end)
