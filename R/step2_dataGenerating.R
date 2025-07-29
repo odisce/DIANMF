@@ -138,23 +138,28 @@ build_XICs <- function(
     tempi <- grid_dt[rowi,]
     x <- rawdt[tempi, on = key_join][,  .(start = mz, end = mz, mz, rtime, intensity, msLevel, isolationWindowTargetMz, collisionEnergy)]
     y <- peaks_dt[tempi, on = key_join][, .(start = mzmin, end = mzmax, xic_label)]
-    setkey(x, start, end)
-    setkey(y, start, end)
-    res <- foverlaps(x, y, type = "any", nomatch = NULL)
-    if (method == "all") {
-      out_i <- res[, .(mz, rtime, intensity, msLevel, isolationWindowTargetMz, collisionEnergy, xic_label)]
-    } else if (method == "max") {
-      out_i <- res[,
-        .(
-          mz = median(mz, na.rm = TRUE),
-          intensity = max(intensity, na.rm = TRUE)
-        ),
-        by = .(rtime, msLevel, isolationWindowTargetMz, collisionEnergy, xic_label)
-      ]
-    } else {
-      stop(sprintf("method argument not recognizes: %s", method))
+    
+    if( anyNA(x$start) | anyNA(x$end) | anyNA(y$start) | anyNA(y$end)  ){
+      return(NULL)
+    }else {
+      setkey(x, start, end)
+      setkey(y, start, end)
+      res <- foverlaps(x, y, type = "any", nomatch = NULL)
+      if (method == "all") {
+        out_i <- res[, .(mz, rtime, intensity, msLevel, isolationWindowTargetMz, collisionEnergy, xic_label)]
+      } else if (method == "max") {
+        out_i <- res[,
+                     .(
+                       mz = median(mz, na.rm = TRUE),
+                       intensity = max(intensity, na.rm = TRUE)
+                     ),
+                     by = .(rtime, msLevel, isolationWindowTargetMz, collisionEnergy, xic_label)
+        ]
+      } else {
+        stop(sprintf("method argument not recognizes: %s", method))
+      }
+      return(out_i)
     }
-    return(out_i)
   }) %>%
     rbindlist()
   return(output)
