@@ -247,8 +247,8 @@ DIANMF.f <- function(
               message("    Build mixed matrix")
             }
             ms_mixed_i <- build_mixed_matrix(ms_xics_i, nscans = nscans)
-            if (nrow(ms_mixed_i$mixedmat) <= 0) {
-              if (verbose) {
+            if ( !is.matrix(ms_mixed_i$mixedmat) || nrow(ms_mixed_i$mixedmat) <= 0 ){
+                if (verbose) {
                 message("    Empty mixed matrix: skipping")
               }
               NextIter <- TRUE

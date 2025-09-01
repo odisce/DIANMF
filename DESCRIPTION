@@ -1,8 +1,6 @@
 Type: Package
 Package: DIANMF
-Title:  Non-negative matrix factorization approaches for the high-throughput processing and analysis of tandem mass spectrometry data 
-          in metabolomics for biomarker identification
-    Data
+Title:  Combined MS and MS/MS deconvolution of SWATH DIA data with the DIA-NMF workflow for comprehensive annotation in metabolomics
 Version: 0.1.0
 Authors@R: c(
     person(given = "Diana", family = "Karaki", email = "diana.karaki@cea.fr", role = c("aut", "cre")),
